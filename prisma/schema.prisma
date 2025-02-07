@@ -7,27 +7,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum TransactionType {
+  EXPENSE
+  INCOME
+}
+
+enum UserRole {
+  ADMIN
+  FINANCE_MANAGER
+  USER
+}
+
+model User {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  email         String       @unique
+  password      String
+  role          UserRole     @default(USER)
+  expenses      Expense[]
+  activities    ActivityParticipant[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+}
+
 model Category {
   id           String        @id @default(auto()) @map("_id") @db.ObjectId
   name         String
-  type         String        // "EXPENSE" or "INCOME"
+  type         TransactionType
   isDefault    Boolean       @default(false)
   expenses     Expense[]
-  transactions Transaction[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
 }
 
-model Transaction {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  amount     Float
-  date       DateTime
-  note       String?
-  type       String   // "EXPENSE" or "INCOME"
-  categoryId String   @db.ObjectId
-  category   Category @relation(fields: [categoryId], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+model Activity {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  description     String?
+  participants    ActivityParticipant[]
+  expenses        Expense[]
+  status          String        @default("ACTIVE") // ACTIVE, SETTLED
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model ActivityParticipant {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  activityId  String    @db.ObjectId
+  userId      String    @db.ObjectId
+  activity    Activity  @relation(fields: [activityId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  isAttending Boolean   @default(true)
+  companions  Int       @default(0)
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([activityId, userId])
 }
 
 model Expense {
@@ -40,15 +78,9 @@ model Expense {
   category    Category  @relation(fields: [categoryId], references: [id])
   userId      String    @db.ObjectId
   user        User      @relation(fields: [userId], references: [id])
+  activityId  String    @db.ObjectId
+  activity    Activity  @relation(fields: [activityId], references: [id])
+  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-}
-
-model User {
-  id          String      @id @default(auto()) @map("_id") @db.ObjectId
-  name        String?
-  email       String?     @unique
-  expenses    Expense[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
 }
