@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         userId: session.user.id,
         activityId: defaultActivity.id, // 使用預設活動
         status: "PENDING",
-        images: [], // 預設空陣列
+        images: data.images || [], // 預設空陣列
       },
     });
 
