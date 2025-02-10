@@ -1,20 +1,74 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const data = await req.json();
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const data = await request.json();
+    console.log("Received data:", data);  // 檢查接收到的數據
+    console.log("User session:", session);  // 檢查用戶 session
+
+    // 驗證必要欄位
+    if (!data.amount || !data.categoryId || !data.date) {
+      return NextResponse.json(
+        { error: "Missing required fields", data },
+        { status: 400 }
+      );
+    }
+
+    // 獲取預設活動或第一個活動
+    const defaultActivity = await prisma.activity.findFirst({
+      where: {
+        status: "ACTIVE",
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (!defaultActivity) {
+      return NextResponse.json(
+        { error: "No active activity found" },
+        { status: 400 }
+      );
+    }
+
+    // 創建新的支出記錄
     const expense = await prisma.expense.create({
       data: {
-        ...data,
-        images: data.images || [],
+        amount: parseFloat(data.amount),
+        description: data.description || "",
+        date: new Date(data.date),
+        categoryId: data.categoryId,
+        userId: session.user.id,
+        activityId: defaultActivity.id, // 使用預設活動
+        status: "PENDING",
+        images: [], // 預設空陣列
       },
     });
-    return NextResponse.json(expense);
+
+    console.log("Created expense:", expense);  // 檢查創建的結果
+
+    return NextResponse.json({ data: expense });
+    
   } catch (error) {
-    console.error("Expense creation error:", error);
+    // 輸出詳細的錯誤信息
+    console.error("Create expense error:", error);
     return NextResponse.json(
-      { error: "Failed to create expense" },
+      { 
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }

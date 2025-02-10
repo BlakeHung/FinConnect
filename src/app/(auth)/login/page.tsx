@@ -23,8 +23,6 @@ export default function LoginPage() {
       const email = formData.get('email') as string
       const password = formData.get('password') as string
 
-      console.log('Login attempt with:', { email })
-
       const result = await signIn('credentials', {
         email,
         password,
@@ -32,15 +30,12 @@ export default function LoginPage() {
         callbackUrl: '/dashboard'
       })
 
-      console.log('SignIn result:', result)
-
       if (result?.error) {
         setError(result.error)
       } else if (result?.url) {
         router.push(result.url)
       }
     } catch (error) {
-      console.error('Login error:', error)
       setError('登入時發生錯誤')
     } finally {
       setIsLoading(false)
