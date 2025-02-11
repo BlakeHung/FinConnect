@@ -17,6 +17,9 @@ export default async function TransactionsPage() {
       user: true,
       activity: true,
     },
+    where: {
+      userId: session.user.id,
+    },
     orderBy: {
       date: 'desc',
     },
@@ -35,22 +38,29 @@ export default async function TransactionsPage() {
       </div>
       <div className="grid gap-4">
         {expenses.map((expense) => (
-          <div 
-            key={expense.id} 
-            className="p-4 bg-white rounded-lg shadow"
+          <Link 
+            key={expense.id}
+            href={`/transactions/${expense.id}`}
           >
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-medium">{expense.description || '無說明'}</h3>
-                <p className="text-sm text-gray-500">
-                  {expense.category.name} • {new Date(expense.date).toLocaleDateString()}
+            <div 
+              className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-medium">{expense.description || '無說明'}</h3>
+                  <p className="text-sm text-gray-500">
+                    {expense.category.name} • {new Date(expense.date).toLocaleDateString()}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    {expense.user.name}
+                  </p>
+                </div>
+                <p className="font-medium text-lg">
+                  ${expense.amount.toLocaleString()}
                 </p>
               </div>
-              <p className="font-medium text-lg">
-                ${expense.amount.toLocaleString()}
-              </p>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

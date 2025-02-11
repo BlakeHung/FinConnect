@@ -30,6 +30,8 @@ export function TransactionForm({ categories, type }: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
 
+  const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
+
   const {
     register,
     handleSubmit,
@@ -38,6 +40,9 @@ export function TransactionForm({ categories, type }: TransactionFormProps) {
     formState: { errors },
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
+    defaultValues: {
+      date: today,  // 直接使用格式化後的日期字串
+    }
   });
 
   const handleImageUpload = async (file: File) => {
@@ -100,6 +105,13 @@ export function TransactionForm({ categories, type }: TransactionFormProps) {
         <input
           type="number"
           step="0.01"
+          min="0"
+          onKeyDown={(e) => {
+            if (!/[\d.]/.test(e.key) && 
+                !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+              e.preventDefault();
+            }
+          }}
           {...register("amount", { valueAsNumber: true })}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
