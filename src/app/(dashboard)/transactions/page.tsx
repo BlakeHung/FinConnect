@@ -12,13 +12,13 @@ export default async function TransactionsPage() {
   }
 
   const expenses = await prisma.expense.findMany({
+    where: {
+      userId: session.user.id,
+    },
     include: {
       category: true,
       user: true,
       activity: true,
-    },
-    where: {
-      userId: session.user.id,
     },
     orderBy: {
       date: 'desc',
@@ -51,9 +51,6 @@ export default async function TransactionsPage() {
                   <p className="text-sm text-gray-500">
                     {expense.category.name} • {new Date(expense.date).toLocaleDateString()}
                   </p>
-                  <p className="text-xs text-gray-400">
-                    {expense.user.name}
-                  </p>
                 </div>
                 <p className="font-medium text-lg">
                   ${expense.amount.toLocaleString()}
@@ -62,6 +59,11 @@ export default async function TransactionsPage() {
             </div>
           </Link>
         ))}
+        {expenses.length === 0 && (
+          <div className="text-center text-gray-500 py-8">
+            還沒有任何交易記錄
+          </div>
+        )}
       </div>
     </div>
   );

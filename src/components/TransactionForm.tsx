@@ -23,12 +23,27 @@ interface Category {
 
 interface TransactionFormProps {
   categories: Category[];
-  type: "EXPENSE" | "INCOME";
+  type: 'EXPENSE' | 'INCOME';
+  defaultValues?: {
+    amount: number;
+    categoryId: string;
+    date: Date;
+    description?: string;
+    images?: string[];
+  };
+  expenseId?: string;
 }
 
-export function TransactionForm({ categories, type }: TransactionFormProps) {
+export function TransactionForm({ 
+  categories, 
+  type, 
+  defaultValues,
+  expenseId 
+}: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [previewImages, setPreviewImages] = useState<string[]>(
+    defaultValues?.images || []
+  );
 
   const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
 
@@ -40,8 +55,8 @@ export function TransactionForm({ categories, type }: TransactionFormProps) {
     formState: { errors },
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: {
-      date: today,  // 直接使用格式化後的日期字串
+    defaultValues: defaultValues || {
+      date: new Date(),
     }
   });
 
@@ -74,23 +89,30 @@ export function TransactionForm({ categories, type }: TransactionFormProps) {
   const onSubmit = async (data: TransactionFormData) => {
     try {
       setIsSubmitting(true);
-      const response = await fetch(`/api/expenses`, {
-        method: "POST",
+      
+      const url = expenseId 
+        ? `/api/transactions/${expenseId}` 
+        : '/api/transactions';
+      
+      const method = expenseId ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error("提交失敗");
+        throw new Error('提交失敗');
       }
 
-      reset();
-      alert("記錄成功！");
+      // 重定向到交易列表頁面
+      window.location.href = '/transactions';
     } catch (error) {
-      console.error("提交錯誤:", error);
-      alert("記錄失敗，請稍後再試");
+      console.error('Error:', error);
+      alert('提交失敗，請稍後再試');
     } finally {
       setIsSubmitting(false);
     }
