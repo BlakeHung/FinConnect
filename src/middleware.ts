@@ -10,5 +10,6 @@ export const config = {
   matcher: [
     "/transactions/:path*",
     "/dashboard/:path*",
+    "/((?!share|api|login|_next/static|_next/image|favicon.ico).*)",
   ]
 } 

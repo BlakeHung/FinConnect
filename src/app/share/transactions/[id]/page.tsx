@@ -1,28 +1,16 @@
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { redirect, notFound } from "next/navigation";
-import Link from "next/link";
-import { Share2 } from "lucide-react";
-import { ShareButton } from "@/components/share-button";
+import { notFound } from "next/navigation";
 
-export default async function TransactionDetailPage({
+export default async function SharedTransactionPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session) {
-    redirect('/login');
-  }
-
   const expense = await prisma.expense.findUnique({
     where: { id: params.id },
     include: {
       category: true,
       user: true,
-      activity: true,
     },
   });
 
@@ -30,40 +18,12 @@ export default async function TransactionDetailPage({
     notFound();
   }
 
-  // 檢查使用者權限
-  const isOwner = expense.userId === session.user.id;
-  const isAdmin = session.user.role === 'ADMIN';
-  const canEdit = isOwner || isAdmin;
-
-  console.log({
-    expenseUserId: expense.userId,
-    sessionUserId: session.user.id,
-    userRole: session.user.role,
-    canEdit: isOwner || isAdmin
-  });
-
   return (
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto bg-white rounded-lg shadow p-6">
-        <div className="flex justify-between items-center mb-6">
+        <div className="mb-6">
           <h1 className="text-2xl font-bold">支出詳情</h1>
-          <div className="space-x-2 flex items-center">
-            <ShareButton transactionId={params.id} />
-            <Link
-              href="/transactions"
-              className="text-gray-600 hover:text-gray-800"
-            >
-              返回列表
-            </Link>
-            {canEdit && (
-              <Link
-                href={`/transactions/${expense.id}/edit`}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                編輯
-              </Link>
-            )}
-          </div>
+          <p className="text-sm text-gray-500">分享檢視</p>
         </div>
 
         <div className="space-y-4">
@@ -85,11 +45,6 @@ export default async function TransactionDetailPage({
           <div>
             <h3 className="text-gray-600">說明</h3>
             <p>{expense.description || '無說明'}</p>
-          </div>
-
-          <div>
-            <h3 className="text-gray-600">建立者</h3>
-            <p>{expense.user.name}</p>
           </div>
 
           {expense.images && expense.images.length > 0 && (
