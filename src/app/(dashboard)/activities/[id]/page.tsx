@@ -64,12 +64,20 @@ export default async function ActivityPage({
           <div className="flex gap-2">
             <ShareButton id={activity.id} type="activity" />
             {session.user.role === 'ADMIN' && (
-              <Link
-                href={`/activities/${activity.id}/edit`}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-              >
-                編輯活動
-              </Link>
+              <>
+                <Link
+                  href={`/activities/${activity.id}/edit`}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+                >
+                  編輯活動
+                </Link>
+                <Link
+                  href={`/activities/${activity.id}/edm`}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
+                >
+                  EDM 管理
+                </Link>
+              </>
             )}
           </div>
         </div>
@@ -78,6 +86,30 @@ export default async function ActivityPage({
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
             <h2 className="text-lg font-semibold mb-2">活動說明</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{activity.description}</p>
+          </div>
+        )}
+
+        {/* 如果有 EDM，顯示預覽 */}
+        {activity.edm && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">EDM 預覽</h2>
+              <ShareButton id={activity.id} type="activity" />
+            </div>
+            <div className="prose max-w-none">
+              <h3>{activity.edm.title}</h3>
+              <p className="whitespace-pre-wrap">{activity.edm.content}</p>
+              {activity.edm.registrationLink && (
+                <a 
+                  href={activity.edm.registrationLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  立即報名
+                </a>
+              )}
+            </div>
           </div>
         )}
 
