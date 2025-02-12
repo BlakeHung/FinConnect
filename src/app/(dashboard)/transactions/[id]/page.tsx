@@ -3,8 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { Share2 } from "lucide-react";
-import { ShareButton } from "@/components/share-button";
+import { ShareButton } from "@/components/ShareButton";
 
 export default async function TransactionDetailPage({
   params,
@@ -48,7 +47,7 @@ export default async function TransactionDetailPage({
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">支出詳情</h1>
           <div className="space-x-2 flex items-center">
-            <ShareButton transactionId={params.id} />
+            <ShareButton id={params.id} type="transaction" />
             <Link
               href="/transactions"
               className="text-gray-600 hover:text-gray-800"

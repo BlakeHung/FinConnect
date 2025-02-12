@@ -1,25 +1,26 @@
 "use client";
 
+import { Share2 } from "lucide-react";
 import { useState } from "react";
-import { Share } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface ShareButtonProps {
-  link: string;
+  id: string;
+  type: 'transaction' | 'activity';
 }
 
-export function ShareButton({ link }: ShareButtonProps) {
+export function ShareButton({ id, type }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async () => {
+    const paths = {
+      transaction: `/share/transactions/${id}`,
+      activity: `/edm/activities/${id}`,
+    };
+    
+    const shareUrl = `${window.location.origin}${paths[type]}`;
+    
     try {
-      await navigator.clipboard.writeText(link);
+      await navigator.clipboard.writeText(shareUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -28,21 +29,12 @@ export function ShareButton({ link }: ShareButtonProps) {
   };
 
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleShare}
-          >
-            <Share className="h-4 w-4" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{copied ? '已複製連結！' : '複製分享連結'}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <button
+      onClick={handleShare}
+      className="text-gray-600 hover:text-gray-800 flex items-center gap-1"
+    >
+      <Share2 className="w-4 h-4" />
+      {copied ? "已複製連結！" : "分享"}
+    </button>
   );
 } 

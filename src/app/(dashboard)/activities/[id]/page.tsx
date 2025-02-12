@@ -62,7 +62,7 @@ export default async function ActivityPage({
           </div>
           
           <div className="flex gap-2">
-            <ShareButton link={edmLink} />
+            <ShareButton id={activity.id} type="activity" />
             {session.user.role === 'ADMIN' && (
               <Link
                 href={`/activities/${activity.id}/edit`}
