@@ -51,6 +51,7 @@ model Activity {
   status          String        @default("ACTIVE") // ACTIVE, SETTLED
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  edm             EDM?
 }
 
 model ActivityParticipant {
@@ -83,4 +84,17 @@ model Expense {
   status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+model EDM {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  title           String
+  content         String
+  images          String[]  @default([])
+  contactInfo     String?
+  registrationLink String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  activity        Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  activityId      String    @unique @db.ObjectId
 }
