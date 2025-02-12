@@ -56,7 +56,7 @@ export function TransactionForm({
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: defaultValues || {
-      date: new Date(),
+      date: today,
     }
   });
 

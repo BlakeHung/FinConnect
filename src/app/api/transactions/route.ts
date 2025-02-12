@@ -15,8 +15,7 @@ export async function POST(request: Request) {
     }
 
     const data = await request.json();
-    console.log("Received data:", data);  // 檢查接收到的數據
-    console.log("User session:", session);  // 檢查用戶 session
+    console.log("Received data:", data);
 
     // 驗證必要欄位
     if (!data.amount || !data.categoryId || !data.date) {
@@ -43,27 +42,35 @@ export async function POST(request: Request) {
       );
     }
 
+    // 確保日期格式正確
+    const date = new Date(data.date);
+    if (isNaN(date.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
+    }
+
     // 創建新的支出記錄
     const expense = await prisma.expense.create({
       data: {
         amount: parseFloat(data.amount),
         description: data.description || "",
-        date: new Date(data.date),
+        date: date,
         categoryId: data.categoryId,
         userId: session.user.id,
-        activityId: defaultActivity.id, // 使用預設活動
+        activityId: defaultActivity.id,
         status: "PENDING",
-        images: data.images || [], // 預設空陣列
+        images: data.images || [],
       },
     });
 
-    console.log("Created expense:", expense);  // 檢查創建的結果
+    console.log("Created expense:", expense);
 
     return NextResponse.json({ data: expense });
     
   } catch (error) {
-    // 輸出詳細的錯誤信息
-    console.error("Create expense error:", error);
+    console.error("[EXPENSE_CREATE]", error);
     return NextResponse.json(
       { 
         error: "Internal server error",
@@ -74,20 +81,43 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const expenses = await prisma.transaction.findMany({
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const order = searchParams.get('order') || 'desc';
+
+    // 檢查是否有權限查看所有記錄
+    const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
+
+    const expenses = await prisma.expense.findMany({
       where: {
-        type: "EXPENSE",
+        userId: canViewAll 
+          ? userId || undefined
+          : session.user.id,
       },
       include: {
         category: true,
+        user: true,
+        activity: true,
+      },
+      orderBy: {
+        [sortBy]: order,
       },
     });
 
-    return NextResponse.json(expenses);
+    return NextResponse.json({ data: expenses });
   } catch (error) {
-    console.error("Error fetching expenses:", error);
+    console.error("[EXPENSES_GET]", error);
     return NextResponse.json(
       { error: "Failed to fetch expenses" },
       { status: 500 }
