@@ -3,15 +3,17 @@
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/store/use-sidebar"
+import { useSession } from "next-auth/react"
 import {
   LayoutDashboard,
   Receipt,
   PieChart,
   Settings,
-  Tag
+  Tag,
+  Users
 } from "lucide-react"
 
-const routes = [
+const commonRoutes = [
   {
     label: "總覽",
     icon: LayoutDashboard,
@@ -39,9 +41,23 @@ const routes = [
   },
 ]
 
+const adminRoutes = [
+  {
+    label: "使用者管理",
+    icon: Users,
+    href: "/users",
+  },
+]
+
 export function Sidebar() {
   const { isOpen, toggle } = useSidebar()
+  const { data: session } = useSession()
   
+  // 根據使用者角色決定要顯示的路由
+  const routes = session?.user?.role === 'ADMIN' 
+    ? [...commonRoutes, ...adminRoutes]
+    : commonRoutes;
+
   console.log('Sidebar render, isOpen:', isOpen)
 
   return (

@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { TransactionForm } from "@/components/TransactionForm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { TransactionForm } from "@/components/TransactionForm";
 
 export default async function NewTransactionPage() {
   const session = await getServerSession(authOptions);
@@ -11,31 +11,23 @@ export default async function NewTransactionPage() {
     redirect('/login');
   }
 
+  // 獲取所有類別
   const categories = await prisma.category.findMany({
     where: {
-      type: "EXPENSE",
-    },
-  });
-
-  const activities = await prisma.activity.findMany({
-    where: {
-      endDate: {
-        gte: new Date(),
-      },
+      type: 'EXPENSE',
     },
     orderBy: {
-      startDate: 'asc',
+      name: 'asc',
     },
   });
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">新增交易</h1>
-      <div className="max-w-md">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">新增支出</h1>
         <TransactionForm 
-          categories={categories}
-          activities={activities}
           type="EXPENSE"
+          categories={categories}
         />
       </div>
     </div>
