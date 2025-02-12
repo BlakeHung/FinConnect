@@ -10,7 +10,8 @@ import {
   PieChart,
   Settings,
   Tag,
-  Users
+  Users,
+  CalendarDays
 } from "lucide-react"
 
 const commonRoutes = [
@@ -46,6 +47,11 @@ const adminRoutes = [
     label: "使用者管理",
     icon: Users,
     href: "/users",
+  },
+  {
+    label: "活動管理",
+    icon: CalendarDays,
+    href: "/activities",
   },
 ]
 
