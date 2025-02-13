@@ -22,59 +22,59 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    try {
-      setIsSubmitting(true);
-      const response = await fetch("/api/categories" + (category ? `/${category.id}` : ""), {
-        method: category ? "PATCH" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          name: name.trim(),
-          type,
-          isDefault,
-        }),
+    setIsSubmitting(true);
+    fetch("/api/categories" + (category ? `/${category.id}` : ""), {
+      method: category ? "PATCH" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ 
+        name: name.trim(),
+        type,
+        isDefault,
+      }),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error("提交失敗");
+        router.refresh();
+        if (!category) {
+          setName("");
+          setType(defaultType);
+          setIsDefault(false);
+        }
+        setIsEditing(false);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("操作失敗，請稍後再試");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-
-      if (!response.ok) throw new Error("提交失敗");
-
-      router.refresh();
-      if (!category) {
-        setName("");
-        setType(defaultType);
-        setIsDefault(false);
-      }
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error:", error);
-      alert("操作失敗，請稍後再試");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!category || !confirm("確定要刪除此分類嗎？")) return;
 
-    try {
-      setIsSubmitting(true);
-      const response = await fetch(`/api/categories/${category.id}`, {
-        method: "DELETE",
+    setIsSubmitting(true);
+    fetch(`/api/categories/${category.id}`, {
+      method: "DELETE",
+    })
+      .then(response => {
+        if (!response.ok) throw new Error("刪除失敗");
+        router.refresh();
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("刪除失敗，請稍後再試");
+      })
+      .finally(() => {
+        setIsSubmitting(false);
       });
-
-      if (!response.ok) throw new Error("刪除失敗");
-
-      router.refresh();
-    } catch (error) {
-      console.error("Error:", error);
-      alert("刪除失敗，請稍後再試");
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
   if (category && !isEditing) {
