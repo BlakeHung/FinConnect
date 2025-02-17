@@ -31,7 +31,7 @@ async function getStats() {
       take: 5,
     }),
     // 取得最近的交易記錄
-    prisma.expense.findMany({
+    prisma.transaction.findMany({
       include: {
         category: true,
         user: true,
@@ -42,7 +42,7 @@ async function getStats() {
       take: 5,
     }),
     // 取得分類統計
-    prisma.expense.groupBy({
+      prisma.transaction.groupBy({
       by: ['categoryId'],
       where: {
         date: {

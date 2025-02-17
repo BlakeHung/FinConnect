@@ -52,9 +52,10 @@ export async function POST(request: Request) {
     }
 
     // 創建新的支出記錄
-    const expense = await prisma.expense.create({
+    const transaction = await prisma.transaction.create({
       data: {
         amount: parseFloat(data.amount),
+        type: data.type,
         description: data.description || "",
         date: date,
         categoryId: data.categoryId,
@@ -65,12 +66,12 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log("Created expense:", expense);
+    console.log("Created transaction:", transaction);
 
-    return NextResponse.json({ data: expense });
+    return NextResponse.json({ data: transaction });
     
   } catch (error) {
-    console.error("[EXPENSE_CREATE]", error);
+    console.error("[TRANSACTION_CREATE]", error);
     return NextResponse.json(
       { 
         error: "Internal server error",
@@ -99,7 +100,7 @@ export async function GET(request: Request) {
     // 檢查是否有權限查看所有記錄
     const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
 
-    const expenses = await prisma.expense.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: {
         userId: canViewAll 
           ? userId || undefined
@@ -115,11 +116,11 @@ export async function GET(request: Request) {
       },
     });
 
-    return NextResponse.json({ data: expenses });
+    return NextResponse.json({ data: transactions });
   } catch (error) {
-    console.error("[EXPENSES_GET]", error);
+    console.error("[TRANSACTIONS_GET]", error);
     return NextResponse.json(
-      { error: "Failed to fetch expenses" },
+      { error: "Failed to fetch transactions" },
       { status: 500 }
     );
   }

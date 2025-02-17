@@ -21,9 +21,9 @@ export default async function ActivityPage({
     where: { id: params.id },
     include: {
       _count: {
-        select: { expenses: true }
+        select: { transactions: true }
       },
-      expenses: {
+      transactions: {
         include: {
           category: true,
           user: true,
@@ -118,25 +118,25 @@ export default async function ActivityPage({
             <h2 className="text-lg font-semibold">支出記錄</h2>
           </div>
           <div className="divide-y">
-            {activity.expenses.map((expense) => (
-              <div key={expense.id} className="p-4">
+            {activity.transactions.map((transaction) => (
+              <div key={transaction.id} className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{expense.description || '無說明'}</p>
+                    <p className="font-medium">{transaction.description || '無說明'}</p>
                     <p className="text-sm text-gray-500">
-                      {expense.category.name} • {new Date(expense.date).toLocaleDateString()}
+                      {transaction.category.name} • {new Date(transaction.date).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-gray-400">
-                      記錄者: {expense.user.name}
+                      記錄者: {transaction.user.name}
                     </p>
                   </div>
                   <p className="font-medium text-lg">
-                    ${expense.amount.toLocaleString()}
+                    ${transaction.amount.toLocaleString()}
                   </p>
                 </div>
               </div>
             ))}
-            {activity.expenses.length === 0 && (
+            {activity.transactions.length === 0 && (
               <div className="text-center text-gray-500 py-8">
                 還沒有任何支出記錄
               </div>

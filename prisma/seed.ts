@@ -23,7 +23,7 @@ async function main() {
     console.log('成功連接到數據庫')
 
     // 清除所有現有數據
-    await prisma.expense.deleteMany()
+    await prisma.transaction.deleteMany()
     await prisma.activityParticipant.deleteMany()
     await prisma.activity.deleteMany()
     await prisma.category.deleteMany()

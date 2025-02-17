@@ -13,16 +13,16 @@ export async function PUT(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const expense = await prisma.expense.findUnique({
+    const transaction = await prisma.transaction.findUnique({
       where: { id: params.id },
     });
 
-    if (!expense) {
+    if (!transaction) {
       return new NextResponse("Not found", { status: 404 });
     }
 
     // 檢查權限
-    const isOwner = expense.userId === session.user.id;
+    const isOwner = transaction.userId === session.user.id;
     const isAdmin = session.user.role === 'ADMIN';
     if (!isOwner && !isAdmin) {
       return new NextResponse("Forbidden", { status: 403 });
@@ -30,7 +30,7 @@ export async function PUT(
 
     const body = await request.json();
 
-    const updatedExpense = await prisma.expense.update({
+    const updatedTransaction = await prisma.transaction.update({
       where: { id: params.id },
       data: {
         amount: body.amount,
@@ -41,9 +41,9 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json(updatedExpense);
+    return NextResponse.json(updatedTransaction);
   } catch (error) {
-    console.error("[EXPENSE_UPDATE]", error);
+    console.error("[TRANSACTION_UPDATE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 } 

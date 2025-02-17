@@ -15,7 +15,7 @@ export default async function ActivitiesPage() {
   const activities = await prisma.activity.findMany({
     include: {
       _count: {
-        select: { expenses: true }
+        select: { transactions: true }
       }
     },
     orderBy: {
@@ -53,7 +53,7 @@ export default async function ActivitiesPage() {
                       {activity.status === 'ACTIVE' ? '進行中' : '已結束'}
                     </Badge>
                     <Badge variant="outline">
-                      {activity._count.expenses} 筆支出
+                      {activity._count.transactions} 筆支出
                     </Badge>
                   </div>
                 </div>

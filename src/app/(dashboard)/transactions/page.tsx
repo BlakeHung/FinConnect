@@ -5,6 +5,14 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { UserFilter } from "@/components/UserFilter";
 import { SortFilter } from "@/components/SortFilter";
+import { Plus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 type SortField = 'date' | 'amount';
 type SortOrder = 'asc' | 'desc';
@@ -44,18 +52,18 @@ export default async function TransactionsPage({
   const order = searchParams.order as SortOrder || 'desc';
 
   // 構建查詢條件
+  const userId = await Promise.resolve(searchParams.userId);
   const where = {
     userId: canViewAll 
-      ? searchParams.userId || undefined  // 如果有選擇特定使用者
+      ? userId || undefined  // 如果有選擇特定使用者
       : session.user.id,  // 一般使用者只能看到自己的
   };
 
-  const expenses = await prisma.expense.findMany({
+  const transactions = await prisma.transaction.findMany({
     where,
     include: {
       category: true,
       user: true,
-      activity: true,
     },
     orderBy: {
       [sortBy]: order,
@@ -64,14 +72,24 @@ export default async function TransactionsPage({
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">交易記錄</h1>
-        <Link
-          href="/transactions/new"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-        >
-          記錄支出
-        </Link>
+        
+        {/* 新增按鈕群組 */}
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button asChild className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
+            <a href="/transactions/new?type=EXPENSE" className="flex items-center justify-center">
+              <Plus className="mr-2 h-4 w-4" />
+              新增支出
+            </a>
+          </Button>
+          <Button asChild className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
+            <a href="/transactions/new?type=INCOME" className="flex items-center justify-center">
+              <Plus className="mr-2 h-4 w-4" />
+              新增收入
+            </a>
+          </Button>
+        </div>
       </div>
 
       <div className="mb-6 flex flex-col sm:flex-row gap-4">
@@ -82,34 +100,34 @@ export default async function TransactionsPage({
       </div>
 
       <div className="grid gap-4">
-        {expenses.map((expense) => (
+        {transactions.map((transaction) => (
           <Link 
-            key={expense.id}
-            href={`/transactions/${expense.id}`}
+            key={transaction.id}
+            href={`/transactions/${transaction.id}`}
           >
             <div 
               className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
             >
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="font-medium">{expense.description || '無說明'}</h3>
+                  <h3 className="font-medium">{transaction.description || '無說明'}</h3>
                   <p className="text-sm text-gray-500">
-                    {expense.category.name} • {new Date(expense.date).toLocaleDateString()}
+                    {transaction.category.name} • {new Date(transaction.date).toLocaleDateString()}
                   </p>
                   {canViewAll && (
                     <p className="text-xs text-gray-400">
-                      記錄者: {expense.user.name}
+                      記錄者: {transaction.user.name}
                     </p>
                   )}
                 </div>
                 <p className="font-medium text-lg">
-                  ${expense.amount.toLocaleString()}
+                  ${transaction.amount.toLocaleString()}
                 </p>
               </div>
             </div>
           </Link>
         ))}
-        {expenses.length === 0 && (
+        {transactions.length === 0 && (
           <div className="text-center text-gray-500 py-8">
             還沒有任何交易記錄
           </div>

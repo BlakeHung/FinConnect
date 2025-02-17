@@ -19,6 +19,7 @@ type TransactionFormData = z.infer<typeof transactionSchema>;
 interface Category {
   id: string;
   name: string;
+  type: 'EXPENSE' | 'INCOME';
 }
 
 interface TransactionFormProps {
@@ -36,7 +37,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ 
   categories, 
-  type, 
+  type,
   defaultValues,
   expenseId 
 }: TransactionFormProps) {
@@ -101,14 +102,16 @@ export function TransactionForm({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          type,
+        }),
       });
 
       if (!response.ok) {
         throw new Error('提交失敗');
       }
 
-      // 重定向到交易列表頁面
       window.location.href = '/transactions';
     } catch (error) {
       console.error('Error:', error);

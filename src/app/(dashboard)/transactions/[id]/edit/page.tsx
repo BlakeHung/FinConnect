@@ -15,19 +15,19 @@ export default async function EditTransactionPage({
     redirect('/login');
   }
 
-  const expense = await prisma.expense.findUnique({
+  const transaction = await prisma.transaction.findUnique({
     where: { id: params.id },
     include: {
       category: true,
     },
   });
 
-  if (!expense) {
+  if (!transaction) {
     notFound();
   }
 
   // 檢查權限
-  const isOwner = expense.userId === session.user.id;
+  const isOwner = transaction.userId === session.user.id;
   const isAdmin = session.user.role === 'ADMIN';
   if (!isOwner && !isAdmin) {
     redirect('/transactions');  // 如果沒有權限，重定向到列表頁面
@@ -51,13 +51,13 @@ export default async function EditTransactionPage({
           type="EXPENSE"
           categories={categories}
           defaultValues={{
-            amount: expense.amount,
-            categoryId: expense.categoryId,
-            date: expense.date,
-            description: expense.description || '',
-            images: expense.images || [],
+            amount: transaction.amount,
+            categoryId: transaction.categoryId,
+            date: transaction.date,
+            description: transaction.description || '',
+            images: transaction.images || [],
           }}
-          expenseId={expense.id}
+          transactionId={transaction.id}
         />
       </div>
     </div>
