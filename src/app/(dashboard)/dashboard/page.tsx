@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { CalendarDays, Receipt, PieChart } from "lucide-react";
 import Link from "next/link";
+import { isWithinInterval } from "date-fns";
+import { format } from "date-fns";
 
 async function getStats() {
   const today = new Date();
@@ -12,13 +14,14 @@ async function getStats() {
 
   const [
     activeActivities,
+    allActivities,
     recentTransactions,
     categoryStats,
   ] = await Promise.all([
-    // 取得進行中的活動
+    // 進行中的活動
     prisma.activity.findMany({
       where: {
-        status: "ACTIVE",
+        enabled: true,
         startDate: { lte: today },
         endDate: { gte: today },
       },
@@ -29,6 +32,19 @@ async function getStats() {
         startDate: 'asc',
       },
       take: 5,
+    }),
+    // 所有活動（按時間排序）
+    prisma.activity.findMany({
+      where: {
+        enabled: true,
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+      take: 5,
+      include: {
+        edm: true,
+      },
     }),
     // 取得最近的交易記錄
     prisma.transaction.findMany({
@@ -74,9 +90,25 @@ async function getStats() {
 
   return {
     activeActivities,
+    allActivities,
     recentTransactions,
     categoryStats,
   };
+}
+
+// 活動狀態判斷函數
+function getActivityStatus(startDate: Date, endDate: Date) {
+  const now = new Date();
+  
+  if (now < startDate) {
+    return { status: '即將開始', className: 'bg-yellow-100 text-yellow-800' };
+  }
+  
+  if (now > endDate) {
+    return { status: '已結束', className: 'bg-gray-100 text-gray-800' };
+  }
+  
+  return { status: '進行中', className: 'bg-green-100 text-green-800' };
 }
 
 export default async function DashboardPage() {
@@ -164,8 +196,8 @@ export default async function DashboardPage() {
                       {activity.name}
                     </Link>
                     <p className="text-sm text-gray-500">
-                      {new Date(activity.startDate).toLocaleDateString()} - 
-                      {new Date(activity.endDate).toLocaleDateString()}
+                      {format(activity.startDate, 'yyyy/MM/dd')} - 
+                      {format(activity.endDate, 'yyyy/MM/dd')}
                     </p>
                   </div>
                   {activity.edm && (
@@ -216,6 +248,63 @@ export default async function DashboardPage() {
           ))}
           {stats.recentTransactions.length === 0 && (
             <p className="py-4 text-gray-500 text-center">尚無交易記錄</p>
+          )}
+        </div>
+      </div>
+
+      {/* 所有活動列表 */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-purple-600" />
+            <h3 className="text-lg font-semibold">所有活動</h3>
+          </div>
+          <Link 
+            href="/activities" 
+            className="text-sm text-blue-600 hover:underline"
+          >
+            查看全部
+          </Link>
+        </div>
+        <div className="divide-y">
+          {stats.allActivities.map((activity) => {
+            const status = getActivityStatus(activity.startDate, activity.endDate);
+            return (
+              <div key={activity.id} className="py-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Link 
+                        href={`/activities/${activity.id}`}
+                        className="text-blue-600 hover:underline font-medium"
+                      >
+                        {activity.name}
+                      </Link>
+                      <span className={`px-2 py-0.5 text-xs rounded ${status.className}`}>
+                        {status.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {format(activity.startDate, 'yyyy/MM/dd')} - 
+                      {format(activity.endDate, 'yyyy/MM/dd')}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {activity.edm && (
+                      <Link
+                        href={`/activities/${activity.id}/edm`}
+                        className="text-sm text-green-600 hover:underline"
+                      >
+                        查看 EDM
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          {stats.allActivities.length === 0 && (
+            <p className="py-4 text-gray-500 text-center">目前沒有活動</p>
           )}
         </div>
       </div>

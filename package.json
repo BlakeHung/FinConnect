@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "db:seed": "npx ts-node prisma/seed.ts",
-    "migrate:expenses": "ts-node scripts/migrate-expenses-to-transactions.ts"
+    "migrate:expenses": "ts-node scripts/migrate-expenses-to-transactions.ts",
+    "test-db": "ts-node scripts/test-db.ts",
+    "seed": "ts-node scripts/seed-db.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"

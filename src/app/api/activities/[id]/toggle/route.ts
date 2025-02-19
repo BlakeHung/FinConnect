@@ -15,7 +15,7 @@ export async function PUT(
 
   try {
     const { enabled } = await request.json();
-
+    
     const activity = await prisma.activity.update({
       where: {
         id: params.id,
