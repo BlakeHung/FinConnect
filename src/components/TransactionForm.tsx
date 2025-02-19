@@ -5,6 +5,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Image from "next/image";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const transactionSchema = z.object({
   amount: z.number().positive("金額必須大於 0"),
@@ -31,20 +34,24 @@ interface TransactionFormProps {
     date: Date;
     description?: string;
     images?: string[];
+    paymentStatus?: string;
   };
-  expenseId?: string;
+  transactionId?: string;
+  canManagePayments?: boolean;
 }
 
 export function TransactionForm({ 
   categories, 
   type,
   defaultValues,
-  expenseId 
+  transactionId,
+  canManagePayments = false,
 }: TransactionFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>(
     defaultValues?.images || []
   );
+  const [isPaid, setIsPaid] = useState(defaultValues?.paymentStatus === 'PAID');
 
   const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
 
@@ -91,11 +98,11 @@ export function TransactionForm({
     try {
       setIsSubmitting(true);
       
-      const url = expenseId 
-        ? `/api/transactions/${expenseId}` 
+      const url = transactionId 
+        ? `/api/transactions/${transactionId}` 
         : '/api/transactions';
       
-      const method = expenseId ? 'PUT' : 'POST';
+      const method = transactionId ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method: method,
@@ -105,6 +112,7 @@ export function TransactionForm({
         body: JSON.stringify({
           ...data,
           type,
+          paymentStatus: isPaid ? 'PAID' : 'UNPAID',
         }),
       });
 
@@ -218,13 +226,26 @@ export function TransactionForm({
         </div>
       </div>
 
-      <button
+      {canManagePayments && (
+        <div className="flex items-center space-x-2">
+          <Switch
+            id="payment-status"
+            checked={isPaid}
+            onCheckedChange={setIsPaid}
+          />
+          <Label htmlFor="payment-status">
+            {isPaid ? '已付款' : '未付款'}
+          </Label>
+        </div>
+      )}
+
+      <Button
         type="submit"
+        className="w-full"
         disabled={isSubmitting}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300"
       >
-        {isSubmitting ? "儲存中..." : "儲存"}
-      </button>
+        {isSubmitting ? '處理中...' : '儲存'}
+      </Button>
     </form>
   );
 }

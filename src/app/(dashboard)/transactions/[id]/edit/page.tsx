@@ -43,6 +43,8 @@ export default async function EditTransactionPage({
     },
   });
 
+  const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
+
   return (
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
@@ -56,8 +58,10 @@ export default async function EditTransactionPage({
             date: transaction.date,
             description: transaction.description || '',
             images: transaction.images || [],
+            paymentStatus: transaction.paymentStatus,
           }}
           transactionId={transaction.id}
+          canManagePayments={canManagePayments}
         />
       </div>
     </div>

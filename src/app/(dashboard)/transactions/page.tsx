@@ -6,13 +6,8 @@ import { redirect } from "next/navigation";
 import { UserFilter } from "@/components/UserFilter";
 import { SortFilter } from "@/components/SortFilter";
 import { Plus } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { TransactionTable } from "@/components/TransactionTable";
 
 type SortField = 'date' | 'amount';
 type SortOrder = 'asc' | 'desc';
@@ -22,8 +17,8 @@ export default async function TransactionsPage({
 }: {
   searchParams: { 
     userId?: string;
-    sortBy?: SortField;
-    order?: SortOrder;
+    sortBy?: 'date' | 'amount';
+    order?: 'asc' | 'desc';
   };
 }) {
   const session = await getServerSession(authOptions);
@@ -32,10 +27,8 @@ export default async function TransactionsPage({
     redirect('/login');
   }
 
-  // 檢查是否為管理員或財務
   const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
 
-  // 如果是管理員或財務，獲取所有使用者列表
   const users = canViewAll ? await prisma.user.findMany({
     orderBy: {
       name: 'asc',
@@ -47,16 +40,13 @@ export default async function TransactionsPage({
     },
   }) : [];
 
-  // 處理排序參數
-  const sortBy = searchParams.sortBy as SortField || 'date';
-  const order = searchParams.order as SortOrder || 'desc';
+  const sortBy = searchParams.sortBy || 'date';
+  const order = searchParams.order || 'desc';
 
-  // 構建查詢條件
-  const userId = await Promise.resolve(searchParams.userId);
   const where = {
     userId: canViewAll 
-      ? userId || undefined  // 如果有選擇特定使用者
-      : session.user.id,  // 一般使用者只能看到自己的
+      ? searchParams.userId || undefined
+      : session.user.id,
   };
 
   const transactions = await prisma.transaction.findMany({
@@ -69,6 +59,8 @@ export default async function TransactionsPage({
       [sortBy]: order,
     },
   });
+
+  const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
   return (
     <div className="container mx-auto p-4">
@@ -99,39 +91,12 @@ export default async function TransactionsPage({
         <SortFilter />
       </div>
 
-      <div className="grid gap-4">
-        {transactions.map((transaction) => (
-          <Link 
-            key={transaction.id}
-            href={`/transactions/${transaction.id}`}
-          >
-            <div 
-              className="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium">{transaction.description || '無說明'}</h3>
-                  <p className="text-sm text-gray-500">
-                    {transaction.category.name} • {new Date(transaction.date).toLocaleDateString()}
-                  </p>
-                  {canViewAll && (
-                    <p className="text-xs text-gray-400">
-                      記錄者: {transaction.user.name}
-                    </p>
-                  )}
-                </div>
-                <p className="font-medium text-lg">
-                  ${transaction.amount.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </Link>
-        ))}
-        {transactions.length === 0 && (
-          <div className="text-center text-gray-500 py-8">
-            還沒有任何交易記錄
-          </div>
-        )}
+      {/* 移除舊的列表顯示，只使用 TransactionTable */}
+      <div className="mt-6">
+        <TransactionTable 
+          transactions={transactions} 
+          canManagePayments={canManagePayments}
+        />
       </div>
     </div>
   );

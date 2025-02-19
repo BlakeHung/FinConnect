@@ -91,6 +91,8 @@ model Transaction {
   activityId  String?   @db.ObjectId
   activity    Activity? @relation(fields: [activityId], references: [id])
   status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  paymentStatus String  @default("UNPAID")  // UNPAID, PAID
+  paidAt      DateTime? // 付款日期，可選
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
