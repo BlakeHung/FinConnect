@@ -17,9 +17,7 @@ export default async function EditTransactionPage({
 
   const transaction = await prisma.transaction.findUnique({
     where: { id: params.id },
-    include: {
-      category: true,
-    },
+    include: { category: true },
   });
 
   if (!transaction) {
@@ -30,10 +28,12 @@ export default async function EditTransactionPage({
   const isOwner = transaction.userId === session.user.id;
   const isAdmin = session.user.role === 'ADMIN';
   if (!isOwner && !isAdmin) {
-    redirect('/transactions');  // 如果沒有權限，重定向到列表頁面
+    redirect('/transactions');
   }
 
-  // 獲取所有類別
+  // 格式化交易日期為 YYYY-MM-DD
+  const formattedDate = transaction.date.toISOString().split('T')[0];
+
   const categories = await prisma.category.findMany({
     where: {
       type: transaction.type,
@@ -43,7 +43,6 @@ export default async function EditTransactionPage({
     },
   });
 
-  // 獲取活動列表
   const activities = await prisma.activity.findMany({
     where: {
       status: 'ACTIVE',
@@ -70,8 +69,8 @@ export default async function EditTransactionPage({
           defaultValues={{
             amount: transaction.amount,
             categoryId: transaction.categoryId,
-            activityId: transaction.activityId,
-            date: transaction.date,
+            activityId: transaction.activityId || 'none',
+            date: formattedDate,  // 使用格式化後的日期
             description: transaction.description || '',
             images: transaction.images || [],
             paymentStatus: transaction.paymentStatus,

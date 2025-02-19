@@ -62,7 +62,7 @@ export function TransactionForm({
   );
   const [isPaid, setIsPaid] = useState(defaultValues?.paymentStatus === 'PAID');
 
-  const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
 
   const {
     register,
