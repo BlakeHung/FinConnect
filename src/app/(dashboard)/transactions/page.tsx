@@ -17,7 +17,8 @@ export default async function TransactionsPage({
 }: {
   searchParams: { 
     userId?: string;
-    sortBy?: 'date' | 'amount';
+    activityId?: string;
+    sortBy?: string;
     order?: 'asc' | 'desc';
   };
 }) {
@@ -40,6 +41,19 @@ export default async function TransactionsPage({
     },
   }) : [];
 
+  const activities = await prisma.activity.findMany({
+    where: {
+      status: 'ACTIVE',
+    },
+    orderBy: {
+      startDate: 'desc',
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
   const sortBy = searchParams.sortBy || 'date';
   const order = searchParams.order || 'desc';
 
@@ -47,6 +61,9 @@ export default async function TransactionsPage({
     userId: canViewAll 
       ? searchParams.userId || undefined
       : session.user.id,
+    ...(searchParams.activityId && searchParams.activityId !== 'all' 
+      ? { activityId: searchParams.activityId }
+      : {}),
   };
 
   const transactions = await prisma.transaction.findMany({
@@ -54,6 +71,7 @@ export default async function TransactionsPage({
     include: {
       category: true,
       user: true,
+      activity: true,
     },
     orderBy: {
       [sortBy]: order,
@@ -67,7 +85,6 @@ export default async function TransactionsPage({
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold">交易記錄</h1>
         
-        {/* 新增按鈕群組 */}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button asChild className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
             <a href="/transactions/new?type=EXPENSE" className="flex items-center justify-center">
@@ -91,10 +108,10 @@ export default async function TransactionsPage({
         <SortFilter />
       </div>
 
-      {/* 移除舊的列表顯示，只使用 TransactionTable */}
       <div className="mt-6">
         <TransactionTable 
           transactions={transactions} 
+          activities={activities}
           canManagePayments={canManagePayments}
         />
       </div>

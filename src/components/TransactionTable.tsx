@@ -7,6 +7,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 import { ArrowUpDown } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { Label } from "@/components/ui/label";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 interface Transaction {
   id: string;
@@ -21,10 +23,20 @@ interface Transaction {
   user: {
     name: string;
   };
+  activity?: {
+    id: string;
+    name: string;
+  };
+}
+
+interface Activity {
+  id: string;
+  name: string;
 }
 
 interface TransactionTableProps {
   transactions: Transaction[];
+  activities: Activity[];
   canManagePayments: boolean;
 }
 
@@ -37,7 +49,7 @@ function formatDate(date: Date) {
   return `${year}/${month}/${day}`;
 }
 
-export function TransactionTable({ transactions, canManagePayments }: TransactionTableProps) {
+export function TransactionTable({ transactions, activities = [], canManagePayments }: TransactionTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -56,6 +68,9 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
   const currentSortBy = searchParams.get('sortBy') || 'date';
   const currentOrder = searchParams.get('order') || 'desc';
 
+  // 獲取當前活動篩選
+  const currentActivityId = searchParams.get('activityId') || 'all';
+
   // 處理排序
   const handleSort = (field: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -69,6 +84,20 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
       params.set('order', 'desc');
     }
 
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  // 處理活動篩選
+  const handleActivityFilter = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    // 如果選擇 'all'，移除 activityId 參數
+    if (value === 'all') {
+      params.delete('activityId');
+    } else {
+      params.set('activityId', value);
+    }
+    
     router.push(`${pathname}?${params.toString()}`);
   };
 
@@ -148,7 +177,30 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-4">
+      {/* 活動篩選 - 只在有活動時顯示 */}
+      {activities && activities.length > 0 && (
+        <div className="flex items-center space-x-2">
+          <Label>活動篩選</Label>
+          <Select
+            value={currentActivityId}
+            onValueChange={handleActivityFilter}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="全部活動" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">全部活動</SelectItem>
+              {activities.map((activity) => (
+                <SelectItem key={activity.id} value={activity.id}>
+                  {activity.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       {/* 確認 Modal */}
       <ConfirmModal
         isOpen={confirmModal.isOpen}
@@ -196,6 +248,7 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">說明</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">建立者</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">付款狀態</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">活動</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
@@ -233,6 +286,9 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
                   >
                     {transaction.paymentStatus === 'PAID' ? '已付款' : '未付款'}
                   </Badge>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {transaction.activity?.name || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
@@ -291,6 +347,12 @@ export function TransactionTable({ transactions, canManagePayments }: Transactio
             <div className="text-sm text-gray-500">
               建立者: {transaction.user.name}
             </div>
+
+            {transaction.activity && (
+              <div className="text-sm text-gray-500">
+                活動: {transaction.activity.name}
+              </div>
+            )}
 
             {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
               <div className="flex items-center justify-between pt-2 border-t">

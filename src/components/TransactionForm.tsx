@@ -8,6 +8,7 @@ import Image from "next/image";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 const transactionSchema = z.object({
   amount: z.number().positive("金額必須大於 0"),
@@ -25,12 +26,19 @@ interface Category {
   type: 'EXPENSE' | 'INCOME';
 }
 
+interface Activity {
+  id: string;
+  name: string;
+}
+
 interface TransactionFormProps {
   categories: Category[];
+  activities: Activity[];
   type: 'EXPENSE' | 'INCOME';
   defaultValues?: {
     amount: number;
     categoryId: string;
+    activityId?: string;
     date: Date;
     description?: string;
     images?: string[];
@@ -42,6 +50,7 @@ interface TransactionFormProps {
 
 export function TransactionForm({ 
   categories, 
+  activities,
   type,
   defaultValues,
   transactionId,
@@ -61,6 +70,7 @@ export function TransactionForm({
     reset,
     setValue,
     formState: { errors },
+    watch,
   } = useForm<TransactionFormData>({
     resolver: zodResolver(transactionSchema),
     defaultValues: defaultValues || {
@@ -224,6 +234,27 @@ export function TransactionForm({
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="activityId">活動</Label>
+        
+        <Select
+          value={watch('activityId') || 'none'}
+          onValueChange={(value) => setValue('activityId', value === 'none' ? null : value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="選擇活動" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">無活動</SelectItem>
+            {activities?.map((activity) => (
+              <SelectItem key={activity.id} value={activity.id}>
+                {activity.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {canManagePayments && (

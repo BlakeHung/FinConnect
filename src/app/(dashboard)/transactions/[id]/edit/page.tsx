@@ -36,10 +36,24 @@ export default async function EditTransactionPage({
   // 獲取所有類別
   const categories = await prisma.category.findMany({
     where: {
-      type: 'EXPENSE',
+      type: transaction.type,
     },
     orderBy: {
       name: 'asc',
+    },
+  });
+
+  // 獲取活動列表
+  const activities = await prisma.activity.findMany({
+    where: {
+      status: 'ACTIVE',
+    },
+    orderBy: {
+      startDate: 'desc',
+    },
+    select: {
+      id: true,
+      name: true,
     },
   });
 
@@ -48,13 +62,15 @@ export default async function EditTransactionPage({
   return (
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">編輯支出</h1>
+        <h1 className="text-2xl font-bold mb-6">編輯交易</h1>
         <TransactionForm 
-          type="EXPENSE"
+          type={transaction.type}
           categories={categories}
+          activities={activities}
           defaultValues={{
             amount: transaction.amount,
             categoryId: transaction.categoryId,
+            activityId: transaction.activityId,
             date: transaction.date,
             description: transaction.description || '',
             images: transaction.images || [],
