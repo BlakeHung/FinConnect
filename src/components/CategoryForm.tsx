@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2, X, Check } from "lucide-react";
+import { Pencil, Trash2} from "lucide-react";
 
 interface CategoryFormProps {
   category?: {

@@ -35,8 +35,6 @@ export default function LoginPage() {
       } else if (result?.url) {
         router.push(result.url)
       }
-    } catch (error) {
-      setError('登入時發生錯誤')
     } finally {
       setIsLoading(false)
     }

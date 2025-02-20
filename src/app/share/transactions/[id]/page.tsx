@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-
+import Image from "next/image";
 export default async function SharedTransactionPage({
   params,
 }: {
@@ -52,7 +52,7 @@ export default async function SharedTransactionPage({
               <h3 className="text-gray-600">附件</h3>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {expense.images.map((image, index) => (
-                  <img
+                  <Image
                     key={index}
                     src={image}
                     alt={`Receipt ${index + 1}`}

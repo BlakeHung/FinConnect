@@ -27,6 +27,7 @@ export async function PUT(
 
     return new Response(JSON.stringify(transaction));
   } catch (error) {
-    return new Response("Error", { status: 500 });
+    console.error("[TRANSACTION_UPDATE]", error);
+    return new Response("Internal server error", { status: 500 });
   }
 } 

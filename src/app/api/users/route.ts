@@ -22,9 +22,8 @@ export async function POST(request: Request) {
         role: body.role,
       },
     });
-
     // 移除密碼後再返回
-    const { password: _, ...userWithoutPassword } = user;
+    const { ...userWithoutPassword } = user;    
     return NextResponse.json(userWithoutPassword);
   } catch (error) {
     console.error("[USER_CREATE]", error);

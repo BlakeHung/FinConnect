@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, CreditCard, Activity, ArrowDown, ArrowUp } from "lucide-react";
+import { CreditCard, Activity, ArrowDown, ArrowUp } from "lucide-react";
 import { TransactionChart } from "@/components/analytics/TransactionChart";
 import { ActivityStats } from "@/components/analytics/ActivityStats";
 import { CategoryChart } from "@/components/analytics/CategoryChart";
@@ -87,7 +87,7 @@ export default async function AnalyticsPage() {
   });
 
   // 處理圖表數據
-  const chartData = dailyTransactions.reduce((acc: any[], transaction) => {
+  const chartData = dailyTransactions.reduce((acc: { date: string; income: number; expense: number }[], transaction) => {
     const date = transaction.date.toISOString().split('T')[0];
     const existing = acc.find(item => item.date === date);
     
@@ -172,17 +172,6 @@ export default async function AnalyticsPage() {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
 
-  const monthlyData = await prisma.transaction.groupBy({
-    by: ['type'],
-    where: {
-      date: {
-        gte: sixMonthsAgo,
-      },
-    },
-    _sum: {
-      amount: true,
-    },
-  });
 
   // 處理月度比較數據
   const months = Array.from({ length: 6 }, (_, i) => {

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
+import Image from 'next/image'
 
 export default async function TransactionDetailPage({
   params,
@@ -96,11 +97,13 @@ export default async function TransactionDetailPage({
               <h3 className="text-gray-600">附件</h3>
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {transaction.images.map((image, index) => (
-                  <img
+                  <Image 
                     key={index}
-                    src={image}
+                    src={image} 
                     alt={`Receipt ${index + 1}`}
-                    className="rounded-lg w-full object-cover"
+                    width={200}
+                    height={200}
+                    className="rounded-lg"
                   />
                 ))}
               </div>

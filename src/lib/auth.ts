@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcrypt"
@@ -51,6 +50,7 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
           };
         } catch (error) {
+          console.error("[AUTH_ERROR]", error);
           return null;
         }
       }

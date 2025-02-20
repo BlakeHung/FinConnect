@@ -8,9 +8,11 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+    domains: ['uploadthing.com', 'utfs.io'],
   },
   experimental: {
-    serverActions: true,
+    // 在 Next.js 14+ 中，serverActions 已經是預設功能
+    // 所以我們可以完全移除這個設定
   },
   webpack: (config, { isServer }) => {
     // 忽略這些模組

@@ -36,6 +36,7 @@ export function ToggleSwitch({ id, enabled, canManage }: ToggleSwitchProps) {
 
           window.location.reload();
         } catch (error) {
+          console.error("[TOGGLE_SWITCH]", error);
           alert('更新失敗，請稍後再試');
         }
       }}

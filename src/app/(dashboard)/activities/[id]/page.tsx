@@ -39,9 +39,6 @@ export default async function ActivityPage({
     notFound();
   }
 
-  // 生成 EDM 分享連結
-  const edmLink = `${process.env.NEXT_PUBLIC_APP_URL}/edm/activities/${activity.id}`;
-
   return (
     <div className="container mx-auto p-4">
       <div className="max-w-4xl mx-auto">

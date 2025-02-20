@@ -67,7 +67,6 @@ export function TransactionForm({
   const {
     register,
     handleSubmit,
-    reset,
     setValue,
     formState: { errors },
     watch,

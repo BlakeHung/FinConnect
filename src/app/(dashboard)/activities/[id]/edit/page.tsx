@@ -3,12 +3,23 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { ActivityForm } from "@/components/ActivityForm";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "編輯活動",
+  description: "編輯活動詳情",
+};
+
+// 使用 Next.js 15 的新類型定義
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export default async function EditActivityPage({
   params,
-}: {
-  params: { id: string };
-}) {
+}: PageProps) {
+  const { id } = await params;  // 解構 Promise
   const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'ADMIN') {
@@ -16,7 +27,7 @@ export default async function EditActivityPage({
   }
 
   const activity = await prisma.activity.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!activity) {
