@@ -2,24 +2,31 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
+import { Metadata } from "next";
 import { EdmForm } from "@/components/EdmForm";
 
-interface EdmPageProps {
-  params: {
-    id: string;
-  };
-}
+export const metadata: Metadata = {
+  title: "活動 EDM",
+  description: "活動 EDM 預覽",
+};
 
-export default async function ActivityEdmPage({
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function EdmPage({
   params,
-}: EdmPageProps) {
+  searchParams,
+}: PageProps) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'ADMIN') {
-    redirect('/transactions');
+    redirect('/activities');
   }
-
-  const { id } = params;
 
   const activity = await prisma.activity.findUnique({
     where: { id },

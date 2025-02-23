@@ -3,12 +3,25 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { ActivityForm } from "@/components/ActivityForm";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "編輯活動",
+  description: "編輯活動詳情",
+};
+
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
 
 export default async function EditActivityPage({
   params,
-}: {
-  params: { id: string };
-}) {
+  searchParams,
+}: PageProps) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
   
   if (!session || session.user.role !== 'ADMIN') {

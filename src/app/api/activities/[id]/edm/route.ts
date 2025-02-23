@@ -26,7 +26,6 @@ export async function POST(
     const body = await req.json();
     const validatedData = edmSchema.parse(body);
 
-    // 檢查活動是否存在
     const activity = await prisma.activity.findUnique({
       where: { id: params.id },
       include: { edm: true },
@@ -36,7 +35,6 @@ export async function POST(
       return new NextResponse("Activity not found", { status: 404 });
     }
 
-    // 更新或創建 EDM
     const edm = await prisma.eDM.upsert({
       where: {
         activityId: params.id,
@@ -62,20 +60,36 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const edm = await prisma.eDM.findUnique({
-      where: {
-        activityId: params.id,
+    const session = await getServerSession(authOptions);
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const activity = await prisma.activity.findUnique({
+      where: { id: params.id },
+      include: {
+        edm: true,
       },
     });
 
-    if (!edm) {
-      return new NextResponse("EDM not found", { status: 404 });
+    if (!activity) {
+      return NextResponse.json(
+        { error: "Activity not found" },
+        { status: 404 }
+      );
     }
 
-    return NextResponse.json(edm);
+    return NextResponse.json(activity.edm);
   } catch (error) {
-    console.error("[EDM_GET]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    console.error("Error fetching EDM:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 

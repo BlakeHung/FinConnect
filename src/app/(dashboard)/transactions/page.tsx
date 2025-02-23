@@ -9,21 +9,25 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/components/TransactionTable";
 
-type SortField = 'date' | 'amount';
-type SortOrder = 'asc' | 'desc';
+type SearchParams = {
+  userId?: string;
+  activityId?: string;
+  sortBy?: string;
+  order?: 'asc' | 'desc';
+};
+
+type PageProps = {
+  params: Promise<Record<string, never>>;
+  searchParams: Promise<SearchParams>;
+};
 
 export default async function TransactionsPage({
+  params,
   searchParams,
-}: {
-  searchParams: { 
-    userId?: string;
-    activityId?: string;
-    sortBy?: string;
-    order?: 'asc' | 'desc';
-  };
-}) {
+}: PageProps) {
+  const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
-  
+  console.log(params);
   if (!session) {
     redirect('/login');
   }
@@ -54,27 +58,24 @@ export default async function TransactionsPage({
     },
   });
 
-  const sortBy = searchParams.sortBy || 'date';
-  const order = searchParams.order || 'desc';
-
   const where = {
-    userId: canViewAll 
-      ? searchParams.userId || undefined
-      : session.user.id,
-    ...(searchParams.activityId && searchParams.activityId !== 'all' 
-      ? { activityId: searchParams.activityId }
-      : {}),
+    ...(queryParams.userId && { userId: queryParams.userId }),
+    ...(queryParams.activityId && { activityId: queryParams.activityId }),
   };
+
+  const orderBy = queryParams.sortBy
+    ? {
+        [queryParams.sortBy]: queryParams.order || 'desc',
+      }
+    : { date: 'desc' as const };
 
   const transactions = await prisma.transaction.findMany({
     where,
+    orderBy,
     include: {
       category: true,
-      user: true,
       activity: true,
-    },
-    orderBy: {
-      [sortBy]: order,
+      user: true,
     },
   });
 

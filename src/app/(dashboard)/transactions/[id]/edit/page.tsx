@@ -4,11 +4,18 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
 export default async function EditTransactionPage({
   params,
-}: {
-  params: { id: string };
-}) {
+  searchParams,
+}: PageProps) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
   
   if (!session) {
@@ -16,7 +23,7 @@ export default async function EditTransactionPage({
   }
 
   const transaction = await prisma.transaction.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { category: true },
   });
 
@@ -70,7 +77,7 @@ export default async function EditTransactionPage({
             amount: transaction.amount,
             categoryId: transaction.categoryId,
             activityId: transaction.activityId || 'none',
-            date: formattedDate,  // 使用格式化後的日期
+            date: formattedDate,
             description: transaction.description || '',
             images: transaction.images || [],
             paymentStatus: transaction.paymentStatus,

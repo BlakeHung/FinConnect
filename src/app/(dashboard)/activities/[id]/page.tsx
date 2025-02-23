@@ -6,11 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
 
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
 export default async function ActivityPage({
   params,
-}: {
-  params: { id: string };
-}) {
+  searchParams,
+}: PageProps) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
   
   if (!session) {
@@ -18,7 +25,7 @@ export default async function ActivityPage({
   }
 
   const activity = await prisma.activity.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       _count: {
         select: { transactions: true }
@@ -56,7 +63,7 @@ export default async function ActivityPage({
                 {activity.status === 'ACTIVE' ? '進行中' : '已結束'}
               </Badge>
               <Badge variant="outline">
-                {activity._count.expenses} 筆支出
+                {activity._count.transactions} 筆支出
               </Badge>
             </div>
           </div>

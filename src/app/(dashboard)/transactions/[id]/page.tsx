@@ -5,11 +5,18 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
 
-export default async function TransactionDetailPage({
+type PageProps = {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function TransactionPage({
   params,
-}: {
-  params: { id: string };
-}) {
+  searchParams,
+}: PageProps) {
+  const { id } = await params;
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
   
   if (!session) {
@@ -17,11 +24,11 @@ export default async function TransactionDetailPage({
   }
 
   const transaction = await prisma.transaction.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       category: true,
-      user: true,
       activity: true,
+      user: true,
     },
   });
 
@@ -29,9 +36,14 @@ export default async function TransactionDetailPage({
     notFound();
   }
 
-  // 檢查使用者權限
+  // 檢查權限
   const isOwner = transaction.userId === session.user.id;
   const isAdmin = session.user.role === 'ADMIN';
+  if (!isOwner && !isAdmin) {
+    redirect('/transactions');
+  }
+
+  // 檢查使用者權限
   const canEdit = isOwner || isAdmin;
 
   console.log({
@@ -47,7 +59,7 @@ export default async function TransactionDetailPage({
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">支出詳情</h1>
           <div className="space-x-2 flex items-center">
-            <ShareButton id={params.id} type="transaction" />
+            <ShareButton id={id} type="transaction" />
             <Link
               href="/transactions"
               className="text-gray-600 hover:text-gray-800"
@@ -56,7 +68,7 @@ export default async function TransactionDetailPage({
             </Link>
             {canEdit && (
               <Link
-                href={`/transactions/${transaction.id}/edit`}
+                href={`/transactions/${id}/edit`}
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
               >
                 編輯

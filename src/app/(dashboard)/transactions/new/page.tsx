@@ -4,13 +4,18 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 
+type PageProps = {
+  params: Promise<Record<string, never>>;
+  searchParams: Promise<{ type: 'EXPENSE' | 'INCOME' }>;
+};
+
 export default async function NewTransactionPage({
+  params,
   searchParams,
-}: {
-  searchParams: { type: 'EXPENSE' | 'INCOME' };
-}) {
+}: PageProps) {
+  const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
-  
+  console.log(params);
   if (!session) {
     redirect('/login');
   }
@@ -18,7 +23,7 @@ export default async function NewTransactionPage({
   // 獲取分類列表
   const categories = await prisma.category.findMany({
     where: {
-      type: searchParams.type,
+      type: queryParams.type,
     },
     orderBy: {
       name: 'asc',
@@ -53,10 +58,10 @@ export default async function NewTransactionPage({
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
-          新增{searchParams.type === 'EXPENSE' ? '支出' : '收入'}
+          新增{queryParams.type === 'EXPENSE' ? '支出' : '收入'}
         </h1>
         <TransactionForm 
-          type={searchParams.type} 
+          type={queryParams.type} 
           categories={categories}
           activities={activities}
           defaultValues={{
