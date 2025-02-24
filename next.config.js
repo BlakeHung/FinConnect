@@ -13,6 +13,7 @@ const nextConfig = {
         pathname: '/**',
       },
     ],
+    domains: ['vercel.app'],
   },
   experimental: {
     serverActions: true,
@@ -32,6 +33,19 @@ const nextConfig = {
       'bcrypt': false,
     }
     return config
+  },
+  async headers() {
+    return [
+      {
+        source: '/public-og-image.png',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ]
   },
 }
 
