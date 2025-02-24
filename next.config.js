@@ -37,7 +37,7 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/public-og-image.png',
+        source: '/og-image-:size.png',  // 動態匹配所有 og-image 文件
         headers: [
           {
             key: 'Cache-Control',

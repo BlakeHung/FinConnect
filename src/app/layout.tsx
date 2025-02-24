@@ -36,16 +36,35 @@ export const metadata: Metadata = {
     siteName: '阿美族家族活動記帳系統',
     images: [
       {
-        url: '/og-image.svg',
+        url: '/og-image-1200x630.svg',  // Facebook 推薦尺寸
         width: 1200,
         height: 630,
+        alt: '阿美族家族活動記帳系統'
+      },
+      {
+        url: '/og-image-800x800.svg',   // Line 推薦尺寸
+        width: 800,
+        height: 800,
+        alt: '阿美族家族活動記帳系統'
+      },
+      {
+        url: '/og-image-600x600.svg',   // Line 最小尺寸
+        width: 600,
+        height: 600,
+        alt: '阿美族家族活動記帳系統'
       }
     ],
     locale: 'zh_TW',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: '阿美族家族活動記帳系統',
+    description: '專為阿美族家族活動設計的財務管理與記帳系統',
+    images: ['/og-image-1200x630.svg'],
+  },
   other: {
-    'line-share': '阿美族家族活動記帳系統', // Line 特定的標籤
+    'line-share': '阿美族家族活動記帳系統',
   },
 }
 

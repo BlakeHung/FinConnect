@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800">
+  <!-- 背景 -->
+  <rect width="800" height="800" fill="#0F1A1A"/>
+  
+  <!-- Logo Group - 置于上方 -->
+  <g transform="translate(200,200)">
+    <path d="M0 0
+             L0 200
+             L150 200
+             C220 200 220 150 150 150
+             L0 150
+             M0 0
+             L130 0
+             C200 0 200 50 130 50
+             L0 50" 
+          fill="#ffffff"/>
+    <circle cx="250" cy="100" r="50" fill="#ffffff"/>
+  </g>
+  
+  <!-- 文字組 - 置于下方 -->
+  <g transform="translate(400,500)">
+    <!-- 中文名稱 -->
+    <text x="0" y="0" 
+          font-family="'Microsoft JhengHei', 'PingFang TC', sans-serif" 
+          font-size="48" 
+          font-weight="bold"
+          text-anchor="middle" 
+          fill="#ffffff">布雷克實驗室</text>
+    
+    <!-- 英文名稱 -->
+    <text x="0" y="80" 
+          font-family="Arial Black, Arial Bold, sans-serif" 
+          font-size="56" 
+          font-weight="900"
+          text-anchor="middle" 
+          fill="#ffffff">BLAKE LABS</text>
+  </g>
+</svg>
