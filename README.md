@@ -1,39 +1,47 @@
-# 個人記帳系統
+# Personal Finance Management System
 
-一個使用 Next.js 開發的現代化記帳應用。
+A modern financial management system built with Next.js 15, Prisma, and TypeScript.
 
-## 功能特點
+## Features
 
-- 收入/支出記帳
-- 分類管理
-- 數據統計
-- 記帳歷史查詢
+- 🔐 Secure authentication with NextAuth.js
+- 💰 Track expenses and income
+- 📊 Analytics dashboard
+- 📱 Responsive design
+- 🎯 Activity management
+- 📧 EDM system
 
-## 技術棧
+## Tech Stack
 
-- Next.js 13+
+- Next.js 15
 - TypeScript
-- Tailwind CSS
 - Prisma
 - PostgreSQL
+- TailwindCSS
+- NextAuth.js
 
-## 開始使用
+## Getting Started
 
-1. 克隆專案
+1. Clone the repository
 ```bash
-git clone [your-repository-url]
+git clone https://github.com/yourusername/personal-finance.git
 ```
 
-2. 安裝依賴
+2. Install dependencies
 ```bash
 npm install
 ```
 
-3. 運行開發服務器
+3. Set up environment variables
+```bash
+cp .env.example .env
+```
+
+4. Run the development server
 ```bash
 npm run dev
 ```
 
-## 開發文檔
+## License
 
-待補充
+MIT © [Your Name] - Powered by [Blake Labs](https://wchung.tw/)

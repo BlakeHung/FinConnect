@@ -33,6 +33,12 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+
+    /* 支援 LINE 瀏覽器的安全區域 */
+    --sat: env(safe-area-inset-top);
+    --sar: env(safe-area-inset-right);
+    --sab: env(safe-area-inset-bottom);
+    --sal: env(safe-area-inset-left);
   }
  
   .dark {
@@ -72,5 +78,36 @@
   }
   body {
     @apply bg-background text-foreground;
+    padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* 適配 LINE 瀏覽器 */
+.safe-area-top {
+  padding-top: var(--sat);
+}
+
+.safe-area-bottom {
+  padding-bottom: max(var(--sab), 0.5rem);
+}
+
+/* 防止內容被 LINE 瀏覽器的底部導航欄遮擋 */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 優化移動端點擊體驗 */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  input, button {
+    font-size: 16px; /* 防止 iOS 自動放大輸入框 */
+  }
+}
+
+/* 優化滾動體驗 */
+* {
+  -webkit-overflow-scrolling: touch;
 }

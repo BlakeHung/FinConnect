@@ -1,7 +1,8 @@
 {
   "name": "amis-finance",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
