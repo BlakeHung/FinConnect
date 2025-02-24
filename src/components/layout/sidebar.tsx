@@ -35,11 +35,11 @@ const commonRoutes = [
     icon: PieChart,
     href: "/analytics",
   },
-  {
-    label: "設定",
-    icon: Settings,
-    href: "/settings",
-  },
+  // {
+  //   label: "設定",
+  //   icon: Settings,
+  //   href: "/settings",
+  // },
 ]
 
 const adminRoutes = [
