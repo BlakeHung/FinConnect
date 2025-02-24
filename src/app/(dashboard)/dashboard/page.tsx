@@ -202,7 +202,7 @@ export default async function DashboardPage() {
                   </div>
                   {activity.edm && (
                     <Link
-                      href={`/activities/${activity.id}/edm`}
+                      href={`/edm/activities/${activity.id}/`}
                       className="text-sm text-green-600 hover:underline"
                     >
                       查看 EDM
@@ -292,7 +292,7 @@ export default async function DashboardPage() {
                   <div className="flex items-center gap-2">
                     {activity.edm && (
                       <Link
-                        href={`/activities/${activity.id}/edm`}
+                        href={`/edm/activities/${activity.id}`}
                         className="text-sm text-green-600 hover:underline"
                       >
                         查看 EDM

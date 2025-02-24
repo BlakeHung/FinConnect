@@ -8,6 +8,10 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+    domains: [
+      'res.cloudinary.com',
+      'images.unsplash.com'  // 添加 Unsplash
+    ],
   },
   experimental: {
     serverActions: true,
