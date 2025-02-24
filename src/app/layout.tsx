@@ -36,13 +36,16 @@ export const metadata: Metadata = {
     siteName: '阿美族家族活動記帳系統',
     images: [
       {
-        url: '/og-image.svg',
+        url: '/og-image.png',
         width: 1200,
         height: 630,
       }
     ],
     locale: 'zh_TW',
     type: 'website',
+  },
+  other: {
+    'line-share': '阿美族家族活動記帳系統', // Line 特定的標籤
   },
 }
 
