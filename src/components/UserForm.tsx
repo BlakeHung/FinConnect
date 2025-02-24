@@ -1,136 +1,140 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ImageUpload } from "./ImageUpload";
 
-const userSchema = z.object({
-  name: z.string().min(1, "請輸入名稱"),
-  email: z.string().email("請輸入有效的電子郵件"),
-  password: z.string().min(6, "密碼至少需要 6 個字元"),
-  role: z.enum(["USER", "ADMIN"]),
-});
-
-type UserFormData = z.infer<typeof userSchema>;
-
-export function UserForm() {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function UserForm({ user }: { user?: any }) {
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+  const isDemo = session?.user?.email === 'demo@wchung.tw';
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<UserFormData>({
-    resolver: zodResolver(userSchema),
-    defaultValues: {
-      role: "USER",
-    },
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    password: '', // 編輯時可選
+    role: user?.role || 'USER',
+    image: user?.image || '',
   });
 
-  const onSubmit = async (data: UserFormData) => {
-    // 再次檢查是否為 demo 帳號
-    if (session?.user?.email === 'demo@wchung.tw') {
-      toast.error("Demo 帳號無法新增使用者");
-      router.push('/users');
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (isDemo) {
+      toast.error("Demo 帳號無法修改用戶");
       return;
     }
 
     try {
-      setIsSubmitting(true);
-      const response = await fetch('/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      setIsLoading(true);
+      
+      // 構建請求數據
+      const data = {
+        ...formData,
+        // 只有在有輸入密碼時才發送密碼
+        ...(formData.password ? { password: formData.password } : {}),
+      };
+
+      // 根據是否有 user 來決定是新增還是更新
+      const url = user ? `/api/users/${user.id}` : '/api/users';
+      const method = user ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
-        throw new Error('新增失敗');
+        const error = await response.text();
+        throw new Error(error);
       }
 
-      window.location.href = '/users';
+      toast.success(user ? '更新成功' : '創建成功');
+      router.push('/users');
+      router.refresh();
     } catch (error) {
       console.error('Error:', error);
-      alert('新增失敗，請稍後再試');
+      toast.error(error instanceof Error ? error.message : '操作失敗，請稍後再試');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          名稱
-        </label>
-        <input
-          type="text"
-          {...register("name")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+        <Label htmlFor="name">名稱</Label>
+        <Input
+          id="name"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          required
         />
-        {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          電子郵件
-        </label>
-        <input
+        <Label htmlFor="email">Email</Label>
+        <Input
+          id="email"
           type="email"
-          {...register("email")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          required
         />
-        {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          密碼
-        </label>
-        <input
+        <Label htmlFor="password">
+          密碼 {user && <span className="text-sm text-gray-500">(留空表示不修改)</span>}
+        </Label>
+        <Input
+          id="password"
           type="password"
-          {...register("password")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          {...(!user && { required: true })} // 新建用戶時必填
         />
-        {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-        )}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">
-          角色
-        </label>
+        <Label htmlFor="role">角色</Label>
         <select
-          {...register("role")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+          id="role"
+          className="w-full rounded-md border border-gray-300 p-2"
+          value={formData.role}
+          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+          required
         >
-          <option value="USER">一般使用者</option>
+          <option value="USER">一般用戶</option>
+          <option value="FINANCE_MANAGER">財務主記帳</option>
           <option value="ADMIN">管理員</option>
         </select>
-        {errors.role && (
-          <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-        )}
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md disabled:opacity-50"
-      >
-        {isSubmitting ? '處理中...' : '新增使用者'}
-      </button>
+      <div>
+        <Label>頭像</Label>
+        {isDemo && (
+          <p className="text-sm text-amber-600 mb-2">
+            Demo 帳號無法上傳圖片，請使用其他帳號進行測試。
+          </p>
+        )}
+        <ImageUpload
+          value={formData.image ? [formData.image] : []}
+          onChange={(urls) => setFormData({ ...formData, image: urls[0] || '' })}
+          onRemove={() => setFormData({ ...formData, image: '' })}
+        />
+      </div>
+
+      <Button type="submit" disabled={isLoading || isDemo}>
+        {isLoading ? '處理中...' : (user ? '更新' : '創建')}
+      </Button>
     </form>
   );
 } 

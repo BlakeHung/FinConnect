@@ -1,4 +1,3 @@
-import { PrismaAdapter } from "@auth/prisma-adapter"
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcrypt"
@@ -28,6 +27,7 @@ export const authOptions: NextAuthOptions = {
               name: true,
               role: true,
               password: true,
+              image: true,
             }
           });
 
@@ -49,8 +49,10 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             name: user.name,
             role: user.role,
+            image: user.image,
           };
         } catch (error) {
+          console.error("[AUTH_ERROR]", error);
           return null;
         }
       }
@@ -66,6 +68,7 @@ export const authOptions: NextAuthOptions = {
         token.email = user.email
         token.name = user.name
         token.role = user.role
+        token.image = user.image
       }
       return token
     },
@@ -75,6 +78,7 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email
         session.user.name = token.name as string
         session.user.role = token.role
+        session.user.image = token.image as string
       }
       return session
     }

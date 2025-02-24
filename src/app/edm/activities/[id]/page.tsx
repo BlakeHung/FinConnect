@@ -2,13 +2,16 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 
-export default async function EdmPage({
+export default async function ActivityEdmPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string }
 }) {
+  // 確保 params 是已解析的
+  const { id } = await params;
+  
   const activity = await prisma.activity.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       edm: true,
     },

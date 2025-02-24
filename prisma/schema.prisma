@@ -19,6 +19,7 @@ model User {
   email         String       @unique
   password      String
   role          UserRole     @default(USER)
+  image         String?
   transactions  Transaction[]
   activities    ActivityParticipant[]
   createdAt     DateTime     @default(now())

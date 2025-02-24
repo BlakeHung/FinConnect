@@ -22,9 +22,29 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AMIS Finance",
-  description: "AMIS Finance Management System",
-};
+  title: '阿美族家族活動記帳系統',
+  description: '專為阿美族家族活動設計的財務管理與記帳系統，提供完整的預算規劃、收支記錄、結算報表等功能',
+  icons: {
+    icon: '/favicon-32.svg',
+    shortcut: '/favicon-16.svg',
+    apple: '/apple-touch.svg'
+  },
+  openGraph: {
+    title: '阿美族家族活動記帳系統',
+    description: '專為阿美族家族活動設計的財務管理與記帳系統，輕鬆管理活動預算與支出',
+    url: 'https://wchung.tw',
+    siteName: '阿美族家族活動記帳系統',
+    images: [
+      {
+        url: '/og-image.svg',
+        width: 1200,
+        height: 630,
+      }
+    ],
+    locale: 'zh_TW',
+    type: 'website',
+  },
+}
 
 export default function RootLayout({
   children,
