@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     siteName: '阿美族家族活動記帳系統',
     images: [
       {
-        url: '/public-og-image.png',
+        url: '/og-image.svg',
         width: 1200,
         height: 630,
       }
