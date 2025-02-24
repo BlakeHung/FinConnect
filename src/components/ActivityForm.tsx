@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const activitySchema = z.object({
   name: z.string().min(1, "請輸入活動名稱"),
@@ -28,7 +29,7 @@ interface ActivityFormProps {
 }
 
 export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const {
@@ -45,9 +46,8 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
   });
 
   const onSubmit = async (data: ActivityFormData) => {
+    setIsLoading(true);
     try {
-      setIsSubmitting(true);
-      
       const url = activityId 
         ? `/api/activities/${activityId}`
         : '/api/activities';
@@ -70,7 +70,7 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
       console.error('Error:', error);
       alert('提交失敗，請稍後再試');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
@@ -142,13 +142,23 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
         </select>
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md disabled:opacity-50"
-      >
-        {isSubmitting ? '處理中...' : activityId ? '更新活動' : '新增活動'}
-      </button>
+      <div className="flex justify-end gap-4 mt-6">
+        <LoadingButton
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          disabled={isLoading}
+        >
+          取消
+        </LoadingButton>
+        <LoadingButton
+          type="submit"
+          isLoading={isLoading}
+          loadingText="儲存中..."
+        >
+          儲存
+        </LoadingButton>
+      </div>
     </form>
   );
 } 

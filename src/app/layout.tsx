@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Inter } from 'next/font/google'
+import { LoadingProvider } from "@/components/providers/loading-provider"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,22 +36,24 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="min-h-screen flex flex-col">
-        <main className="flex-1">
-          <AuthProvider>
-            {children}
-          </AuthProvider>
-        </main>
-        <footer className="py-4 text-center text-sm text-gray-500 safe-area-bottom">
-          Powered by{' '}
-          <a 
-            href="https://wchung.tw/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hover:text-gray-700"
-          >
-            Blake Labs
-          </a>
-        </footer>
+        <AuthProvider>
+          <LoadingProvider>
+            <main className="flex-1">
+              {children}
+            </main>
+            <footer className="py-4 text-center text-sm text-gray-500 safe-area-bottom">
+              Powered by{' '}
+              <a 
+                href="https://blakelabs.com" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="hover:text-gray-700"
+              >
+                Blake Labs
+              </a>
+            </footer>
+          </LoadingProvider>
+        </AuthProvider>
       </body>
     </html>
   );

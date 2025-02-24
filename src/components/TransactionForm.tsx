@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { LoadingButton } from "@/components/ui/loading-button";
 
 const transactionSchema = z.object({
   amount: z.number().positive("金額必須大於 0"),
@@ -61,6 +63,7 @@ export function TransactionForm({
     defaultValues?.images || []
   );
   const [isPaid, setIsPaid] = useState(defaultValues?.paymentStatus === 'PAID');
+  const router = useRouter();
 
   const today = new Date().toISOString().split('T')[0];
 
@@ -270,13 +273,23 @@ export function TransactionForm({
         </div>
       )}
 
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isSubmitting}
-      >
-        {isSubmitting ? '處理中...' : '儲存'}
-      </Button>
+      <div className="flex justify-end gap-4 mt-6">
+        <LoadingButton
+          type="button"
+          variant="outline"
+          onClick={() => router.back()}
+          disabled={isSubmitting}
+        >
+          取消
+        </LoadingButton>
+        <LoadingButton
+          type="submit"
+          isLoading={isSubmitting}
+          loadingText="儲存中..."
+        >
+          儲存
+        </LoadingButton>
+      </div>
     </form>
   );
 }
