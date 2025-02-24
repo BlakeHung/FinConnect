@@ -17,17 +17,26 @@ export default async function UsersPage() {
     },
   });
 
+  const isDemo = session.user.email === 'demo@wchung.tw';
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">使用者管理</h1>
-        <Link
-          href="/users/new"
-          className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
-        >
-          新增使用者
-        </Link>
+        {!isDemo && (
+          <Link
+            href="/users/new"
+            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+          >
+            新增使用者
+          </Link>
+        )}
       </div>
+      {isDemo && (
+        <div className="mb-6 p-4 bg-amber-50 text-amber-800 rounded-md">
+          Demo 帳號無法新增使用者，請使用其他管理員帳號進行操作。
+        </div>
+      )}
       <div className="grid gap-4">
         {users.map((user) => (
           <div 

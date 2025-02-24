@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 const userSchema = z.object({
   name: z.string().min(1, "請輸入名稱"),
@@ -16,6 +19,8 @@ type UserFormData = z.infer<typeof userSchema>;
 
 export function UserForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const { data: session } = useSession();
 
   const {
     register,
@@ -29,6 +34,13 @@ export function UserForm() {
   });
 
   const onSubmit = async (data: UserFormData) => {
+    // 再次檢查是否為 demo 帳號
+    if (session?.user?.email === 'demo@wchung.tw') {
+      toast.error("Demo 帳號無法新增使用者");
+      router.push('/users');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       const response = await fetch('/api/users', {

@@ -11,6 +11,14 @@ export async function POST(request: Request) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    // 檢查是否為 demo 帳號
+    if (session.user.email === 'demo@wchung.tw') {
+      return NextResponse.json(
+        { error: "Demo 帳號無法新增使用者" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const hashedPassword = await bcrypt.hash(body.password, 12);
 
@@ -27,7 +35,7 @@ export async function POST(request: Request) {
     const { password: _, ...userWithoutPassword } = user;
     return NextResponse.json(userWithoutPassword);
   } catch (error) {
-    console.error("[USER_CREATE]", error);
+    console.error("[USERS_POST]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 } 

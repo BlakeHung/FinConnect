@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { ImageUpload } from "./ImageUpload";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 const edmSchema = z.object({
   title: z.string().min(1, "請輸入標題"),
@@ -31,6 +33,7 @@ interface EdmFormProps {
 export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   const {
     register,
@@ -46,6 +49,11 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
   const images = watch("images") || [];
 
   const onSubmit = async (data: EdmFormData) => {
+    if (session?.user?.email === 'demo@wchung.tw' && data.images?.length > 0) {
+      toast.error("Demo 帳號無法上傳圖片，請使用其他帳號進行測試。");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       
@@ -65,11 +73,13 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
       router.refresh();
     } catch (error) {
       console.error("Error:", error);
-      alert("提交失敗，請稍後再試");
+      toast.error("提交失敗，請稍後再試");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const isDemo = session?.user?.email === 'demo@wchung.tw';
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -107,6 +117,11 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
         <label className="block text-sm font-medium text-gray-700">
           活動圖片
         </label>
+        {isDemo && (
+          <p className="text-sm text-amber-600 mb-2">
+            Demo 帳號無法上傳圖片，請使用其他帳號進行測試。
+          </p>
+        )}
         <ImageUpload
           value={images}
           onChange={(urls) => setValue("images", urls)}

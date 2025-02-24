@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Inter } from 'next/font/google'
 import { LoadingProvider } from "@/components/providers/loading-provider"
+import { Toaster } from 'sonner'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
             <main className="flex-1">
               {children}
             </main>
+            <Toaster />
             <footer className="py-4 text-center text-sm text-gray-500 safe-area-bottom">
               Powered by{' '}
               <a 

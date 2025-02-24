@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Loader2, X } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { toast } from "sonner";
 
 interface ImageUploadProps {
   value: string[];
@@ -10,10 +12,17 @@ interface ImageUploadProps {
   onRemove: (url: string) => void;
 }
 
-export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
+export function ImageUpload({ value = [], onChange, onRemove }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const { data: session } = useSession();
+  const isDemo = session?.user?.email === 'demo@wchung.tw';
 
   const handleImageUpload = async (file: File) => {
+    if (isDemo) {
+      toast.error("Demo 帳號無法上傳圖片，請使用其他帳號進行測試。");
+      return null;
+    }
+
     const formData = new FormData();
     formData.append("file", file);
     formData.append("upload_preset", "amis_management");
@@ -35,14 +44,19 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
       try {
         setIsUploading(true);
         const files = Array.from(e.target.files);
-        const urls = await Promise.all(files.map(handleImageUpload));
-        onChange([...value, ...urls]);
+        const urls = await Promise.all(
+          files.map(handleImageUpload)
+        );
+        // 過濾掉 null 值（來自 demo 帳號的上傳嘗試）
+        const validUrls = urls.filter((url): url is string => url !== null);
+        if (validUrls.length > 0) {
+          onChange([...value, ...validUrls]);
+        }
       } catch (error) {
         console.error('Error uploading images:', error);
-        alert('圖片上傳失敗，請稍後再試');
+        toast.error('圖片上傳失敗，請稍後再試');
       } finally {
         setIsUploading(false);
-        // 清空 input 值，允許重複上傳相同的圖片
         e.target.value = '';
       }
     }
@@ -56,7 +70,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
           multiple
           accept="image/*"
           onChange={onImageChange}
-          disabled={isUploading}
+          disabled={isUploading || isDemo}
           className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         />
         {isUploading && (
@@ -66,24 +80,26 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
         )}
       </div>
 
-      {value.length > 0 && (
+      {value && value.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
           {value.map((url, index) => (
-            <div key={url} className="relative aspect-square group">
-              <Image
-                src={url}
-                alt={`Image ${index + 1}`}
-                fill
-                className="object-cover rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={() => onRemove(url)}
-                className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            url && (
+              <div key={url} className="relative aspect-square group">
+                <Image
+                  src={url}
+                  alt={`Image ${index + 1}`}
+                  fill
+                  className="object-cover rounded-lg"
+                />
+                <button
+                  type="button"
+                  onClick={() => onRemove(url)}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            )
           ))}
         </div>
       )}

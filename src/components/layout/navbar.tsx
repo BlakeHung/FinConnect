@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/store/use-sidebar";
 import { signOut, useSession } from "next-auth/react";
@@ -13,18 +13,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 export function Navbar() {
   const { toggle } = useSidebar();
   const { data: session } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleToggle = () => {
     console.log("Menu button clicked");
     toggle();
     console.log("Sidebar state after toggle:", useSidebar.getState().isOpen);
   };
-  const handleSignOut = () => {
-    signOut({ callbackUrl: "/login" });
+  const handleSignOut = async () => {
+    try {
+      setIsLoading(true);
+      await signOut({ redirect: true, callbackUrl: "/login" });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -77,8 +85,19 @@ export function Navbar() {
               <DropdownMenuItem
                 className="text-red-600 cursor-pointer"
                 onClick={handleSignOut}
+                disabled={isLoading}
               >
-                登出
+                {isLoading ? (
+                  <>
+                    <Spinner className="h-4 w-4" />
+                    <span>登出中...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="h-4 w-4" />
+                    <span>登出</span>
+                  </>
+                )}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
