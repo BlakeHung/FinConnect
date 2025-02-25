@@ -21,6 +21,7 @@ const transactionSchema = z.object({
   date: z.date(),
   description: z.string().optional(),
   images: z.array(z.string()).optional(),
+  activityId: z.string().optional(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -121,7 +122,6 @@ export function TransactionForm({
         : '/api/transactions';
       
       const method = transactionId ? 'PUT' : 'POST';
-
       const response = await fetch(url, {
         method: method,
         headers: {

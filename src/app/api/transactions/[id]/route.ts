@@ -8,13 +8,15 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const id = await params.id;
+
     const session = await getServerSession(authOptions);
     if (!session) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const transaction = await prisma.transaction.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         activity: true,
       }
@@ -45,9 +47,8 @@ export async function PUT(
     }
 
     const updatedTransaction = await prisma.transaction.update({
-      where: { id: params.id },
+      where: { id },
       data: {
-        title: body.title,
         amount: body.amount,
         type: body.type,
         date: new Date(body.date),

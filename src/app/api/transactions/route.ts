@@ -11,17 +11,20 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
+    console.log('Received body:', body); // 添加日誌來查看收到的數據
+
     const { 
-      title,
-      amount,
+      amount, 
       type,
       date,
-      activityId,  // 從請求中獲取 activityId
-      description 
+      activityId,
+      description,
+      images,
+      categoryId  // 可能缺少這個
     } = body;
 
     // 驗證必要欄位
-    if (!title || !amount || !type || !date || !activityId) {
+    if (!amount || !type || !date || !activityId || !categoryId) {
       return new NextResponse("Missing required fields", { status: 400 });
     }
 
@@ -37,21 +40,26 @@ export async function POST(req: Request) {
     // 創建交易記錄
     const transaction = await prisma.transaction.create({
       data: {
-        title,
         amount,
         type,
         date: new Date(date),
         description,
-        activityId,  // 使用請求中提供的 activityId
+        activityId,
+        categoryId,  // 添加類別 ID
         status: "PENDING",
+        images,
         createdBy: session.user.id,
+        userId: session.user.id,
       },
     });
-
+    
     return NextResponse.json(transaction);
   } catch (error) {
     console.error("[TRANSACTIONS_POST]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(
+      error instanceof Error ? error.message : "Internal error", 
+      { status: 500 }
+    );
   }
 }
 

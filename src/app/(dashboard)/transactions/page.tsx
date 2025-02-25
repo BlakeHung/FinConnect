@@ -71,7 +71,10 @@ export default async function TransactionsPage({
 
   const transactions = await prisma.transaction.findMany({
     where,
-    orderBy,
+    orderBy: [
+      { updatedAt: 'desc' },
+      { date: 'desc' }
+    ],
     include: {
       category: true,
       activity: true,

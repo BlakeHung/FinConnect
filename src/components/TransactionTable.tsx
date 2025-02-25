@@ -17,6 +17,7 @@ interface Transaction {
   date: Date;
   description?: string;
   paymentStatus: string;
+  updatedAt: Date;
   category: {
     name: string;
   };
@@ -249,6 +250,8 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">建立者</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">付款狀態</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">活動</th>
+              <SortableHeader field="updatedAt">最後更新</SortableHeader>
+
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
@@ -290,6 +293,10 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 <td className="px-6 py-4 whitespace-nowrap">
                   {transaction.activity?.name || '-'}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {formatDate(transaction.updatedAt)}
+                </td>
+
                 <td className="px-6 py-4 whitespace-nowrap">
                   {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
                     <Button
@@ -353,6 +360,11 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 活動: {transaction.activity.name}
               </div>
             )}
+
+            <div className="text-sm text-gray-500">
+              最後更新: {formatDate(transaction.updatedAt)}
+            </div>
+
 
             {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
               <div className="flex items-center justify-between pt-2 border-t">
