@@ -86,8 +86,6 @@ export function TransactionForm({
     }
   });
 
-  const images = watch("images") || [];
-
   const handleImageUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -115,12 +113,6 @@ export function TransactionForm({
   };
 
   const onSubmit = async (data: TransactionFormData) => {
-    // 如果是 demo 帳號且嘗試上傳圖片
-    if (isDemo && data.images?.length > 0) {
-      toast.error("Demo 帳號無法上傳圖片，請使用其他帳號進行測試。");
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       
@@ -228,18 +220,28 @@ export function TransactionForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          收據圖片
+          圖片
         </label>
-        {isDemo && (
-          <p className="text-sm text-amber-600 mb-2">
-            Demo 帳號無法上傳圖片，請使用其他帳號進行測試。
-          </p>
-        )}
-        <ImageUpload
-          value={images}
-          onChange={(urls) => setValue("images", urls)}
-          onRemove={(url) => setValue("images", images.filter((i) => i !== url))}
+        <input
+          type="file"
+          multiple
+          accept="image/*"
+          onChange={onImageChange}
+          className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
         />
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {previewImages.map((url, index) => (
+            <div key={index} className="relative aspect-square">
+              <Image
+                src={url}
+                alt={`Preview ${index}`}
+                width={100}
+                height={100}
+                className="object-cover rounded-md"
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">

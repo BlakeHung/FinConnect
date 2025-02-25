@@ -35,22 +35,16 @@ export default async function NewTransactionPage({
   const activities = await prisma.activity.findMany({
     where: {
       status: 'ACTIVE',
-      startDate: {
-        lte: new Date(), // 開始日期在今天或之前
-      },
-      endDate: {
-        gte: new Date(), // 結束日期在今天或之後
-      },
     },
     orderBy: {
-      createdAt: 'desc', // 按創建時間降序排序
+      startDate: 'desc',
     },
     select: {
       id: true,
       name: true,
     },
   });
-
+  console.log(activities)
   // 獲取最新創建的活動（如果有的話）
   const latestActivity = activities[0];
 

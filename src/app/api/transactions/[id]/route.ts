@@ -15,6 +15,9 @@ export async function PUT(
 
     const transaction = await prisma.transaction.findUnique({
       where: { id: params.id },
+      include: {
+        activity: true,
+      }
     });
 
     if (!transaction) {
@@ -22,7 +25,7 @@ export async function PUT(
     }
 
     // 檢查權限
-    const isOwner = transaction.userId === session.user.id;
+    const isOwner = transaction.createdBy === session.user.id;
     const isAdmin = session.user.role === 'ADMIN';
     if (!isOwner && !isAdmin) {
       return new NextResponse("Forbidden", { status: 403 });
@@ -30,20 +33,37 @@ export async function PUT(
 
     const body = await request.json();
 
+    // 如果提供了新的 activityId，檢查該活動是否存在
+    if (body.activityId) {
+      const activity = await prisma.activity.findUnique({
+        where: { id: body.activityId }
+      });
+
+      if (!activity) {
+        return new NextResponse("Activity not found", { status: 404 });
+      }
+    }
+
     const updatedTransaction = await prisma.transaction.update({
       where: { id: params.id },
       data: {
+        title: body.title,
         amount: body.amount,
-        categoryId: body.categoryId,
+        type: body.type,
         date: new Date(body.date),
         description: body.description,
-        images: body.images,
+        activityId: body.activityId,
+        status: body.status,
+        updatedAt: new Date(),
       },
     });
 
     return NextResponse.json(updatedTransaction);
   } catch (error) {
     console.error("[TRANSACTION_UPDATE]", error);
-    return new NextResponse("Internal error", { status: 500 });
+    return new NextResponse(
+      error instanceof Error ? error.message : "Internal error", 
+      { status: 500 }
+    );
   }
 } 

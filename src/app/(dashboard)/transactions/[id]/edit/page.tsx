@@ -26,7 +26,7 @@ export default async function EditTransactionPage({
     where: { id },
     include: { category: true },
   });
-
+  console.log(transaction)
   if (!transaction) {
     notFound();
   }
@@ -51,9 +51,6 @@ export default async function EditTransactionPage({
   });
 
   const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
     orderBy: {
       startDate: 'desc',
     },
@@ -62,7 +59,7 @@ export default async function EditTransactionPage({
       name: true,
     },
   });
-
+  
   const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
   return (

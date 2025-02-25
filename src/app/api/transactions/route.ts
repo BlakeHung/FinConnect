@@ -3,82 +3,55 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const data = await request.json();
-    console.log("Received data:", data);
+    const body = await req.json();
+    const { 
+      title,
+      amount,
+      type,
+      date,
+      activityId,  // 從請求中獲取 activityId
+      description 
+    } = body;
 
     // 驗證必要欄位
-    if (!data.amount || !data.categoryId || !data.date) {
-      return NextResponse.json(
-        { error: "Missing required fields", data },
-        { status: 400 }
-      );
+    if (!title || !amount || !type || !date || !activityId) {
+      return new NextResponse("Missing required fields", { status: 400 });
     }
 
-    // 獲取預設活動或第一個活動
-    const defaultActivity = await prisma.activity.findFirst({
-      where: {
-        status: "ACTIVE",
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+    // 檢查活動是否存在
+    const activity = await prisma.activity.findUnique({
+      where: { id: activityId }
     });
 
-    if (!defaultActivity) {
-      return NextResponse.json(
-        { error: "No active activity found" },
-        { status: 400 }
-      );
+    if (!activity) {
+      return new NextResponse("Activity not found", { status: 404 });
     }
 
-    // 確保日期格式正確
-    const date = new Date(data.date);
-    if (isNaN(date.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid date format" },
-        { status: 400 }
-      );
-    }
-
-    // 創建新的支出記錄
+    // 創建交易記錄
     const transaction = await prisma.transaction.create({
       data: {
-        amount: parseFloat(data.amount),
-        type: data.type,
-        description: data.description || "",
-        date: date,
-        categoryId: data.categoryId,
-        userId: session.user.id,
-        activityId: defaultActivity.id,
+        title,
+        amount,
+        type,
+        date: new Date(date),
+        description,
+        activityId,  // 使用請求中提供的 activityId
         status: "PENDING",
-        images: data.images || [],
+        createdBy: session.user.id,
       },
     });
 
-    console.log("Created transaction:", transaction);
-
-    return NextResponse.json({ data: transaction });
-    
+    return NextResponse.json(transaction);
   } catch (error) {
-    console.error("[TRANSACTION_CREATE]", error);
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error"
-      },
-      { status: 500 }
-    );
+    console.error("[TRANSACTIONS_POST]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
