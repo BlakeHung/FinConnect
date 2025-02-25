@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     shortcut: '/favicon-16.svg',
     apple: '/apple-touch.svg'
   },
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || 'https://amis-management.vercel.app'
+  ),
   openGraph: {
     title: '阿美族家族活動記帳系統',
     description: '專為阿美族家族活動設計的財務管理與記帳系統，輕鬆管理活動預算與支出',

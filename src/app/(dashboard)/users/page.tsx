@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { DataTable } from "@/components/ui/table";
-import { columns } from "./columns";
+import { DataTable } from "@/components/ui/data-table";
+import { columns } from "./columns"; // Fixed import path
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
