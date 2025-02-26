@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/providers/auth-provider";
 import { Inter } from 'next/font/google'
-import { LoadingProvider } from "@/components/providers/loading-provider"
 import { Toaster } from 'sonner'
 
 const geistSans = Geist({
@@ -83,7 +82,6 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen flex flex-col">
         <AuthProvider>
-          <LoadingProvider>
             <main className="flex-1">
               {children}
             </main>
@@ -99,7 +97,6 @@ export default function RootLayout({
                 Blake Labs
               </a>
             </footer>
-          </LoadingProvider>
         </AuthProvider>
       </body>
     </html>

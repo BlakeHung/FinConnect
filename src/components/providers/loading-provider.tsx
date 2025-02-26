@@ -1,23 +1,24 @@
 "use client"
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 
 function LoadingState() {
   const [isLoading, setIsLoading] = useState(false)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     setIsLoading(true)
     const timer = setTimeout(() => setIsLoading(false), 500)
     return () => clearTimeout(timer)
-  }, [pathname])
+  }, [pathname, searchParams])
 
   if (!isLoading) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white/80 backdrop-blur-sm">
       <div className="text-center">
         <Spinner className="h-8 w-8 text-blue-600" />
         <p className="mt-2 text-sm text-gray-500">載入中...</p>
