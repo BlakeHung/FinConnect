@@ -145,4 +145,29 @@ export const zh = {
   
   // Form validations
   form__select_category: '選擇類別',
+  
+  // Transaction table translations
+  transaction_table__date: '日期',
+  transaction_table__type: '類型',
+  transaction_table__amount: '金額',
+  transaction_table__category: '分類',
+  transaction_table__description: '說明',
+  transaction_table__creator: '建立者',
+  transaction_table__payment_status: '付款狀態',
+  transaction_table__activity: '活動',
+  transaction_table__last_updated: '最後更新',
+  transaction_table__actions: '操作',
+  transaction_table__expense: '支出',
+  transaction_table__income: '收入',
+  transaction_table__paid: '已付款',
+  transaction_table__unpaid: '未付款',
+  transaction_table__mark_as_paid: '標記為已付款',
+  transaction_table__mark_selected_paid: '標記選中項目為已付款 ({0})',
+  transaction_table__confirm_title: '確認更新付款狀態',
+  transaction_table__confirm_single: '確定要將此筆交易標記為已付款嗎？',
+  transaction_table__confirm_batch: '確定要將選中的 {0} 筆交易標記為已付款嗎？',
+  transaction_table__update_failed: '更新失敗，請稍後再試',
+  transaction_table__filter_activity: '活動篩選',
+  transaction_table__all_activities: '全部活動',
+  transaction_table__no_activity: '-',
 } as const; 

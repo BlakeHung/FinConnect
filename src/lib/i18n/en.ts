@@ -141,4 +141,29 @@ export const en = {
   
   // Form validations
   form__select_category: 'Select category',
+  
+  // Transaction table translations
+  transaction_table__date: 'Date',
+  transaction_table__type: 'Type',
+  transaction_table__amount: 'Amount',
+  transaction_table__category: 'Category',
+  transaction_table__description: 'Description',
+  transaction_table__creator: 'Creator',
+  transaction_table__payment_status: 'Payment Status',
+  transaction_table__activity: 'Activity',
+  transaction_table__last_updated: 'Last Updated',
+  transaction_table__actions: 'Actions',
+  transaction_table__expense: 'Expense',
+  transaction_table__income: 'Income',
+  transaction_table__paid: 'Paid',
+  transaction_table__unpaid: 'Unpaid',
+  transaction_table__mark_as_paid: 'Mark as Paid',
+  transaction_table__mark_selected_paid: 'Mark Selected as Paid ({0})',
+  transaction_table__confirm_title: 'Confirm Payment Status Update',
+  transaction_table__confirm_single: 'Are you sure you want to mark this transaction as paid?',
+  transaction_table__confirm_batch: 'Are you sure you want to mark {0} transactions as paid?',
+  transaction_table__update_failed: 'Update failed, please try again later',
+  transaction_table__filter_activity: 'Filter by Activity',
+  transaction_table__all_activities: 'All Activities',
+  transaction_table__no_activity: '-',
 } as const; 
