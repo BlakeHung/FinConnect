@@ -9,12 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
+import { useLanguage } from "@/hooks/useLanguage"
 
 export function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
-
+  const { t } = useLanguage()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
@@ -28,14 +29,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error("登入失敗，請檢查帳號密碼")
+        toast.error(t.login__error)
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error("登入失敗，請稍後再試")
+      toast.error(t.login__error)
     } finally {
       setIsLoading(false)
     }
@@ -51,14 +52,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error("訪客登入失敗，請稍後再試")
+        toast.error(t.login__error)
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error("訪客登入失敗，請稍後再試")
+      toast.error(t.login__error)
     } finally {
       setIsDemoLoading(false)
     }
@@ -68,7 +69,7 @@ export function LoginForm() {
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{t.login__email}</Label>
           <Input
             id="email"
             name="email"
@@ -78,7 +79,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <Label htmlFor="password">密碼</Label>
+          <Label htmlFor="password">{t.login__password}</Label>
           <Input
             id="password"
             name="password"
@@ -98,7 +99,7 @@ export function LoginForm() {
               登入中...
             </>
           ) : (
-            "登入"
+            t.login__submit
           )}
         </Button>
       </form>
@@ -124,7 +125,7 @@ export function LoginForm() {
             登入中...
           </>
         ) : (
-          "訪客登入"
+          t.login__demo
         )}
       </Button>
     </div>
@@ -135,7 +136,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-
+  const { t } = useLanguage()
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsLoading(true)
@@ -159,7 +160,7 @@ export default function LoginPage() {
         router.push(result.url)
       }
     } catch (error) {
-      setError('登入時發生錯誤')
+      setError(t.login__error)
     } finally {
       setIsLoading(false)
     }
@@ -169,8 +170,8 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md p-6 space-y-6 bg-white">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold">登入系統</h1>
-          <p className="text-gray-500">請輸入您的帳號密碼</p>
+          <h1 className="text-2xl font-bold">{t.login__title}</h1>
+          <p className="text-gray-500">{t.login__description}</p>
         </div>
         <LoginForm />
         {error && (
