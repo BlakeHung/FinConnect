@@ -1,37 +1,27 @@
 "use client";
 
-import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Locale, availableLocales, translations } from '@/lib/i18n';
-import { getDefaultLocale } from '@/lib/i18n/utils';
+import { Locale, translations } from '@/lib/i18n';
+import { getClientLocale, setLocale } from '@/lib/i18n/utils';
 
 export function useLanguage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [locale, setLocale] = useState<Locale>(getDefaultLocale());
+  const [mounted, setMounted] = useState(false);
+  const [locale, setCurrentLocale] = useState<Locale>('zh');
 
   useEffect(() => {
-    const urlLocale = searchParams.get('lang') as Locale;
-    if (availableLocales.includes(urlLocale) && urlLocale !== locale) {
-      setLocale(urlLocale);
-      localStorage.setItem('lang', urlLocale);
-    }
-  }, [searchParams]);
+    setCurrentLocale(getClientLocale());
+    setMounted(true);
+  }, []);
 
   const changeLanguage = (newLocale: Locale) => {
-    // 更新 URL
-    const params = new URLSearchParams(window.location.search);
-    params.set('lang', newLocale);
-    router.push(`${window.location.pathname}?${params.toString()}`);
-    
-    // 更新 localStorage
-    localStorage.setItem('lang', newLocale);
     setLocale(newLocale);
   };
 
+  // 提供預設的中文翻譯和當前語言的翻譯
   return {
     locale,
     changeLanguage,
-    t: translations[locale],
+    t: mounted ? translations[locale] : translations['zh'],
+    mounted, // 導出 mounted 狀態，讓組件可以知道是否已經掛載
   };
 } 

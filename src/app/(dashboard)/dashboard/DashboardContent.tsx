@@ -3,13 +3,15 @@
 import { CalendarDays, Receipt, PieChart } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { useLanguage } from "@/hooks/useLanguage";
+import { getClientTranslation } from "@/lib/i18n/utils"
+import { useState } from "react";
 
 // Activity status helper function
 function getActivityStatus(startDate: Date, endDate: Date) {
   const now = new Date();
-  const { t } = useLanguage();
-  
+  const { t } = getClientTranslation();
+  const [mounted, setMounted] = useState(false)
+
   if (now < startDate) {
     return { 
       status: t.dashboard__status_upcoming, 
@@ -31,18 +33,19 @@ function getActivityStatus(startDate: Date, endDate: Date) {
 }
 
 export function DashboardContent({ stats }: { stats: any }) {
-  const { t } = useLanguage();
+  const { t } = getClientTranslation();
+  const [mounted, setMounted] = useState(false)
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t.dashboard__title}</h2>
+      <h2 className="text-2xl font-bold">{mounted ? t.dashboard__title : "儀表板"}</h2>
       
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center gap-2 text-blue-600 mb-2">
             <CalendarDays className="h-5 w-5" />
-            <h3 className="font-semibold">{t.dashboard__active_activities}</h3>
+            <h3 className="font-semibold">{mounted ? t.dashboard__active_activities : "活動中"}</h3>
           </div>
           <p className="text-2xl font-bold">{stats.activeActivities.length}</p>
         </div>
@@ -50,7 +53,7 @@ export function DashboardContent({ stats }: { stats: any }) {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center gap-2 text-purple-600 mb-2">
             <Receipt className="h-5 w-5" />
-            <h3 className="font-semibold">{t.dashboard__monthly_transactions}</h3>
+            <h3 className="font-semibold">{mounted ? t.dashboard__monthly_transactions : "本月交易"}</h3>
           </div>
           <p className="text-2xl font-bold">{stats.recentTransactions.length}</p>
         </div>
@@ -61,7 +64,7 @@ export function DashboardContent({ stats }: { stats: any }) {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center gap-2 mb-4">
             <PieChart className="h-5 w-5 text-purple-600" />
-            <h3 className="text-lg font-semibold">{t.dashboard__monthly_expenses}</h3>
+            <h3 className="text-lg font-semibold">{mounted ? t.dashboard__monthly_expenses : "本月支出"}</h3>
           </div>
           <div className="space-y-4">
             {stats.categoryStats.map((stat: any) => (
@@ -71,7 +74,7 @@ export function DashboardContent({ stats }: { stats: any }) {
             ))}
             {stats.categoryStats.length === 0 && (
               <p className="text-gray-500 text-center py-4">
-                {t.dashboard__no_expenses}
+                {mounted ? t.dashboard__no_expenses : "本月支出為0"}
               </p>
             )}
           </div>
@@ -81,7 +84,7 @@ export function DashboardContent({ stats }: { stats: any }) {
         <div className="bg-white p-6 rounded-lg shadow">
           <div className="flex items-center gap-2 mb-4">
             <CalendarDays className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-semibold">{t.dashboard__active_activities}</h3>
+            <h3 className="text-lg font-semibold">{mounted ? t.dashboard__active_activities : "活動中"}</h3>
           </div>
           <div className="divide-y">
             {stats.activeActivities.map((activity: any) => (
@@ -104,14 +107,14 @@ export function DashboardContent({ stats }: { stats: any }) {
                       href={`/edm/activities/${activity.id}/`}
                       className="text-sm text-green-600 hover:underline"
                     >
-                      {t.dashboard__view_edm}
+                      {mounted ? t.dashboard__view_edm : "查看 EDM"}
                     </Link>
                   )}
                 </div>
               </div>
             ))}
             {stats.activeActivities.length === 0 && (
-              <p className="py-4 text-gray-500 text-center">{t.dashboard__no_activities}</p>
+              <p className="py-4 text-gray-500 text-center">{mounted ? t.dashboard__no_activities : "活動為0"}</p>
             )}
           </div>
         </div>
@@ -121,7 +124,7 @@ export function DashboardContent({ stats }: { stats: any }) {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex items-center gap-2 mb-4">
           <Receipt className="h-5 w-5 text-green-600" />
-          <h3 className="text-lg font-semibold">{t.dashboard__recent_transactions}</h3>
+          <h3 className="text-lg font-semibold">{mounted ? t.dashboard__recent_transactions : "最近交易"}</h3>
         </div>
         <div className="divide-y">
           {stats.recentTransactions.map((transaction: any) => (
@@ -129,14 +132,14 @@ export function DashboardContent({ stats }: { stats: any }) {
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-medium">
-                    {transaction.description || t.dashboard__no_description}
+                    {mounted ? t.dashboard__no_description : "無描述"}
                   </p>
                   <p className="text-sm text-gray-500">
                     {transaction.category.name} • 
-                    {new Date(transaction.date).toLocaleDateString()}
+                    {format(new Date(transaction.date).toLocaleDateString(), 'yyyy/MM/dd')}
                   </p>
                   <p className="text-xs text-gray-400">
-                    {t.dashboard__recorder} {transaction.user.name}
+                    {mounted ? t.dashboard__recorder : "記錄者"} {transaction.user.name}
                   </p>
                 </div>
                 <p className="font-medium text-lg">
@@ -146,7 +149,7 @@ export function DashboardContent({ stats }: { stats: any }) {
             </div>
           ))}
           {stats.recentTransactions.length === 0 && (
-            <p className="py-4 text-gray-500 text-center">{t.dashboard__no_transactions}</p>
+            <p className="py-4 text-gray-500 text-center">{mounted ? t.dashboard__no_transactions : "交易為0"}</p>
           )}
         </div>
       </div>
@@ -156,13 +159,13 @@ export function DashboardContent({ stats }: { stats: any }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-5 w-5 text-purple-600" />
-            <h3 className="text-lg font-semibold">{t.activities__title}</h3>
+            <h3 className="text-lg font-semibold">{mounted ? t.activities__title : "活動"}</h3>
           </div>
           <Link 
             href="/activities" 
             className="text-sm text-blue-600 hover:underline"
           >
-            {t.dashboard__view_all}
+            {mounted ? t.dashboard__view_all : "查看所有活動"}
           </Link>
         </div>
         {/* ... All activities content remains similar but using t.dashboard__no_activities for empty state ... */}

@@ -1,30 +1,36 @@
-import { Locale, availableLocales, translations } from '@/lib/i18n';
+import { translations, type Locale } from '@/lib/i18n'
 
-export function getDefaultLocale(): Locale {
-  // 如果在客戶端
-  if (typeof window !== 'undefined') {
-    // 先檢查 URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlLocale = urlParams.get('lang') as Locale;
-    if (availableLocales.includes(urlLocale)) {
-      return urlLocale;
-    }
-
-    // 再檢查 localStorage
-    const savedLocale = localStorage.getItem('lang') as Locale;
-    if (availableLocales.includes(savedLocale)) {
-      return savedLocale;
-    }
-
-    // 最後檢查瀏覽器語言
-    const browserLocale = navigator.language;
-    return browserLocale.includes('zh') ? 'zh' : 'en';
-  }
-
-  // 如果在伺服器端，預設使用中文
-  return 'zh';
+// 伺服器端使用
+export function getServerLocale(): Locale {
+  return 'zh'  // 預設中文
 }
 
 export function getTranslation(locale: Locale) {
-  return translations[locale];
+  return translations[locale]
+}
+
+// 客戶端使用
+export function getClientLocale(): Locale {
+  if (typeof window === 'undefined') {
+    return 'zh'  // 預設中文
+  }
+
+  // 從 cookie 讀取語言設定
+  const cookieLocale = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('NEXT_LOCALE='))
+    ?.split('=')[1] as Locale
+
+  return cookieLocale || 'zh'  // 預設中文
+}
+
+export function getClientTranslation() {
+  return translations[getClientLocale()]
+}
+
+export function setLocale(locale: Locale) {
+  // 設定 cookie
+  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000`
+  // 重新載入頁面以更新所有組件的翻譯
+  window.location.reload()
 } 
