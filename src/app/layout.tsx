@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/components/providers/auth-provider";
 import { Inter } from 'next/font/google'
 import { Toaster } from 'sonner'
 
@@ -81,7 +80,6 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="min-h-screen flex flex-col">
-        <AuthProvider>
             <main className="flex-1">
               {children}
             </main>
@@ -97,7 +95,6 @@ export default function RootLayout({
                 Blake Labs
               </a>
             </footer>
-        </AuthProvider>
       </body>
     </html>
   );

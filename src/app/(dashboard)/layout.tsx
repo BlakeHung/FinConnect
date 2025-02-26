@@ -2,7 +2,7 @@
 import { Navbar } from "@/components/layout/navbar"
 import { Sidebar } from "@/components/layout/sidebar"
 import { LoadingProvider } from "@/components/providers/loading-provider"
-
+import { AuthProvider } from "@/components/providers/auth-provider"
 export default function DashboardLayout({
   children,
 }: {
@@ -10,9 +10,10 @@ export default function DashboardLayout({
 }) {
   return (
     <div className="h-full relative">
-      <LoadingProvider>
-        <div className="h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0">
-          <Sidebar />
+      <AuthProvider>
+        <LoadingProvider>
+          <div className="h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0">
+            <Sidebar />
         </div>
         <main className="md:pl-72">
           <Navbar />
@@ -21,6 +22,7 @@ export default function DashboardLayout({
           </div>
         </main>
       </LoadingProvider>
+      </AuthProvider>
     </div>
   )
 } 
