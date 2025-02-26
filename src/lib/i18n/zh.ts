@@ -65,4 +65,51 @@ export const zh = {
   edm__contact_info_placeholder: '請輸入聯絡資訊',
   edm__preview: '預覽',
   edm__save: '儲存 EDM',
+  
+  // Dashboard translations
+  dashboard__title: '儀表板',
+  dashboard__active_activities: '進行中活動',
+  dashboard__monthly_transactions: '本月交易筆數',
+  dashboard__monthly_expenses: '本月支出分類',
+  dashboard__no_expenses: '本月尚無支出記錄',
+  dashboard__recent_transactions: '最近交易記錄',
+  dashboard__no_transactions: '尚無交易記錄',
+  dashboard__no_description: '無說明',
+  dashboard__recorder: '記錄者',
+  dashboard__view_all: '查看全部',
+  dashboard__view_edm: '查看 EDM',
+  dashboard__no_activities: '目前沒有活動',
+  dashboard__status_upcoming: '即將開始',
+  dashboard__status_ongoing: '進行中',
+  dashboard__status_ended: '已結束',
+  
+  // Categories translations
+  categories__title: '分類管理',
+  categories__new: '新增分類',
+  categories__existing: '現有分類',
+  categories__expense: '支出',
+  categories__income: '收入',
+  categories__default: '預設',
+  categories__no_expense: '尚無支出分類',
+  categories__no_income: '尚無收入分類',
+  
+  // Category form translations
+  category__name_placeholder: '輸入分類名稱',
+  category__set_default: '設為預設分類',
+  category__update: '更新',
+  category__add: '新增',
+  category__cancel: '取消',
+  category__processing: '處理中...',
+  category__delete_confirm: '確定要刪除此分類嗎？',
+  category__submit_error: '操作失敗，請稍後再試',
+  category__delete_error: '刪除失敗，請稍後再試',
+  
+  // Sidebar translations
+  sidebar__dashboard: '總覽',
+  sidebar__transactions: '交易紀錄',
+  sidebar__categories: '分類管理',
+  sidebar__analytics: '統計分析',
+  sidebar__settings: '設定',
+  sidebar__users: '使用者管理',
+  sidebar__activities: '活動管理',
 } as const; 

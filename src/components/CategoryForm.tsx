@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X, Check } from "lucide-react";
+import { useLanguage } from "@/hooks/useLanguage";
 
 interface CategoryFormProps {
   category?: {
@@ -21,6 +22,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
   const [isDefault, setIsDefault] = useState(category?.isDefault || false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const { t } = useLanguage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
       }),
     })
       .then(response => {
-        if (!response.ok) throw new Error("提交失敗");
+        if (!response.ok) throw new Error(t.category__submit_error);
         router.refresh();
         if (!category) {
           setName("");
@@ -50,7 +52,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
       })
       .catch(error => {
         console.error("Error:", error);
-        alert("操作失敗，請稍後再試");
+        alert(t.category__submit_error);
       })
       .finally(() => {
         setIsSubmitting(false);
@@ -58,19 +60,19 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
   };
 
   const handleDelete = () => {
-    if (!category || !confirm("確定要刪除此分類嗎？")) return;
+    if (!category || !confirm(t.category__delete_confirm)) return;
 
     setIsSubmitting(true);
     fetch(`/api/categories/${category.id}`, {
       method: "DELETE",
     })
       .then(response => {
-        if (!response.ok) throw new Error("刪除失敗");
+        if (!response.ok) throw new Error(t.category__delete_error);
         router.refresh();
       })
       .catch(error => {
         console.error("Error:", error);
-        alert("刪除失敗，請稍後再試");
+        alert(t.category__delete_error);
       })
       .finally(() => {
         setIsSubmitting(false);
@@ -105,7 +107,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="輸入分類名稱"
+          placeholder={t.category__name_placeholder}
           className="px-3 py-1.5 border rounded-md text-sm w-full sm:w-auto"
           disabled={isSubmitting}
         />
@@ -115,8 +117,8 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
           className="px-3 py-1.5 border rounded-md text-sm bg-white"
           disabled={isSubmitting}
         >
-          <option value="EXPENSE">支出</option>
-          <option value="INCOME">收入</option>
+          <option value="EXPENSE">{t.categories__expense}</option>
+          <option value="INCOME">{t.categories__income}</option>
         </select>
       </div>
       
@@ -133,7 +135,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
           htmlFor={`default-${category?.id || 'new'}`}
           className="text-sm text-gray-700"
         >
-          設為預設分類
+          {t.category__set_default}
         </label>
       </div>
 
@@ -143,7 +145,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
           className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "處理中..." : (category ? "更新" : "新增")}
+          {isSubmitting ? t.category__processing : (category ? t.category__update : t.category__add)}
         </button>
         {category && (
           <button
@@ -152,7 +154,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
             className="px-4 py-1.5 border text-sm rounded-md hover:bg-gray-50 disabled:opacity-50"
             disabled={isSubmitting}
           >
-            取消
+            {t.category__cancel}
           </button>
         )}
       </div>

@@ -61,4 +61,51 @@ export const en = {
   login__demo: 'Sign in with demo account',
   login__guest: 'Guest Sign in',
   login__guest_error: 'Guest sign in failed',
+  
+  // Dashboard translations
+  dashboard__title: 'Dashboard',
+  dashboard__active_activities: 'Active Activities',
+  dashboard__monthly_transactions: 'Monthly Transactions',
+  dashboard__monthly_expenses: 'Monthly Expenses by Category',
+  dashboard__no_expenses: 'No expenses this month',
+  dashboard__recent_transactions: 'Recent Transactions',
+  dashboard__no_transactions: 'No transactions',
+  dashboard__no_description: 'No description',
+  dashboard__recorder: 'Recorded by',
+  dashboard__view_all: 'View All',
+  dashboard__view_edm: 'View EDM',
+  dashboard__no_activities: 'No activities',
+  dashboard__status_upcoming: 'Upcoming',
+  dashboard__status_ongoing: 'Ongoing',
+  dashboard__status_ended: 'Ended',
+  
+  // Categories translations
+  categories__title: 'Categories Management',
+  categories__new: 'New Category',
+  categories__existing: 'Existing Categories',
+  categories__expense: 'Expense',
+  categories__income: 'Income',
+  categories__default: 'Default',
+  categories__no_expense: 'No expense categories',
+  categories__no_income: 'No income categories',
+  
+  // Category form translations
+  category__name_placeholder: 'Enter category name',
+  category__set_default: 'Set as default category',
+  category__update: 'Update',
+  category__add: 'Add',
+  category__cancel: 'Cancel',
+  category__processing: 'Processing...',
+  category__delete_confirm: 'Are you sure you want to delete this category?',
+  category__submit_error: 'Operation failed, please try again later',
+  category__delete_error: 'Delete failed, please try again later',
+  
+  // Sidebar translations
+  sidebar__dashboard: 'Dashboard',
+  sidebar__transactions: 'Transactions',
+  sidebar__categories: 'Categories',
+  sidebar__analytics: 'Analytics',
+  sidebar__settings: 'Settings',
+  sidebar__users: 'Users',
+  sidebar__activities: 'Activities',
 } as const; 
