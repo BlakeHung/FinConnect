@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         date: date,
         categoryId: data.categoryId,
         userId: session.user.id,
-        activityId: data.activityId,
+        activityId: data.activityId || defaultActivity.id,
         status: "PENDING",
         images: data.images || [],
       },

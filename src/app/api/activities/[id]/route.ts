@@ -3,7 +3,10 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+export async function PUT(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -16,19 +19,23 @@ export async function POST(request: Request) {
 
     const data = await request.json();
 
-    const activity = await prisma.activity.create({
+    const activity = await prisma.activity.update({
+      where: {
+        id: params.id,
+      },
       data: {
         name: data.name,
         startDate: new Date(data.startDate),
         endDate: new Date(data.endDate),
         description: data.description || "",
-        enabled: data.enabled ?? true,
+        enabled: data.enabled,
+        updatedAt: new Date(),
       },
     });
 
     return NextResponse.json({ data: activity });
   } catch (error) {
-    console.error("[ACTIVITY_CREATE]", error);
+    console.error("[ACTIVITY_UPDATE]", error);
     return NextResponse.json(
       { 
         error: "Internal server error",
@@ -39,7 +46,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -49,17 +59,24 @@ export async function GET() {
       );
     }
 
-    const activities = await prisma.activity.findMany({
-      orderBy: {
-        updatedAt: 'desc',
+    const activity = await prisma.activity.findUnique({
+      where: {
+        id: params.id,
       },
     });
 
-    return NextResponse.json({ data: activities });
+    if (!activity) {
+      return NextResponse.json(
+        { error: "Activity not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ data: activity });
   } catch (error) {
-    console.error("[ACTIVITIES_GET]", error);
+    console.error("[ACTIVITY_GET]", error);
     return NextResponse.json(
-      { error: "Failed to fetch activities" },
+      { error: "Failed to fetch activity" },
       { status: 500 }
     );
   }

@@ -46,7 +46,7 @@ export default async function EditActivityPage({
             startDate: activity.startDate,
             endDate: activity.endDate,
             description: activity.description || '',
-            status: activity.status,
+            enabled: activity.enabled,
           }}
           activityId={activity.id}
         />

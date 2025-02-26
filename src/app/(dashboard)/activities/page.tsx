@@ -33,9 +33,10 @@ export default async function ActivitiesPage() {
   }
 
   const activities = await prisma.activity.findMany({
-    orderBy: {
-      startDate: 'desc',
-    },
+    orderBy: [
+      { updatedAt: 'desc' },  // 優先按更新時間排序
+      { startDate: 'desc' },  // 其次按開始日期排序
+    ],
   });
 
   const canManage = ['ADMIN', 'FINANCE_MANAGER'].includes(session.user.role);
@@ -72,6 +73,9 @@ export default async function ActivitiesPage() {
                 啟用
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                最後更新
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 操作
               </th>
             </tr>
@@ -100,6 +104,9 @@ export default async function ActivitiesPage() {
                     enabled={activity.enabled}
                     canManage={canManage}
                   />
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {format(activity.updatedAt, 'yyyy/MM/dd HH:mm')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {canManage && (
@@ -151,6 +158,9 @@ export default async function ActivitiesPage() {
                   編輯
                 </Link>
               )}
+            </div>
+            <div className="text-sm text-gray-500">
+              最後更新：{format(activity.updatedAt, 'yyyy/MM/dd HH:mm')}
             </div>
           </div>
         ))}
