@@ -3,14 +3,13 @@
 import { CalendarDays, Receipt, PieChart } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { useEffect, useState } from "react";
 import { getClientTranslation } from "@/lib/i18n/utils"
-import { useState } from "react";
+
 
 // Activity status helper function
 function getActivityStatus(startDate: Date, endDate: Date) {
   const now = new Date();
-  const { t } = getClientTranslation();
-  const [mounted, setMounted] = useState(false)
 
   if (now < startDate) {
     return { 
@@ -33,9 +32,13 @@ function getActivityStatus(startDate: Date, endDate: Date) {
 }
 
 export function DashboardContent({ stats }: { stats: any }) {
-  const { t } = getClientTranslation();
   const [mounted, setMounted] = useState(false)
+  const t  = getClientTranslation();
 
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{mounted ? t.dashboard__title : "儀表板"}</h2>
