@@ -170,4 +170,20 @@ export const zh = {
   transaction_table__filter_activity: '活動篩選',
   transaction_table__all_activities: '全部活動',
   transaction_table__no_activity: '-',
+
+  // Users translations
+  users__title: '使用者管理',
+  users__new: '新增使用者',
+  users__demo: 'Demo 帳號無法新增使用者，請使用其他管理員帳號進行操作。',
+  users__search_name: '搜尋名稱...',
+  users__no_data: '沒有資料',
+  users__previous_page: '上一頁',
+  users__next_page: '下一頁', 
+  users__name: '名稱',
+  users__email: '電子郵件',
+  users__role: '角色',
+  users__created_at: '建立時間',
+  users__actions: '操作',
+  
+    
 } as const; 

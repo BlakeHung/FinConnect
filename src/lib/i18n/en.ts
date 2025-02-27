@@ -166,4 +166,18 @@ export const en = {
   transaction_table__filter_activity: 'Filter by Activity',
   transaction_table__all_activities: 'All Activities',
   transaction_table__no_activity: '-',
+
+  // Users translations
+  users__title: 'Users Management',
+  users__new: 'New User',
+  users__demo: 'Demo account cannot create new users, please use other admin accounts to proceed.',
+  users__search_name: 'Search by name...',
+  users__no_data: 'No data',
+  users__previous_page: 'Previous Page',
+  users__next_page: 'Next Page',
+  users__name: 'Name',
+  users__email: 'Email',
+  users__role: 'Role',
+  users__created_at: 'Created At',
+  users__actions: 'Actions',
 } as const; 

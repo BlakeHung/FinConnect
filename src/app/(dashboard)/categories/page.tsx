@@ -8,7 +8,7 @@ import { CategoriesPageClient } from "./client";
 export default async function CategoriesPage() {
   const session = await getServerSession(authOptions);
   
-  if (!session || session.user.role !== 'ADMIN') {
+  if (!session || session.user?.role !== 'ADMIN') {
     redirect('/dashboard');
   }
 
