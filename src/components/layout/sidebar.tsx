@@ -1,11 +1,10 @@
 "use client"
 
-import { Link } from "@/components/ui/link"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/store/use-sidebar"
 import { useSession } from "next-auth/react"
-import { useTranslations } from 'next-intl'
-import { useMemo, useCallback } from "react"
+import { useLanguage } from "@/hooks/useLanguage"
 import {
   LayoutDashboard,
   Receipt,
@@ -19,62 +18,53 @@ import {
 export function Sidebar() {
   const { isOpen, toggle } = useSidebar()
   const { data: session } = useSession()
-  const t = useTranslations('sidebar')
+  const { t } = useLanguage()
   
-  // 使用 useMemo 緩存路由
-  const routes = useMemo(() => {
-    const commonRoutes = [
-      {
-        label: t('dashboard'),
-        icon: LayoutDashboard,
-        href: "/dashboard",
-      },
-      {
-        label: t('transactions'),
-        icon: Receipt,
-        href: "/transactions",
-      },
-      {
-        label: t('categories'),
-        icon: Tag,
-        href: "/categories",
-      },
-      {
-        label: t('analytics'),
-        icon: PieChart,
-        href: "/analytics",
-      },
-      {
-        label: t('settings'),
-        icon: Settings,
-        href: "/settings",
-      },
-    ]
-    
-    const adminRoutes = [
-      {
-        label: t('users'),
-        icon: Users,
-        href: "/users",
-      },
-      {
-        label: t('activities'),
-        icon: CalendarDays,
-        href: "/activities",
-      },
-    ]
+  const commonRoutes = [
+    {
+      label: t.sidebar__dashboard,
+      icon: LayoutDashboard,
+      href: "/dashboard",
+    },
+    {
+      label: t.sidebar__transactions,
+      icon: Receipt,
+      href: "/transactions",
+    },
+    {
+      label: t.sidebar__categories,
+      icon: Tag,
+      href: "/categories",
+    },
+    {
+      label: t.sidebar__analytics,
+      icon: PieChart,
+      href: "/analytics",
+    },
+    {
+      label: t.sidebar__settings,
+      icon: Settings,
+      href: "/settings",
+    },
+  ]
 
-    return session?.user?.role === 'ADMIN' 
-      ? [...commonRoutes, ...adminRoutes]
-      : commonRoutes
-  }, [session?.user?.role, t])
+  const adminRoutes = [
+    {
+      label: t.sidebar__users,
+      icon: Users,
+      href: "/users",
+    },
+    {
+      label: t.sidebar__activities,
+      icon: CalendarDays,
+      href: "/activities",
+    },
+  ]
 
-  // 使用 useCallback 緩存 toggle 函數
-  const handleToggle = useCallback(() => {
-    if (window.innerWidth < 768) {
-      toggle()
-    }
-  }, [toggle])
+  // 根據使用者角色決定要顯示的路由
+  const routes = session?.user?.role === 'ADMIN' 
+    ? [...commonRoutes, ...adminRoutes]
+    : commonRoutes;
 
   console.log('Sidebar render, isOpen:', isOpen)
 
@@ -84,7 +74,7 @@ export function Sidebar() {
       {isOpen && (
         <div 
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={handleToggle}
+          onClick={toggle}
         />
       )}
 
@@ -105,7 +95,11 @@ export function Sidebar() {
                 <Link
                   key={route.href}
                   href={route.href}
-                  onClick={handleToggle}
+                  onClick={() => {
+                    if (window.innerWidth < 768) {
+                      toggle()
+                    }
+                  }}
                   className={cn(
                     "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer",
                     "hover:text-primary hover:bg-primary/10 rounded-lg transition"
