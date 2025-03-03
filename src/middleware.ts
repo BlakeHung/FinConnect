@@ -19,16 +19,7 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth endpoints)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon files
-     * - og images
-     * - apple touch icon
-     */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|favicon-16.svg|favicon-32.svg|og-image-1200x630.svg|og-image-800x800.svg|og-image-600x600.svg|apple-touch.svg).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|favicon-16.svg|favicon-32.svg|og-image-1200x630.svg|og-image-800x800.svg|og-image-600x600.svg|apple-touch.svg|.*\.png|.*\.jpg|.*\.jpeg|.*\.gif).*)',
     "/edm/activities/:path*",
   ],
 } 
