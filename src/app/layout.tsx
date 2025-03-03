@@ -28,12 +28,12 @@ export const metadata: Metadata = {
     apple: '/apple-touch-icon.png'
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://finconnect.vercel.app'
+    process.env.NEXT_PUBLIC_APP_URL || 'https://amis-management.vercel.app'
   ),
   openGraph: {
     title: 'FinConnect | Amis Family Event Financial Management',
     description: 'Financial management system designed for Amis family events, easily manage event budgets and expenses',
-    url: 'https://finconnect.tw',
+    url: 'https://finconnect-management.vercel.app',
     siteName: 'FinConnect',
     images: [
       {
