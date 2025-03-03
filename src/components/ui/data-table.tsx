@@ -21,8 +21,8 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState } from "react"
-
+import { useState, useEffect } from "react"
+import { getClientTranslation } from "@/lib/i18n/utils"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
@@ -34,6 +34,12 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const t = getClientTranslation();
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const table = useReactTable({
     data,
@@ -54,7 +60,7 @@ export function DataTable<TData, TValue>({
     <div>
       <div className="flex items-center py-4">
         <Input
-          placeholder="搜尋名稱..."
+          placeholder={mounted ? t.search_name : "搜尋名稱..."}
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
             table.getColumn("name")?.setFilterValue(event.target.value)
@@ -105,7 +111,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  沒有資料
+                  {mounted ? t.no_data : "沒有資料"}
                 </TableCell>
               </TableRow>
             )}
@@ -119,7 +125,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          上一頁
+          {mounted ? t.previous_page : "上一頁"}
         </Button>
         <Button
           variant="outline"
@@ -127,7 +133,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          下一頁
+          {mounted ? t.next_page : "下一頁"}
         </Button>
       </div>
     </div>
