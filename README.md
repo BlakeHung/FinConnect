@@ -1,4 +1,4 @@
-# Personal Finance Management System
+# FinConnect
 
 A modern financial management system built with Next.js 15, Prisma, and TypeScript.
 
@@ -44,4 +44,4 @@ npm run dev
 
 ## License
 
-MIT © [Your Name] - Powered by [Blake Labs](https://wchung.tw/)
+MIT © Blake Hung - Powered by [Blake Labs](https://wchung.tw/)

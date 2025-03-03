@@ -20,52 +20,52 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: '阿美族家族活動記帳系統',
-  description: '專為阿美族家族活動設計的財務管理與記帳系統，提供完整的預算規劃、收支記錄、結算報表等功能',
+  title: 'FinConnect | Amis Family Event Financial Management',
+  description: 'Financial management system designed for Amis family events, offering budget planning, expense tracking, and financial reporting',
   icons: {
-    icon: '/favicon-32.svg',
-    shortcut: '/favicon-16.svg',
-    apple: '/apple-touch.svg'
+    icon: '/favicon-32.png',
+    shortcut: '/favicon-16.png',
+    apple: '/apple-touch-icon.png'
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://amis-management.vercel.app'
+    process.env.NEXT_PUBLIC_APP_URL || 'https://finconnect.vercel.app'
   ),
   openGraph: {
-    title: '阿美族家族活動記帳系統',
-    description: '專為阿美族家族活動設計的財務管理與記帳系統，輕鬆管理活動預算與支出',
-    url: 'https://wchung.tw',
-    siteName: '阿美族家族活動記帳系統',
+    title: 'FinConnect | Amis Family Event Financial Management',
+    description: 'Financial management system designed for Amis family events, easily manage event budgets and expenses',
+    url: 'https://finconnect.tw',
+    siteName: 'FinConnect',
     images: [
       {
-        url: '/og-image-1200x630.svg',  // Facebook 推薦尺寸
+        url: '/og-image-1200x630.png',  // Facebook recommended size
         width: 1200,
         height: 630,
-        alt: '阿美族家族活動記帳系統'
+        alt: 'FinConnect - Amis Family Event Financial Management'
       },
       {
-        url: '/og-image-800x800.svg',   // Line 推薦尺寸
+        url: '/og-image-800x800.png',   // Line recommended size
         width: 800,
         height: 800,
-        alt: '阿美族家族活動記帳系統'
+        alt: 'FinConnect - Amis Family Event Financial Management'
       },
       {
-        url: '/og-image-600x600.svg',   // Line 最小尺寸
+        url: '/og-image-600x600.png',   // Line minimum size
         width: 600,
         height: 600,
-        alt: '阿美族家族活動記帳系統'
+        alt: 'FinConnect - Amis Family Event Financial Management'
       }
     ],
-    locale: 'zh_TW',
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: '阿美族家族活動記帳系統',
-    description: '專為阿美族家族活動設計的財務管理與記帳系統',
-    images: ['/og-image-1200x630.svg'],
+    title: 'FinConnect | Amis Family Event Financial Management',
+    description: 'Financial management system designed for Amis family events',
+    images: ['/og-image-1200x630.png'],
   },
   other: {
-    'line-share': '阿美族家族活動記帳系統',
+    'line-share': 'FinConnect - Amis Family Event Financial Management',
   },
 }
 
@@ -85,9 +85,9 @@ export default function RootLayout({
             </main>
             <Toaster />
             <footer className="py-4 text-center text-sm text-gray-500 safe-area-bottom">
-              Powered by{' '}
+              <p>Powered by BlakeLabs</p>
               <a 
-                href="https://blakelabs.com" 
+                href="https://wchung.tw" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="hover:text-gray-700"

@@ -49,7 +49,7 @@ export function Navbar() {
         </Button>
 
         <div className="flex items-center space-x-4 ml-4 md:ml-0">
-          <h2 className="text-2xl font-bold">AMIS</h2>
+          <h2 className="text-2xl font-bold">FinConnect</h2>
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
