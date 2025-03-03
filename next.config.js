@@ -1,3 +1,8 @@
+// CommonJS 格式
+const nextIntlPlugin = require('next-intl/plugin');
+
+const withNextIntl = nextIntlPlugin('./src/i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -25,7 +30,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // 忽略這些模組
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -49,4 +54,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig 
+module.exports = withNextIntl(nextConfig); 
