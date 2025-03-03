@@ -2,10 +2,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { CalendarDays, Receipt, PieChart } from "lucide-react";
-import Link from "next/link";
-import { isWithinInterval } from "date-fns";
-import { format } from "date-fns";
 import { DashboardContent } from "./DashboardContent";
 
 async function getStats() {

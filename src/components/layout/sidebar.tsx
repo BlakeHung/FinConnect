@@ -4,7 +4,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/store/use-sidebar"
 import { useSession } from "next-auth/react"
-import { useLanguage } from "@/hooks/useLanguage"
+import { useClientTranslation } from '@/lib/i18n/utils'
 import {
   LayoutDashboard,
   Receipt,
@@ -12,51 +12,55 @@ import {
   Settings,
   Tag,
   Users,
-  CalendarDays
+  CalendarDays,
+  Calendar,
+  LogOut
 } from "lucide-react"
+import { usePathname } from 'next/navigation'
 
 export function Sidebar() {
   const { isOpen, toggle } = useSidebar()
   const { data: session } = useSession()
-  const { t } = useLanguage()
+  const t = useClientTranslation('sidebar')
+  const pathname = usePathname()
   
   const commonRoutes = [
     {
-      label: t.sidebar__dashboard,
-      icon: LayoutDashboard,
+      label: t('dashboard'),
+      icon: <LayoutDashboard className="w-5 h-5" />,
       href: "/dashboard",
     },
     {
-      label: t.sidebar__transactions,
-      icon: Receipt,
+      label: t('transactions'),
+      icon: <Receipt className="w-5 h-5" />,
       href: "/transactions",
     },
     {
-      label: t.sidebar__categories,
-      icon: Tag,
+      label: t('categories'),
+      icon: <PieChart className="w-5 h-5" />,
       href: "/categories",
     },
     {
-      label: t.sidebar__analytics,
-      icon: PieChart,
-      href: "/analytics",
+      label: t('activities'),
+      icon: <Calendar className="w-5 h-5" />,
+      href: "/activities",
     },
     {
-      label: t.sidebar__settings,
-      icon: Settings,
+      label: t('settings'),
+      icon: <Settings className="w-5 h-5" />,
       href: "/settings",
     },
   ]
 
   const adminRoutes = [
     {
-      label: t.sidebar__users,
-      icon: Users,
+      label: t('users'),
+      icon: <Users className="w-5 h-5" />,
       href: "/users",
     },
     {
-      label: t.sidebar__activities,
-      icon: CalendarDays,
+      label: t('activities'),
+      icon: <CalendarDays className="w-5 h-5" />,
       href: "/activities",
     },
   ]
@@ -65,6 +69,10 @@ export function Sidebar() {
   const routes = session?.user?.role === 'ADMIN' 
     ? [...commonRoutes, ...adminRoutes]
     : commonRoutes;
+
+  const isActive = (path: string) => {
+    return pathname?.includes(path);
+  };
 
   console.log('Sidebar render, isOpen:', isOpen)
 
@@ -102,11 +110,12 @@ export function Sidebar() {
                   }}
                   className={cn(
                     "text-sm group flex p-3 w-full justify-start font-medium cursor-pointer",
-                    "hover:text-primary hover:bg-primary/10 rounded-lg transition"
+                    "hover:text-primary hover:bg-primary/10 rounded-lg transition",
+                    isActive(route.href) ? 'bg-gray-100 font-medium' : ''
                   )}
                 >
                   <div className="flex items-center flex-1">
-                    <route.icon className="h-5 w-5 mr-3" />
+                    {route.icon}
                     {route.label}
                   </div>
                 </Link>

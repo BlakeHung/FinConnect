@@ -1,3 +1,7 @@
+const createNextIntlPlugin = require('next-intl/plugin');
+
+const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -25,12 +29,13 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config) => {
     // 忽略這些模組
     config.resolve.alias = {
       ...config.resolve.alias,
       '@mapbox/node-pre-gyp': false,
       'bcrypt': false,
+      'punycode': false
     }
     return config
   },
@@ -46,7 +51,7 @@ const nextConfig = {
         ],
       },
     ]
-  },
-}
+  }
+};
 
-module.exports = nextConfig 
+module.exports = withNextIntl(nextConfig); 

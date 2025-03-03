@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Inter } from 'next/font/google'
-import { Toaster } from 'sonner'
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -75,26 +74,12 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
+    <html className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="min-h-screen flex flex-col">
-            <main className="flex-1">
-              {children}
-            </main>
-            <Toaster />
-            <footer className="py-4 text-center text-sm text-gray-500 safe-area-bottom">
-              <p>Powered by BlakeLabs</p>
-              <a 
-                href="https://wchung.tw" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:text-gray-700"
-              >
-                Blake Labs
-              </a>
-            </footer>
+        {children}
       </body>
     </html>
   );

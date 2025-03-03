@@ -39,6 +39,7 @@
     "components": "@/components",
     "utils": "@/lib/utils",
     "prisma": "@/lib/prisma",
-    "lib": "@/lib"
+    "lib": "@/lib",
+    "styles": "@/styles"
   }
 }

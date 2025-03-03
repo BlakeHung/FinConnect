@@ -1,36 +1,29 @@
-import { translations, type Locale } from '@/lib/i18n'
+import { useTranslations, useLocale } from 'next-intl';
+import { createSharedPathnamesNavigation } from 'next-intl/navigation';
+import { locales, defaultLocale } from './index';
 
-// 伺服器端使用
-export function getServerLocale(): Locale {
-  return 'zh'  // 預設中文
+// 創建導航工具
+export const { Link, redirect, usePathname, useRouter } = createSharedPathnamesNavigation({ 
+  locales, 
+  defaultLocale 
+});
+
+// 獲取當前語言
+export function useClientLocale() {
+  return useLocale();
 }
 
-export function getTranslation(locale: Locale) {
-  return translations[locale]
+// 獲取翻譯函數
+export function useClientTranslation(namespace = 'common') {
+  return useTranslations(namespace);
 }
 
-// 客戶端使用
-export function getClientLocale(): Locale {
-  if (typeof window === 'undefined') {
-    return 'zh'  // 預設中文
-  }
-
-  // 從 cookie 讀取語言設定
-  const cookieLocale = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('NEXT_LOCALE='))
-    ?.split('=')[1] as Locale
-
-  return cookieLocale || 'zh'  // 預設中文
-}
-
-export function getClientTranslation() {
-  return translations[getClientLocale()]
-}
-
-export function setLocale(locale: Locale) {
-  // 設定 cookie
-  document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000`
-  // 重新載入頁面以更新所有組件的翻譯
-  window.location.reload()
+// 切換語言
+export function useSetLocale() {
+  const router = useRouter();
+  const pathname = usePathname();
+  
+  return (locale: string) => {
+    router.replace(pathname, { locale });
+  };
 } 
