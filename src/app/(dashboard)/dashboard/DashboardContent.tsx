@@ -6,39 +6,38 @@ import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { getClientTranslation } from "@/lib/i18n/utils"
 
-
-// Activity status helper function
-function getActivityStatus(startDate: Date, endDate: Date) {
-  const now = new Date();
-
-  if (now < startDate) {
-    return { 
-      status: t.dashboard__status_upcoming, 
-      className: 'bg-yellow-100 text-yellow-800' 
-    };
-  }
-  
-  if (now > endDate) {
-    return { 
-      status: t.dashboard__status_ended, 
-      className: 'bg-gray-100 text-gray-800' 
-    };
-  }
-  
-  return { 
-    status: t.dashboard__status_ongoing, 
-    className: 'bg-green-100 text-green-800' 
-  };
-}
-
 export function DashboardContent({ stats }: { stats: any }) {
   const [mounted, setMounted] = useState(false)
-  const t  = getClientTranslation();
-
+  const t = getClientTranslation();
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Activity status helper function - 移到組件內部
+  function getActivityStatus(startDate: Date, endDate: Date) {
+    const now = new Date();
+
+    if (now < startDate) {
+      return { 
+        status: mounted ? t.dashboard__status_upcoming : "即將開始", 
+        className: 'bg-yellow-100 text-yellow-800' 
+      };
+    }
+    
+    if (now > endDate) {
+      return { 
+        status: mounted ? t.dashboard__status_ended : "已結束", 
+        className: 'bg-gray-100 text-gray-800' 
+      };
+    }
+    
+    return { 
+      status: mounted ? t.dashboard__status_ongoing : "進行中", 
+      className: 'bg-green-100 text-green-800' 
+    };
+  }
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{mounted ? t.dashboard__title : "儀表板"}</h2>
