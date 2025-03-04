@@ -204,6 +204,20 @@ const zh = {
       finance_manager: '財務主記帳',
       user: '一般用戶',
     }
+  },
+  
+  common: {
+    search_placeholder: "搜尋{field}...",
+    no_data: "沒有資料",
+    previous_page: "上一頁",
+    next_page: "下一頁",
+    fields: {
+      name: "名稱",
+      title: "標題",
+      email: "電子郵件",
+      role: "角色",
+      createdAt: "建立日期",
+    }
   }
 };
 

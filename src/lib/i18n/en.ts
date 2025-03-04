@@ -191,14 +191,24 @@ const en = {
     login_demo: 'Use Demo account',
   },
   
+  common: {
+    search_placeholder: "Search {field}...",
+    no_data: "No data available",
+    previous_page: "Previous",
+    next_page: "Next",
+    fields: {
+      name: "name",
+      title: "title",
+      email: "email",
+      role: "role",
+      createdAt: "created date",
+    }
+  },
+  
   users: {
     title: 'Users Management',
     new: 'New User',
     demo: 'Demo account cannot create new users, please use other admin accounts to proceed.',
-    search_name: 'Search by name...',
-    no_data: 'No data',
-    previous_page: 'Previous Page',
-    next_page: 'Next Page',
     name: 'Name',
     email: 'Email',
     role: 'Role',

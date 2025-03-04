@@ -69,8 +69,6 @@ export function Sidebar() {
     return pathname?.includes(path);
   };
 
-  console.log('Sidebar render, isOpen:', isOpen)
-
   return (
     <>
       {/* 行動版遮罩層 */}

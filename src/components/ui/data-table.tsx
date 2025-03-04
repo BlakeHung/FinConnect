@@ -22,19 +22,22 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState, useEffect } from "react"
-import { getClientTranslation } from "@/lib/i18n/utils"
+import { useClientTranslation } from "@/lib/i18n/utils"
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  searchKey?: string
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  searchKey = "name"
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
-  const t = getClientTranslation();
+  const t = useClientTranslation('common')
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -60,10 +63,10 @@ export function DataTable<TData, TValue>({
     <div>
       <div className="flex items-center py-4">
         <Input
-          placeholder={mounted ? t.search_name : "搜尋名稱..."}
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+          placeholder={t('search_placeholder', { field: t(`fields.${searchKey}`) })}
+          value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
+            table.getColumn(searchKey)?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
@@ -111,7 +114,7 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  {mounted ? t.no_data : "沒有資料"}
+                  {t('no_data')}
                 </TableCell>
               </TableRow>
             )}
@@ -125,7 +128,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
-          {mounted ? t.previous_page : "上一頁"}
+          {t('previous_page')}
         </Button>
         <Button
           variant="outline"
@@ -133,7 +136,7 @@ export function DataTable<TData, TValue>({
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >
-          {mounted ? t.next_page : "下一頁"}
+          {t('next_page')}
         </Button>
       </div>
     </div>
