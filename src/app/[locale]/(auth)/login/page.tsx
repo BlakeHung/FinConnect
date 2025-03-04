@@ -9,14 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
-import { getClientTranslation } from "@/lib/i18n/utils"
+import { useClientTranslation } from "@/lib/i18n/utils"
 
 export function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const t = getClientTranslation()
+  const t = useClientTranslation('auth')
 
   useEffect(() => {
     setMounted(true)
@@ -35,14 +35,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error(mounted ? t.login__error : "登入失敗")
+        toast.error(mounted ? t('login_error') : "登入失敗")
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error(mounted ? t.login__error : "登入失敗")
+      toast.error(mounted ? t('login_error') : "登入失敗")
     } finally {
       setIsLoading(false)
     }
@@ -58,14 +58,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error(mounted ? t.login__error : "登入失敗")
+        toast.error(mounted ? t('login_error') : "登入失敗")
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error(mounted ? t.login__error : "登入失敗")
+      toast.error(mounted ? t('login_error') : "登入失敗")
     } finally {
       setIsDemoLoading(false)
     }
@@ -75,7 +75,7 @@ export function LoginForm() {
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="email">{mounted ? t.login__email : "電子郵件"}</Label>
+          <Label htmlFor="email">{mounted ? t('email') : "電子郵件"}</Label>
           <Input
             id="email"
             name="email"
@@ -85,7 +85,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <Label htmlFor="password">{mounted ? t.login__password : "密碼"}</Label>
+          <Label htmlFor="password">{mounted ? t('password') : "密碼"}</Label>
           <Input
             id="password"
             name="password"
@@ -102,10 +102,10 @@ export function LoginForm() {
           {isLoading ? (
             <>
               <Spinner className="mr-2 h-4 w-4" />
-              {mounted ? t.login__loading : "登入中..."}
+              {mounted ? t('login_loading') : "登入中..."}
             </>
           ) : (
-            mounted ? t.login__submit : "登入"
+            mounted ? t('login_submit') : "登入"
           )}
         </Button>
       </form>
@@ -128,10 +128,10 @@ export function LoginForm() {
         {isDemoLoading ? (
           <>
             <Spinner className="mr-2 h-4 w-4" />
-            {mounted ? t.login__loading : "登入中..."}
+            {mounted ? t('login_loading') : "登入中..."}
           </>
         ) : (
-          mounted ? t.login__demo : "使用 Demo 帳號"
+          mounted ? t('login_demo') : "使用 Demo 帳號"
         )}
       </Button>
     </div>
@@ -140,7 +140,7 @@ export function LoginForm() {
 
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false)
-  const t = getClientTranslation()
+  const t = useClientTranslation('auth')
 
   useEffect(() => {
     setMounted(true)
@@ -151,10 +151,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md p-6 space-y-6 bg-white">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">
-            {mounted ? t.login__title : "登入"}
+            {mounted ? t('login_title') : "登入"}
           </h1>
           <p className="text-gray-500">
-            {mounted ? t.login__description : "歡迎回來"}
+            {mounted ? t('login_description') : "歡迎回來"}
           </p>
         </div>
         <LoginForm />

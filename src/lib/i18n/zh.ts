@@ -175,6 +175,13 @@ const zh = {
     logout_success: '登出成功',
     login_success: '登入成功',
     register_success: '註冊成功',
+    login_error: '登入失敗',
+    demo_error: 'Demo 帳號無法新增使用者，請使用其他管理員帳號進行操作。',
+    login_title: '登入',
+    login_description: '歡迎回來',
+    login_loading: '登入中...',
+    login_submit: '登入',
+    login_demo: '使用 Demo 帳號',
   },
   
   users: {

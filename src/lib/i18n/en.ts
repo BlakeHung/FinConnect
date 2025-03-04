@@ -180,6 +180,13 @@ const en = {
     logout_success: 'Logged out successfully',
     login_success: 'Logged in successfully',
     register_success: 'Registered successfully',
+    login_error: 'Login failed',
+    demo_error: 'Demo account cannot create new users, please use other admin accounts to proceed.',
+    login_title: 'Login',
+    login_description: 'Welcome back',
+    login_loading: 'Logging in...',
+    login_submit: 'Login',
+    login_demo: 'Use Demo account',
   },
   
   users: {
