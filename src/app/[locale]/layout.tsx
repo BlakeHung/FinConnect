@@ -29,16 +29,11 @@ export default async function LocaleLayout({
   const messages = await getMessages(locale);
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className={inter.className}>
-        <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Taipei">
-          <div className="flex min-h-screen bg-gray-50">
-            {/* 側邊欄和主要內容將在子組件中渲染 */}
-            {children}
-          </div>
-          <Toaster position="top-right" />
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Taipei">
+      <div className={inter.className}>
+        {children}
+        <Toaster />
+      </div>
+    </NextIntlClientProvider>
   );
 } 

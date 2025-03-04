@@ -9,7 +9,7 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="h-full relative">
+    <div className="min-h-screen bg-gray-50">
       <AuthProvider>
         <LoadingProvider>
           <div className="h-full md:flex md:w-72 md:flex-col md:fixed md:inset-y-0">

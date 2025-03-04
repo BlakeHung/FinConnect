@@ -3,6 +3,8 @@ const en = {
     title: 'Settings',
     language: 'Language',
     save: 'Save',
+    language_en: 'English',
+    language_zh: 'Chinese', 
   },
   
   activities: {
@@ -201,7 +203,11 @@ const en = {
     email: 'Email',
     role: 'Role',
     created_at: 'Created At',
-    actions: 'Actions',
+    roles: {
+      admin: 'Administrator',
+      finance_manager: 'Finance Manager',
+      user: 'Regular User',
+    }
   }
 };
 

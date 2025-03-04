@@ -41,11 +41,6 @@ export function Sidebar() {
       href: "/categories",
     },
     {
-      label: t('activities'),
-      icon: <Calendar className="w-5 h-5" />,
-      href: "/activities",
-    },
-    {
       label: t('settings'),
       icon: <Settings className="w-5 h-5" />,
       href: "/settings",

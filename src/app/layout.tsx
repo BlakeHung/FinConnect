@@ -74,7 +74,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
+    <html suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} antialiased`}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>

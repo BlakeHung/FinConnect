@@ -3,6 +3,8 @@ const zh = {
     title: '設定',
     language: '語言',
     save: '儲存',
+    language_en: '英文',
+    language_zh: '中文',
   },
   
   activities: {
@@ -197,6 +199,11 @@ const zh = {
     role: '角色',
     created_at: '建立時間',
     actions: '操作',
+    roles: {
+      admin: '管理員',
+      finance_manager: '財務主記帳',
+      user: '一般用戶',
+    }
   }
 };
 
