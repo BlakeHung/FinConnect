@@ -8,7 +8,7 @@ const en = {
   },
   
   activities: {
-    title: 'Activities',
+    title: 'Activities Management',
     new: 'New Activity',
     search: 'Search activities',
     status: 'Status',
@@ -47,6 +47,15 @@ const en = {
     status_upcoming: 'Upcoming',
     status_active: 'Active',
     status_ended: 'Ended',
+    enabled: 'Enabled',
+    updated_at: 'Updated At',
+    status_types: {
+      disabled: 'Disabled',
+      upcoming: 'Upcoming',
+      ongoing: 'Ongoing',
+      ended: 'Ended'
+    },
+    new_activity: 'New Activity',
   },
   
   dashboard: {
@@ -231,7 +240,74 @@ const en = {
       finance_manager: 'Finance Manager',
       user: 'Regular User',
     }
-  }
+  },
+  
+  activity_form: {
+    activity_name: 'Activity Name',
+    start_date: 'Start Date',
+    end_date: 'End Date',
+    description: 'Description',
+    enabled_status: 'Enabled Status',
+    activity_enabled: 'Activity is enabled',
+    activity_disabled: 'Activity is disabled',
+    current_status: 'Current Status',
+    processing: 'Processing...',
+    update_activity: 'Update Activity',
+    add_activity: 'Add Activity',
+    submit_failed: 'Submission failed',
+    submit_error_message: 'Submission failed, please try again later',
+    name_required: 'Please enter activity name',
+    start_date_required: 'Please select start date',
+    end_date_required: 'Please select end date'
+  },
+  
+  activity_detail: {
+    ongoing: 'Ongoing',
+    ended: 'Ended',
+    expense_count: 'expenses',
+    edit_activity: 'Edit Activity',
+    edm_management: 'EDM Management',
+    activity_description: 'Activity Description',
+    edm_preview: 'EDM Preview',
+    register_now: 'Register Now',
+    expense_records: 'Expense Records',
+    no_description: 'No description',
+    recorder: 'Recorder',
+    no_expense_records: 'No expense records yet'
+  },
+  
+  activity_edit: {
+    title: 'Edit Activity',
+    description: 'Edit activity details',
+    edit_activity: 'Edit Activity'
+  },
+  
+  activity_edm: {
+    title: 'Activity EDM',
+    description: 'Activity EDM Preview',
+    edit_activity_edm: 'Edit Activity EDM'
+  },
+  
+  edm_form: {
+    title_required: 'Please enter a title',
+    content_required: 'Please enter content',
+    valid_url_required: 'Please enter a valid URL',
+    demo_account_image_error: 'Demo account cannot upload images. Please use another account for testing.',
+    submission_failed: 'Submission failed',
+    submission_error_message: 'Submission failed, please try again later',
+    edm_title: 'EDM Title',
+    title_placeholder: 'Enter an attractive title',
+    activity_content: 'Activity Content',
+    content_placeholder: 'Describe activity details, features, and important information',
+    activity_images: 'Activity Images',
+    demo_account_warning: 'Demo account cannot upload images. Please use another account for testing.',
+    contact_info: 'Contact Information',
+    contact_info_placeholder: 'Contact person, phone, email, etc.',
+    registration_link: 'Registration Link',
+    cancel: 'Cancel',
+    saving: 'Saving...',
+    save_edm: 'Save EDM'
+  },
 };
 
 export default en; 

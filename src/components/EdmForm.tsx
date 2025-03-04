@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { ImageUpload } from "./ImageUpload";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { useTranslations } from 'next-intl';
 
 const edmSchema = z.object({
   title: z.string().min(1, "請輸入標題"),
@@ -34,6 +35,16 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
+  const t = useTranslations('edm_form');
+
+  // 創建帶有翻譯錯誤消息的 schema
+  const localizedEdmSchema = z.object({
+    title: z.string().min(1, t('title_required')),
+    content: z.string().min(1, t('content_required')),
+    images: z.array(z.string()).optional(),
+    contactInfo: z.string().optional(),
+    registrationLink: z.string().url(t('valid_url_required')).optional().or(z.literal("")),
+  });
 
   const {
     register,
@@ -42,7 +53,7 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
     watch,
     formState: { errors },
   } = useForm<EdmFormData>({
-    resolver: zodResolver(edmSchema),
+    resolver: zodResolver(localizedEdmSchema),
     defaultValues,
   });
 
@@ -50,7 +61,7 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
 
   const onSubmit = async (data: EdmFormData) => {
     if (session?.user?.email === 'demo@wchung.tw' && data.images?.length > 0) {
-      toast.error("Demo 帳號無法上傳圖片，請使用其他帳號進行測試。");
+      toast.error(t('demo_account_image_error'));
       return;
     }
 
@@ -66,14 +77,14 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error("提交失敗");
+        throw new Error(t('submission_failed'));
       }
 
       router.push(`/activities/${activityId}`);
       router.refresh();
     } catch (error) {
       console.error("Error:", error);
-      toast.error("提交失敗，請稍後再試");
+      toast.error(t('submission_error_message'));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,13 +96,13 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          EDM 標題
+          {t('edm_title')}
         </label>
         <input
           type="text"
           {...register("title")}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          placeholder="輸入吸引人的標題"
+          placeholder={t('title_placeholder')}
         />
         {errors.title && (
           <p className="mt-1 text-sm text-red-600">{errors.title.message}</p>
@@ -100,13 +111,13 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          活動內容
+          {t('activity_content')}
         </label>
         <textarea
           {...register("content")}
           rows={10}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          placeholder="詳細描述活動內容、特色和重要資訊"
+          placeholder={t('content_placeholder')}
         />
         {errors.content && (
           <p className="mt-1 text-sm text-red-600">{errors.content.message}</p>
@@ -115,11 +126,11 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          活動圖片
+          {t('activity_images')}
         </label>
         {isDemo && (
           <p className="text-sm text-amber-600 mb-2">
-            Demo 帳號無法上傳圖片，請使用其他帳號進行測試。
+            {t('demo_account_warning')}
           </p>
         )}
         <ImageUpload
@@ -131,19 +142,19 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          聯絡資訊
+          {t('contact_info')}
         </label>
         <textarea
           {...register("contactInfo")}
           rows={3}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-          placeholder="聯絡人、電話、Email 等資訊"
+          placeholder={t('contact_info_placeholder')}
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          報名連結
+          {t('registration_link')}
         </label>
         <input
           type="url"
@@ -162,14 +173,14 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
           onClick={() => router.back()}
           className="px-4 py-2 border rounded-md hover:bg-gray-100"
         >
-          取消
+          {t('cancel')}
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
           className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 disabled:opacity-50"
         >
-          {isSubmitting ? "儲存中..." : "儲存 EDM"}
+          {isSubmitting ? t('saving') : t('save_edm')}
         </button>
       </div>
     </form>

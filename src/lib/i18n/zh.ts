@@ -8,7 +8,7 @@ const zh = {
   },
   
   activities: {
-    title: '活動列表',
+    title: '活動管理',
     new: '新增活動',
     search: '搜尋活動',
     status: '狀態',
@@ -47,6 +47,15 @@ const zh = {
     status_upcoming: '即將開始',
     status_active: '進行中',
     status_ended: '已結束',
+    enabled: '啟用',
+    updated_at: '更新時間',
+    status_types: {
+      disabled: '未啟用',
+      upcoming: '即將開始',
+      ongoing: '進行中',
+      ended: '已結束'
+    },
+    new_activity: '新增活動',
   },
   
   dashboard: {
@@ -233,7 +242,74 @@ const zh = {
       role: "角色",
       createdAt: "建立日期",
     }
-  }
+  },
+  
+  activity_form: {
+    activity_name: '活動名稱',
+    start_date: '開始日期',
+    end_date: '結束日期',
+    description: '描述',
+    enabled_status: '啟用狀態',
+    activity_enabled: '活動已啟用',
+    activity_disabled: '活動未啟用',
+    current_status: '目前狀態',
+    processing: '處理中...',
+    update_activity: '更新活動',
+    add_activity: '新增活動',
+    submit_failed: '提交失敗',
+    submit_error_message: '提交失敗，請稍後再試',
+    name_required: '請輸入活動名稱',
+    start_date_required: '請選擇開始日期',
+    end_date_required: '請選擇結束日期'
+  },
+  
+  activity_detail: {
+    ongoing: '進行中',
+    ended: '已結束',
+    expense_count: '筆支出',
+    edit_activity: '編輯活動',
+    edm_management: 'EDM 管理',
+    activity_description: '活動說明',
+    edm_preview: 'EDM 預覽',
+    register_now: '立即報名',
+    expense_records: '支出記錄',
+    no_description: '無說明',
+    recorder: '記錄者',
+    no_expense_records: '還沒有任何支出記錄'
+  },
+  
+  activity_edit: {
+    title: '編輯活動',
+    description: '編輯活動詳情',
+    edit_activity: '編輯活動'
+  },
+  
+  activity_edm: {
+    title: '活動 EDM',
+    description: '活動 EDM 預覽',
+    edit_activity_edm: '編輯活動 EDM'
+  },
+  
+  edm_form: {
+    title_required: '請輸入標題',
+    content_required: '請輸入內容',
+    valid_url_required: '請輸入有效的網址',
+    demo_account_image_error: 'Demo 帳號無法上傳圖片，請使用其他帳號進行測試。',
+    submission_failed: '提交失敗',
+    submission_error_message: '提交失敗，請稍後再試',
+    edm_title: 'EDM 標題',
+    title_placeholder: '輸入吸引人的標題',
+    activity_content: '活動內容',
+    content_placeholder: '詳細描述活動內容、特色和重要資訊',
+    activity_images: '活動圖片',
+    demo_account_warning: 'Demo 帳號無法上傳圖片，請使用其他帳號進行測試。',
+    contact_info: '聯絡資訊',
+    contact_info_placeholder: '聯絡人、電話、Email 等資訊',
+    registration_link: '報名連結',
+    cancel: '取消',
+    saving: '儲存中...',
+    save_edm: '儲存 EDM'
+  },
 };
 
 export default zh; 

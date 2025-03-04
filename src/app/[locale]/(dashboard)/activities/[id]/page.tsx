@@ -5,20 +5,25 @@ import { redirect, notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 type PageProps = {
-  params: Promise<{ id: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: { id: string; locale: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export default async function ActivityPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id } = await params;
-  const queryParams = await searchParams;
-  console.log(queryParams);
+  // 設置請求語言，啟用靜態渲染
+  setRequestLocale(params.locale);
+  
+  const { id } = params;
   const session = await getServerSession(authOptions);
+  
+  // 獲取翻譯
+  const t = await getTranslations({ locale: params.locale, namespace: 'activity_detail' });
   
   if (!session) {
     redirect('/login');
@@ -60,10 +65,10 @@ export default async function ActivityPage({
             </p>
             <div className="flex gap-2 mt-2">
               <Badge variant={activity.status === 'ACTIVE' ? 'success' : 'secondary'}>
-                {activity.status === 'ACTIVE' ? '進行中' : '已結束'}
+                {activity.status === 'ACTIVE' ? t('ongoing') : t('ended')}
               </Badge>
               <Badge variant="outline">
-                {activity._count.transactions} 筆支出
+                {activity._count.transactions} {t('expense_count')}
               </Badge>
             </div>
           </div>
@@ -76,13 +81,13 @@ export default async function ActivityPage({
                   href={`/activities/${activity.id}/edit`}
                   className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
                 >
-                  編輯活動
+                  {t('edit_activity')}
                 </Link>
                 <Link
                   href={`/activities/${activity.id}/edm`}
                   className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md"
                 >
-                  EDM 管理
+                  {t('edm_management')}
                 </Link>
               </>
             )}
@@ -91,7 +96,7 @@ export default async function ActivityPage({
 
         {activity.description && (
           <div className="bg-gray-50 p-4 rounded-lg mb-6">
-            <h2 className="text-lg font-semibold mb-2">活動說明</h2>
+            <h2 className="text-lg font-semibold mb-2">{t('activity_description')}</h2>
             <p className="text-gray-700 whitespace-pre-wrap">{activity.description}</p>
           </div>
         )}
@@ -100,7 +105,7 @@ export default async function ActivityPage({
         {activity.edm && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">EDM 預覽</h2>
+              <h2 className="text-lg font-semibold">{t('edm_preview')}</h2>
               <ShareButton id={activity.id} type="activity" />
             </div>
             <div className="prose max-w-none">
@@ -113,7 +118,7 @@ export default async function ActivityPage({
                   rel="noopener noreferrer"
                   className="text-blue-500 hover:underline"
                 >
-                  立即報名
+                  {t('register_now')}
                 </a>
               )}
             </div>
@@ -122,19 +127,19 @@ export default async function ActivityPage({
 
         <div className="bg-white rounded-lg shadow">
           <div className="p-4 border-b">
-            <h2 className="text-lg font-semibold">支出記錄</h2>
+            <h2 className="text-lg font-semibold">{t('expense_records')}</h2>
           </div>
           <div className="divide-y">
             {activity.transactions.map((transaction) => (
               <div key={transaction.id} className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{transaction.description || '無說明'}</p>
+                    <p className="font-medium">{transaction.description || t('no_description')}</p>
                     <p className="text-sm text-gray-500">
                       {transaction.category.name} • {new Date(transaction.date).toLocaleDateString()}
                     </p>
                     <p className="text-xs text-gray-400">
-                      記錄者: {transaction.user.name}
+                      {t('recorder')}: {transaction.user.name}
                     </p>
                   </div>
                   <p className="font-medium text-lg">
@@ -145,7 +150,7 @@ export default async function ActivityPage({
             ))}
             {activity.transactions.length === 0 && (
               <div className="text-center text-gray-500 py-8">
-                還沒有任何支出記錄
+                {t('no_expense_records')}
               </div>
             )}
           </div>

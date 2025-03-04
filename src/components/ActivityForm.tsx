@@ -7,6 +7,7 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { getActivityStatus } from "@/lib/utils";
+import { useTranslations } from 'next-intl';
 
 const activitySchema = z.object({
   name: z.string().min(1, "請輸入活動名稱"),
@@ -32,6 +33,8 @@ interface ActivityFormProps {
 export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+  const t = useTranslations('activity_form');
+  const statusT = useTranslations('activities.status_types');
 
   const {
     register,
@@ -68,14 +71,14 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error('提交失敗');
+        throw new Error(t('submit_failed'));
       }
 
       router.push('/activities');
       router.refresh();
     } catch (error) {
       console.error('Error:', error);
-      alert('提交失敗，請稍後再試');
+      alert(t('submit_error_message'));
     } finally {
       setIsSubmitting(false);
     }
@@ -84,14 +87,20 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
   const status = getActivityStatus(
     new Date(watch('startDate')),
     new Date(watch('endDate')),
-    watch('enabled')
+    watch('enabled'),
+    {
+      disabled: statusT('disabled'),
+      upcoming: statusT('upcoming'),
+      ongoing: statusT('ongoing'),
+      ended: statusT('ended')
+    }
   );
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          活動名稱
+          {t('activity_name')}
         </label>
         <input
           type="text"
@@ -99,13 +108,13 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('name_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          開始日期
+          {t('start_date')}
         </label>
         <input
           type="date"
@@ -113,13 +122,13 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.startDate && (
-          <p className="mt-1 text-sm text-red-600">{errors.startDate.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('start_date_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          結束日期
+          {t('end_date')}
         </label>
         <input
           type="date"
@@ -127,13 +136,13 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.endDate && (
-          <p className="mt-1 text-sm text-red-600">{errors.endDate.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('end_date_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          描述
+          {t('description')}
         </label>
         <textarea
           {...register("description")}
@@ -145,10 +154,10 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
       <div className="flex items-center justify-between p-4 border rounded-md">
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            啟用狀態
+            {t('enabled_status')}
           </label>
           <p className="text-sm text-gray-500">
-            {watch('enabled') ? '活動已啟用' : '活動未啟用'}
+            {watch('enabled') ? t('activity_enabled') : t('activity_disabled')}
           </p>
         </div>
         <Switch
@@ -158,7 +167,7 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
       </div>
 
       <div className="p-4 border rounded-md">
-        <span className="text-sm font-medium text-gray-700">目前狀態：</span>
+        <span className="text-sm font-medium text-gray-700">{t('current_status')}：</span>
         <span className={`ml-2 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
           {status.status}
         </span>
@@ -169,7 +178,7 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
         disabled={isSubmitting}
         className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md disabled:opacity-50"
       >
-        {isSubmitting ? '處理中...' : activityId ? '更新活動' : '新增活動'}
+        {isSubmitting ? t('processing') : activityId ? t('update_activity') : t('add_activity')}
       </button>
     </form>
   );
