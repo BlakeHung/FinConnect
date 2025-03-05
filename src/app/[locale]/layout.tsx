@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { Geist, Geist_Mono } from "next/font/google";
 import { Inter } from 'next/font/google';
 import '../globals.css';
+import { setRequestLocale } from '@/lib/i18n';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -83,6 +84,8 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: { locale: Locale };
 }) {
+  setRequestLocale(locale);
+  
   const messages = await getMessages(locale);
 
   return (
@@ -91,7 +94,12 @@ export default async function LocaleLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
       </head>
       <body className="min-h-screen">
-        <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Taipei">
+        <NextIntlClientProvider 
+          locale={locale} 
+          messages={messages} 
+          timeZone="Asia/Taipei"
+          now={new Date()}
+        >
           <div className={inter.className}>
             {children}
             <Toaster />

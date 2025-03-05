@@ -1,15 +1,16 @@
 import createMiddleware from 'next-intl/middleware';
+import { locales, defaultLocale } from '@/lib/i18n';
 
 // 中間件配置
 export default createMiddleware({
   // 支持的語言列表
-  locales: ['en', 'zh'],
+  locales,
   
   // 默認語言
-  defaultLocale: 'zh',
+  defaultLocale,
   
-  // 語言前綴策略 (as-needed: 只有非默認語言才會有前綴)
-  localePrefix: 'as-needed'
+  // 語言前綴策略 (always: 所有語言都會有前綴)
+  localePrefix: 'always'
 });
 
 export const config = {
