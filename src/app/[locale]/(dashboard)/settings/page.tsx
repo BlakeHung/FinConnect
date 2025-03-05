@@ -1,5 +1,5 @@
-import { SettingsContent } from "./SettingsContent";
+import { SettingContent } from "./SettingsContent";
 
 export default function SettingsPage() {
-  return <SettingsContent />;
+  return <SettingContent user={null} />;
 } 

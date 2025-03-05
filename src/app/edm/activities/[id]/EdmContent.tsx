@@ -1,15 +1,34 @@
 "use client";
 
-import { useLanguage } from "@/hooks/useLanguage";
 import Image from "next/image";
-import { availableLocales } from "@/lib/i18n";
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter, usePathname } from 'next/navigation';
+import { useTransition } from 'react';
 
 export function EdmContent({ 
   activity 
 }: { 
   activity: any 
 }) {
-  const { locale, changeLanguage, t } = useLanguage();
+  const locale = useLocale();
+  const t = useTranslations('edm');
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
+  
+  // 可用語言列表
+  const availableLocales = ['en', 'zh'];
+  
+  // 切換語言
+  const changeLanguage = (newLocale: string) => {
+    // 獲取當前路徑並替換語言部分
+    const currentPathWithoutLocale = pathname.replace(/^\/[^\/]+/, '');
+    const newPath = `/${newLocale}${currentPathWithoutLocale}`;
+    
+    startTransition(() => {
+      router.push(newPath);
+    });
+  };
 
   // 根據當前語言獲取內容
   const title = activity.edm[`title_${locale}`] || activity.edm.title;
@@ -24,11 +43,12 @@ export function EdmContent({
           <button
             key={lang}
             onClick={() => changeLanguage(lang)}
+            disabled={isPending}
             className={`px-3 py-1 rounded transition-colors ${
               locale === lang
                 ? "bg-blue-500 text-white"
                 : "bg-gray-200 hover:bg-gray-300"
-            }`}
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {lang === "en" ? "English" : "中文"}
           </button>
@@ -65,14 +85,14 @@ export function EdmContent({
               rel="noopener noreferrer"
               className="bg-blue-500 text-white px-8 py-3 rounded-full text-lg font-semibold hover:bg-blue-600 transition-colors"
             >
-              {t.edm__register}
+              {t('register')}
             </a>
           </div>
         )}
 
         {contactInfo && (
           <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3">{t.edm__contact_info}</h2>
+            <h2 className="text-xl font-semibold mb-3">{t('contact_info')}</h2>
             <p className="whitespace-pre-wrap">{contactInfo}</p>
           </div>
         )}

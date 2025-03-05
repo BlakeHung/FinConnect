@@ -8,6 +8,7 @@ import { SortFilter } from "@/components/SortFilter";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/components/TransactionTable";
+import { setRequestLocale } from 'next-intl/server';
 
 type SearchParams = {
   userId?: string;
@@ -25,6 +26,9 @@ export default async function TransactionsPage({
   params,
   searchParams,
 }: PageProps) {
+  // 設置請求語言，啟用靜態渲染
+  setRequestLocale(params.locale);
+  
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
   console.log(params);

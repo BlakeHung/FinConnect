@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -9,18 +9,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { Spinner } from "@/components/ui/spinner"
-import { useClientTranslation } from "@/lib/i18n/utils"
+import { useTranslations } from "next-intl"
 
 export function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDemoLoading, setIsDemoLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const t = useClientTranslation('auth')
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const t = useTranslations('auth')
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -35,14 +30,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error(mounted ? t('login_error') : "登入失敗")
+        toast.error(t('login_error'))
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error(mounted ? t('login_error') : "登入失敗")
+      toast.error(t('login_error'))
     } finally {
       setIsLoading(false)
     }
@@ -58,14 +53,14 @@ export function LoginForm() {
       })
 
       if (response?.error) {
-        toast.error(mounted ? t('login_error') : "登入失敗")
+        toast.error(t('login_error'))
         return
       }
 
       router.push("/")
       router.refresh()
     } catch (error) {
-      toast.error(mounted ? t('login_error') : "登入失敗")
+      toast.error(t('login_error'))
     } finally {
       setIsDemoLoading(false)
     }
@@ -75,7 +70,7 @@ export function LoginForm() {
     <div className="space-y-4">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Label htmlFor="email">{mounted ? t('email') : "電子郵件"}</Label>
+          <Label htmlFor="email">{t('email')}</Label>
           <Input
             id="email"
             name="email"
@@ -85,7 +80,7 @@ export function LoginForm() {
           />
         </div>
         <div>
-          <Label htmlFor="password">{mounted ? t('password') : "密碼"}</Label>
+          <Label htmlFor="password">{t('password')}</Label>
           <Input
             id="password"
             name="password"
@@ -102,10 +97,10 @@ export function LoginForm() {
           {isLoading ? (
             <>
               <Spinner className="mr-2 h-4 w-4" />
-              {mounted ? t('login_loading') : "登入中..."}
+              {t('login_loading')}
             </>
           ) : (
-            mounted ? t('login_submit') : "登入"
+            t('login_submit')
           )}
         </Button>
       </form>
@@ -115,7 +110,7 @@ export function LoginForm() {
           <span className="w-full border-t" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500">或</span>
+          <span className="bg-white px-2 text-gray-500">{t('or')}</span>
         </div>
       </div>
 
@@ -128,10 +123,10 @@ export function LoginForm() {
         {isDemoLoading ? (
           <>
             <Spinner className="mr-2 h-4 w-4" />
-            {mounted ? t('login_loading') : "登入中..."}
+            {t('login_loading')}
           </>
         ) : (
-          mounted ? t('login_demo') : "使用 Demo 帳號"
+          t('login_demo')
         )}
       </Button>
     </div>
@@ -139,22 +134,17 @@ export function LoginForm() {
 }
 
 export default function LoginPage() {
-  const [mounted, setMounted] = useState(false)
-  const t = useClientTranslation('auth')
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const t = useTranslations('auth')
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
       <Card className="w-full max-w-md p-6 space-y-6 bg-white">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">
-            {mounted ? t('login_title') : "登入"}
+            {t('login_title')}
           </h1>
           <p className="text-gray-500">
-            {mounted ? t('login_description') : "歡迎回來"}
+            {t('login_description')}
           </p>
         </div>
         <LoginForm />

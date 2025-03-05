@@ -4,7 +4,21 @@ const en = {
     language: 'Language',
     save: 'Save',
     language_en: 'English',
-    language_zh: 'Chinese', 
+    language_zh: 'Chinese',
+    name_required: 'Please enter your name',
+    valid_email_required: 'Please enter a valid email',
+    update_failed: 'Update failed',
+    profile_updated: 'Profile updated',
+    update_error_message: 'Update failed, please try again later',
+    account_settings: 'Account Settings',
+    demo_account_message: 'This is a demo account. You cannot modify the profile.',
+    name: 'Name',
+    email: 'Email',
+    email_cannot_change: 'Email cannot be changed',
+    profile_image: 'Profile Image',
+    image_url_hint: 'Enter the URL of your profile image',
+    updating: 'Updating...',
+    update_profile: 'Update Profile'
   },
   
   activities: {
@@ -210,7 +224,8 @@ const en = {
     login_description: 'Welcome back',
     login_loading: 'Logging in...',
     login_submit: 'Login',
-    login_demo: 'Use Demo account',
+    login_demo: 'Use Demo Account',
+    or: 'OR'
   },
   
   common: {
@@ -308,6 +323,12 @@ const en = {
     saving: 'Saving...',
     save_edm: 'Save EDM'
   },
+  
+  edm: {
+    register: 'Register Now',
+    contact_info: 'Contact Information'
+  },
 };
 
-export default en; 
+export default en;
+export { en }; 

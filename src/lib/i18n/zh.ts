@@ -5,6 +5,20 @@ const zh = {
     save: '儲存',
     language_en: '英文',
     language_zh: '中文',
+    name_required: '請輸入姓名',
+    valid_email_required: '請輸入有效的電子郵件',
+    update_failed: '更新失敗',
+    profile_updated: '個人資料已更新',
+    update_error_message: '更新失敗，請稍後再試',
+    account_settings: '帳號設定',
+    demo_account_message: '這是示範帳號，無法修改個人資料。',
+    name: '姓名',
+    email: '電子郵件',
+    email_cannot_change: '電子郵件無法變更',
+    profile_image: '個人頭像',
+    image_url_hint: '輸入頭像圖片的網址',
+    updating: '更新中...',
+    update_profile: '更新個人資料'
   },
   
   activities: {
@@ -208,6 +222,7 @@ const zh = {
     login_loading: '登入中...',
     login_submit: '登入',
     login_demo: '使用 Demo 帳號',
+    or: '或'
   },
   
   users: {
@@ -310,6 +325,12 @@ const zh = {
     saving: '儲存中...',
     save_edm: '儲存 EDM'
   },
+  
+  edm: {
+    register: '立即報名',
+    contact_info: '聯絡資訊'
+  },
 };
 
-export default zh; 
+export default zh;
+export { zh }; 
