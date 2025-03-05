@@ -4,7 +4,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { useSidebar } from "@/store/use-sidebar"
 import { useSession } from "next-auth/react"
-import { useClientTranslation } from '@/lib/i18n/utils'
+import { useClientTranslation, useClientLocale } from '@/lib/i18n/utils'
 import {
   LayoutDashboard,
   Receipt,
@@ -23,6 +23,7 @@ export function Sidebar() {
   const { data: session } = useSession()
   const t = useClientTranslation('sidebar')
   const pathname = usePathname()
+  const locale = useClientLocale()
   
   const commonRoutes = [
     {
@@ -69,6 +70,11 @@ export function Sidebar() {
     return pathname?.includes(path);
   };
 
+  // 生成包含當前語言的完整路徑
+  const getLocalizedHref = (href: string) => {
+    return `/${locale}${href}`;
+  };
+
   return (
     <>
       {/* 行動版遮罩層 */}
@@ -95,7 +101,7 @@ export function Sidebar() {
               {routes.map((route) => (
                 <Link
                   key={route.href}
-                  href={route.href}
+                  href={getLocalizedHref(route.href)}
                   onClick={() => {
                     if (window.innerWidth < 768) {
                       toggle()
@@ -107,9 +113,9 @@ export function Sidebar() {
                     isActive(route.href) ? 'bg-gray-100 font-medium' : ''
                   )}
                 >
-                  <div className="flex items-center flex-1">
+                  <div className="flex items-center flex-1 gap-3">
                     {route.icon}
-                    {route.label}
+                    <span>{route.label}</span>
                   </div>
                 </Link>
               ))}
