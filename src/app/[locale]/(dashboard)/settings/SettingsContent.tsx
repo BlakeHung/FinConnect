@@ -34,7 +34,7 @@ export function SettingsContent() {
                     : "bg-gray-200 hover:bg-gray-300"
                 }`}
               >
-                {lang === "en" ? "English" : "中文"}
+                {t(`languages.${lang}`)}
               </button>
             ))}
           </div>

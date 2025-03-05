@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "./ImageUpload";
+import { useTranslations } from 'next-intl';
 
 export function UserForm({ user }: { user?: any }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
   const isDemo = session?.user?.email === 'demo@wchung.tw';
+  const t = useTranslations('users');
 
   const [formData, setFormData] = useState({
     name: user?.name || '',
@@ -27,21 +29,18 @@ export function UserForm({ user }: { user?: any }) {
     e.preventDefault();
     
     if (isDemo) {
-      toast.error("Demo 帳號無法修改用戶");
+      toast.error(t('demo_error'));
       return;
     }
 
     try {
       setIsLoading(true);
       
-      // 構建請求數據
       const data = {
         ...formData,
-        // 只有在有輸入密碼時才發送密碼
         ...(formData.password ? { password: formData.password } : {}),
       };
 
-      // 根據是否有 user 來決定是新增還是更新
       const url = user ? `/api/users/${user.id}` : '/api/users';
       const method = user ? 'PUT' : 'POST';
 
@@ -56,12 +55,12 @@ export function UserForm({ user }: { user?: any }) {
         throw new Error(error);
       }
 
-      toast.success(user ? '更新成功' : '創建成功');
+      toast.success(user ? t('update_success') : t('create_success'));
       router.push('/users');
       router.refresh();
     } catch (error) {
       console.error('Error:', error);
-      toast.error(error instanceof Error ? error.message : '操作失敗，請稍後再試');
+      toast.error(error instanceof Error ? error.message : t('operation_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +69,7 @@ export function UserForm({ user }: { user?: any }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
-        <Label htmlFor="name">名稱</Label>
+        <Label htmlFor="name">{t('name')}</Label>
         <Input
           id="name"
           value={formData.name}
@@ -80,7 +79,7 @@ export function UserForm({ user }: { user?: any }) {
       </div>
 
       <div>
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t('email')}</Label>
         <Input
           id="email"
           type="email"
@@ -92,19 +91,19 @@ export function UserForm({ user }: { user?: any }) {
 
       <div>
         <Label htmlFor="password">
-          密碼 {user && <span className="text-sm text-gray-500">(留空表示不修改)</span>}
+          {t('password')} {user && <span className="text-sm text-gray-500">({t('password_hint')})</span>}
         </Label>
         <Input
           id="password"
           type="password"
           value={formData.password}
           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          {...(!user && { required: true })} // 新建用戶時必填
+          {...(!user && { required: true })}
         />
       </div>
 
       <div>
-        <Label htmlFor="role">角色</Label>
+        <Label htmlFor="role">{t('role')}</Label>
         <select
           id="role"
           className="w-full rounded-md border border-gray-300 p-2"
@@ -112,17 +111,17 @@ export function UserForm({ user }: { user?: any }) {
           onChange={(e) => setFormData({ ...formData, role: e.target.value })}
           required
         >
-          <option value="USER">一般用戶</option>
-          <option value="FINANCE_MANAGER">財務主記帳</option>
-          <option value="ADMIN">管理員</option>
+          <option value="USER">{t('roles.user')}</option>
+          <option value="FINANCE_MANAGER">{t('roles.finance_manager')}</option>
+          <option value="ADMIN">{t('roles.admin')}</option>
         </select>
       </div>
 
       <div>
-        <Label>頭像</Label>
+        <Label>{t('profile_image')}</Label>
         {isDemo && (
           <p className="text-sm text-amber-600 mb-2">
-            Demo 帳號無法上傳圖片，請使用其他帳號進行測試。
+            {t('demo_image_error')}
           </p>
         )}
         <ImageUpload
@@ -133,7 +132,7 @@ export function UserForm({ user }: { user?: any }) {
       </div>
 
       <Button type="submit" disabled={isLoading || isDemo}>
-        {isLoading ? '處理中...' : (user ? '更新' : '創建')}
+        {isLoading ? t('processing') : (user ? t('update') : t('create'))}
       </Button>
     </form>
   );

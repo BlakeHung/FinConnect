@@ -14,6 +14,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ImageUpload } from "./ImageUpload";
+import { useTranslations } from 'next-intl';
 
 const transactionSchema = z.object({
   amount: z.number().positive("金額必須大於 0"),
@@ -62,6 +63,7 @@ export function TransactionForm({
   transactionId,
   canManagePayments = false,
 }: TransactionFormProps) {
+  const t = useTranslations('transactions');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [previewImages, setPreviewImages] = useState<string[]>(
     defaultValues?.images || []
@@ -151,7 +153,7 @@ export function TransactionForm({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          金額
+          {t('amount')}
         </label>
         <input
           type="number"
@@ -167,19 +169,19 @@ export function TransactionForm({
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.amount && (
-          <p className="mt-1 text-sm text-red-600">{errors.amount.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('amount_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          類別
+          {t('category')}
         </label>
         <select
           {...register("categoryId")}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         >
-          <option value="">選擇類別</option>
+          <option value="">{t('select_category')}</option>
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
@@ -187,13 +189,13 @@ export function TransactionForm({
           ))}
         </select>
         {errors.categoryId && (
-          <p className="mt-1 text-sm text-red-600">{errors.categoryId.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('category_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          日期
+          {t('date')}
         </label>
         <input
           type="date"
@@ -201,26 +203,26 @@ export function TransactionForm({
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.date && (
-          <p className="mt-1 text-sm text-red-600">{errors.date.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('date_required')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          描述
+          {t('description')}
         </label>
         <textarea
           {...register("description")}
           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
         />
         {errors.description && (
-          <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
+          <p className="mt-1 text-sm text-red-600">{t('description_error')}</p>
         )}
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          圖片
+          {t('images')}
         </label>
         <input
           type="file"
@@ -234,7 +236,7 @@ export function TransactionForm({
             <div key={index} className="relative aspect-square">
               <Image
                 src={url}
-                alt={`Preview ${index}`}
+                alt={t('image_preview', { index: index + 1 })}
                 width={100}
                 height={100}
                 className="object-cover rounded-md"
@@ -245,17 +247,17 @@ export function TransactionForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="activityId">活動</Label>
+        <Label htmlFor="activityId">{t('activity')}</Label>
         
         <Select
           value={watch('activityId') || 'none'}
           onValueChange={(value) => setValue('activityId', value === 'none' ? null : value)}
         >
           <SelectTrigger>
-            <SelectValue placeholder="選擇活動" />
+            <SelectValue placeholder={t('select_activity')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="none">無活動</SelectItem>
+            <SelectItem value="none">{t('no_activity')}</SelectItem>
             {activities?.map((activity) => (
               <SelectItem key={activity.id} value={activity.id}>
                 {activity.name}
@@ -273,7 +275,7 @@ export function TransactionForm({
             onCheckedChange={setIsPaid}
           />
           <Label htmlFor="payment-status">
-            {isPaid ? '已付款' : '未付款'}
+            {isPaid ? t('payment_status.paid') : t('payment_status.unpaid')}
           </Label>
         </div>
       )}
@@ -285,14 +287,14 @@ export function TransactionForm({
           onClick={() => router.back()}
           disabled={isSubmitting}
         >
-          取消
+          {t('cancel')}
         </LoadingButton>
         <LoadingButton
           type="submit"
           isLoading={isSubmitting}
-          loadingText="儲存中..."
+          loadingText={t('saving')}
         >
-          儲存
+          {t('save')}
         </LoadingButton>
       </div>
     </form>

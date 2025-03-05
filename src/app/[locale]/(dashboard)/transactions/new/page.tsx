@@ -3,19 +3,20 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
+import { getTranslations } from 'next-intl/server';
 
 type PageProps = {
-  params: Promise<Record<string, never>>;
+  params: { locale: string };
   searchParams: Promise<{ type: 'EXPENSE' | 'INCOME' }>;
 };
 
 export default async function NewTransactionPage({
-  params,
+  params: { locale },
   searchParams,
 }: PageProps) {
+  const t = await getTranslations('transactions');
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
-  console.log(params);
   if (!session) {
     redirect('/login');
   }
@@ -52,7 +53,7 @@ export default async function NewTransactionPage({
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
-          新增{queryParams.type === 'EXPENSE' ? '支出' : '收入'}
+          {queryParams.type === 'EXPENSE' ? t('new_expense') : t('new_income')}
         </h1>
         <TransactionForm 
           type={queryParams.type} 

@@ -3,9 +3,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
+import { getTranslations } from 'next-intl/server';
 
 type PageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
@@ -13,7 +14,8 @@ export default async function EditTransactionPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
+  const t = await getTranslations('transactions');
   const queryParams = await searchParams;
   console.log(queryParams);
   const session = await getServerSession(authOptions);
@@ -65,7 +67,7 @@ export default async function EditTransactionPage({
   return (
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">編輯交易</h1>
+        <h1 className="text-2xl font-bold mb-6">{t('form.title_edit')}</h1>
         <TransactionForm 
           type={transaction.type}
           categories={categories}

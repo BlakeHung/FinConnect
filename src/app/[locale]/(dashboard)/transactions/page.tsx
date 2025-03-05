@@ -8,7 +8,7 @@ import { SortFilter } from "@/components/SortFilter";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/components/TransactionTable";
-import { setRequestLocale } from 'next-intl/server';
+import { getTranslations, setRequestLocale } from 'next-intl/server';
 
 type SearchParams = {
   userId?: string;
@@ -18,20 +18,19 @@ type SearchParams = {
 };
 
 type PageProps = {
-  params: Promise<Record<string, never>>;
+  params: { locale: string };
   searchParams: Promise<SearchParams>;
 };
 
 export default async function TransactionsPage({
-  params,
+  params: { locale },
   searchParams,
 }: PageProps) {
-  // 設置請求語言，啟用靜態渲染
-  setRequestLocale(params.locale);
+  setRequestLocale(locale);
+  const t = await getTranslations('transactions');
   
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
-  console.log(params);
   if (!session) {
     redirect('/login');
   }
@@ -91,19 +90,19 @@ export default async function TransactionsPage({
   return (
     <div className="container mx-auto p-4">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">交易記錄</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button asChild className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
-            <a href="/transactions/new?type=EXPENSE" className="flex items-center justify-center">
+            <a href="/transactions/new?type=EXPENSE">
               <Plus className="mr-2 h-4 w-4" />
-              新增支出
+              {t("new_expense")}
             </a>
           </Button>
           <Button asChild className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-            <a href="/transactions/new?type=INCOME" className="flex items-center justify-center">
+            <a href="/transactions/new?type=INCOME">
               <Plus className="mr-2 h-4 w-4" />
-              新增收入
+              {t("new_income")}
             </a>
           </Button>
         </div>

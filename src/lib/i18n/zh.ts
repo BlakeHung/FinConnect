@@ -18,7 +18,11 @@ const zh = {
     profile_image: '個人頭像',
     image_url_hint: '輸入頭像圖片的網址',
     updating: '更新中...',
-    update_profile: '更新個人資料'
+    update_profile: '更新個人資料',
+    languages: {
+      zh: '中文',
+      en: '英文'
+    }
   },
   
   activities: {
@@ -103,8 +107,14 @@ const zh = {
     search: '搜尋交易',
     date: '日期',
     amount: '金額',
-    category: '分類',
+    amount_required: '金額必須大於 0',
+    category: '類別',
+    select_category: '選擇類別',
+    category_required: '請選擇類別',
     description: '描述',
+    description_error: '描述格式不正確',
+    images: '圖片',
+    image_preview: '預覽圖片 {index}',
     type: '類型',
     user: '使用者',
     actions: '操作',
@@ -132,6 +142,67 @@ const zh = {
     total_participants: '總參與者',
     total_budget: '總預算',
     monthly_transactions: '每月交易',
+    payment_status: {
+      paid: '已付款',
+      unpaid: '未付款'
+    },
+    mark_as_paid: '標記為已付款',
+    mark_selected_as_paid: '標記選中項目為已付款',
+    confirm_payment: '確認更新付款狀態',
+    confirm_batch_payment: '確定要將選中的 {count} 筆交易標記為已付款嗎？',
+    confirm_single_payment: '確定要將此筆交易標記為已付款嗎？',
+    update_failed: '更新失敗，請稍後再試',
+    activity_filter: '活動篩選',
+    all_activities: '全部活動',
+    table: {
+      date: '日期',
+      type: '類型',
+      amount: '金額',
+      category: '分類',
+      description: '說明',
+      creator: '建立者',
+      payment_status: '付款狀態',
+      activity: '活動',
+      last_updated: '最後更新',
+      actions: '操作'
+    },
+    new_expense: 'New Expense',
+    new_income: 'New Income',
+    select_activity: '選擇活動',
+    no_activity: '無活動',
+    saving: '儲存中...',
+    submit_error: '提交失敗，請稍後再試',
+    form: {
+      title_new: '新增交易',
+      title_edit: '編輯交易',
+      submit_success: '交易已儲存',
+      submit_error: '儲存失敗，請稍後再試',
+    },
+    confirm_payment_status: '確認更新付款狀態',
+    confirm_batch_payment: '確定要將選中的 {count} 筆交易標記為已付款嗎？',
+    confirm_single_payment: '確定要將此筆交易標記為已付款嗎？',
+    mark_selected_as_paid: '標記選中項目為已付款 ({count})',
+    mark_as_paid: '標記為已付款',
+    table: {
+      date: '日期',
+      type: '類型',
+      amount: '金額',
+      category: '分類',
+      description: '說明',
+      creator: '建立者',
+      payment_status: '付款狀態',
+      activity: '活動',
+      last_updated: '最後更新',
+      actions: '操作'
+    },
+    activity_filter: '活動篩選',
+    all_activities: '所有活動',
+    expense: '支出',
+    income: '收入',
+    payment_status: {
+      paid: '已付款',
+      unpaid: '未付款'
+    }
   },
   
   categories: {
@@ -242,7 +313,18 @@ const zh = {
       admin: '管理員',
       finance_manager: '財務主記帳',
       user: '一般用戶',
-    }
+    },
+    password: '密碼',
+    password_hint: '留空表示不修改',
+    profile_image: '頭像',
+    demo_image_error: 'Demo 帳號無法上傳圖片，請使用其他帳號進行測試。',
+    processing: '處理中...',
+    create: '創建',
+    update: '更新',
+    update_success: '更新成功',
+    create_success: '創建成功',
+    operation_failed: '操作失敗，請稍後再試',
+    demo_error: 'Demo 帳號無法修改用戶'
   },
   
   common: {
@@ -329,6 +411,18 @@ const zh = {
   edm: {
     register: '立即報名',
     contact_info: '聯絡資訊'
+  },
+  
+  filters: {
+    user_filter_label: '篩選使用者：',
+    all_users: '所有使用者',
+    sort_label: '排序方式：',
+    sort: {
+      date_desc: '日期（新到舊）',
+      date_asc: '日期（舊到新）',
+      amount_desc: '金額（大到小）',
+      amount_asc: '金額（小到大）'
+    }
   },
 };
 

@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+import { useTranslations } from 'next-intl';
 
 interface User {
   id: string;
@@ -16,6 +17,7 @@ interface UserFilterProps {
 export function UserFilter({ users }: UserFilterProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations('filters');
 
   const createQueryString = useCallback(
     (name: string, value: string) => {
@@ -34,7 +36,7 @@ export function UserFilter({ users }: UserFilterProps) {
   return (
     <div className="flex items-center gap-2">
       <label className="text-sm font-medium text-gray-700">
-        篩選使用者：
+        {t("user_filter_label")}
       </label>
       <select
         className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2"
@@ -45,7 +47,7 @@ export function UserFilter({ users }: UserFilterProps) {
           router.push(`/transactions${queryString ? `?${queryString}` : ''}`);
         }}
       >
-        <option value="">所有使用者</option>
+        <option value="">{t("all_users")}</option>
         {users.map((user) => (
           <option key={user.id} value={user.id}>
             {user.name}

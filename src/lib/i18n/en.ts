@@ -18,7 +18,11 @@ const en = {
     profile_image: 'Profile Image',
     image_url_hint: 'Enter the URL of your profile image',
     updating: 'Updating...',
-    update_profile: 'Update Profile'
+    update_profile: 'Update Profile',
+    languages: {
+      zh: 'Chinese',
+      en: 'English'
+    }
   },
   
   activities: {
@@ -108,8 +112,25 @@ const en = {
     search: 'Search transactions',
     date: 'Date',
     amount: 'Amount',
+    amount_required: 'Amount must be greater than 0',
     category: 'Category',
+    select_category: 'Select category',
+    category_required: 'Please select a category',
     description: 'Description',
+    description_error: 'Invalid description format',
+    images: 'Images',
+    image_preview: 'Preview image {index}',
+    activity: 'Activity',
+    select_activity: 'Select activity',
+    no_activity: 'No activity',
+    saving: 'Saving...',
+    submit_error: 'Submission failed, please try again later',
+    form: {
+      title_new: 'New Transaction',
+      title_edit: 'Edit Transaction',
+      submit_success: 'Transaction saved',
+      submit_error: 'Save failed, please try again later',
+    },
     type: 'Type',
     user: 'User',
     actions: 'Actions',
@@ -137,6 +158,41 @@ const en = {
     total_participants: 'Total Participants',
     total_budget: 'Total Budget',
     monthly_transactions: 'Monthly Transactions',
+    payment_status: {
+      paid: 'Paid',
+      unpaid: 'Unpaid'
+    },
+    mark_as_paid: 'Mark as Paid',
+    mark_selected_as_paid: 'Mark Selected as Paid',
+    confirm_payment: 'Confirm Payment Status Update',
+    confirm_batch_payment: 'Are you sure you want to mark {count} selected transactions as paid?',
+    confirm_single_payment: 'Are you sure you want to mark this transaction as paid?',
+    update_failed: 'Update failed, please try again later',
+    activity_filter: 'Activity Filter',
+    all_activities: 'All Activities',
+    table: {
+      date: 'Date',
+      type: 'Type',
+      amount: 'Amount',
+      category: 'Category',
+      description: 'Description',
+      creator: 'Creator',
+      payment_status: 'Payment Status',
+      activity: 'Activity',
+      last_updated: 'Last Updated',
+      actions: 'Actions'
+    },
+    new_expense: 'New Expense',
+    new_income: 'New Income',
+    confirm_payment_status: 'Confirm Payment Status Update',
+    mark_selected_as_paid: 'Mark Selected as Paid ({count})',
+    mark_as_paid: 'Mark as Paid',
+    expense: 'Expense',
+    income: 'Income',
+    payment_status: {
+      paid: 'Paid',
+      unpaid: 'Unpaid'
+    }
   },
   
   categories: {
@@ -254,7 +310,18 @@ const en = {
       admin: 'Administrator',
       finance_manager: 'Finance Manager',
       user: 'Regular User',
-    }
+    },
+    password: 'Password',
+    password_hint: 'Leave blank to keep unchanged',
+    profile_image: 'Profile Image',
+    demo_image_error: 'Demo account cannot upload images. Please use another account for testing.',
+    processing: 'Processing...',
+    create: 'Create',
+    update: 'Update',
+    update_success: 'Updated successfully',
+    create_success: 'Created successfully',
+    operation_failed: 'Operation failed, please try again later',
+    demo_error: 'Demo account cannot modify users'
   },
   
   activity_form: {
@@ -327,6 +394,18 @@ const en = {
   edm: {
     register: 'Register Now',
     contact_info: 'Contact Information'
+  },
+  
+  filters: {
+    user_filter_label: 'Filter Users:',
+    all_users: 'All Users',
+    sort_label: 'Sort By:',
+    sort: {
+      date_desc: 'Date (Newest First)',
+      date_asc: 'Date (Oldest First)',
+      amount_desc: 'Amount (High to Low)',
+      amount_asc: 'Amount (Low to High)'
+    }
   },
 };
 

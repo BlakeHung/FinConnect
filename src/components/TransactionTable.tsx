@@ -9,6 +9,7 @@ import { ArrowUpDown } from "lucide-react";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { Label } from "@/components/ui/label";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { useTranslations } from 'next-intl';
 
 interface Transaction {
   id: string;
@@ -64,6 +65,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
     ids: [],
     isBatch: false,
   });
+  const t = useTranslations('transactions');
 
   // 獲取當前排序狀態
   const currentSortBy = searchParams.get('sortBy') || 'date';
@@ -182,16 +184,16 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
       {/* 活動篩選 - 只在有活動時顯示 */}
       {activities && activities.length > 0 && (
         <div className="flex items-center space-x-2">
-          <Label>活動篩選</Label>
+          <Label>{t("activity_filter")}</Label>
           <Select
             value={currentActivityId}
             onValueChange={handleActivityFilter}
           >
             <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="全部活動" />
+              <SelectValue placeholder={t("all_activities")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">全部活動</SelectItem>
+              <SelectItem value="all">{t("all_activities")}</SelectItem>
               {activities.map((activity) => (
                 <SelectItem key={activity.id} value={activity.id}>
                   {activity.name}
@@ -210,11 +212,11 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
           handleMarkAsPaid(confirmModal.ids);
           closeConfirmModal();
         }}
-        title="確認更新付款狀態"
+        title={t('confirm_payment_status')}
         description={
           confirmModal.isBatch
-            ? `確定要將選中的 ${confirmModal.ids.length} 筆交易標記為已付款嗎？`
-            : "確定要將此筆交易標記為已付款嗎？"
+            ? t('confirm_batch_payment', { count: confirmModal.ids.length })
+            : t('confirm_single_payment')
         }
       />
 
@@ -224,7 +226,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
           <Button
             onClick={() => openConfirmModal(selectedIds, true)}
           >
-            標記選中項目為已付款 ({selectedIds.length})
+            {t('mark_selected_as_paid', { count: selectedIds.length })}
           </Button>
         </div>
       )}
@@ -242,17 +244,16 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                   />
                 </th>
               )}
-              <SortableHeader field="date">日期</SortableHeader>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">類型</th>
-              <SortableHeader field="amount">金額</SortableHeader>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">分類</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">說明</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">建立者</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">付款狀態</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">活動</th>
-              <SortableHeader field="updatedAt">最後更新</SortableHeader>
-
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+              <SortableHeader field="date">{t('table.date')}</SortableHeader>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.type')}</th>
+              <SortableHeader field="amount">{t('table.amount')}</SortableHeader>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.category')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.description')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.creator')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.payment_status')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.activity')}</th>
+              <SortableHeader field="updatedAt">{t('table.last_updated')}</SortableHeader>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -278,7 +279,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                   </td>
                 )}
                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.type === 'EXPENSE' ? '支出' : '收入'}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.type === 'EXPENSE' ? t('expense') : t('income')}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.amount}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.category.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.description}</td>
@@ -287,7 +288,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                   <Badge
                     variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
                   >
-                    {transaction.paymentStatus === 'PAID' ? '已付款' : '未付款'}
+                    {transaction.paymentStatus === 'PAID' ? t('payment_status.paid') : t('payment_status.unpaid')}
                   </Badge>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -306,7 +307,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                         openConfirmModal([transaction.id], false);
                       }}
                     >
-                      標記為已付款
+                      {t('mark_as_paid')}
                     </Button>
                   )}
                 </td>
@@ -328,7 +329,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
               <div className="space-y-1">
                 <div className="text-sm text-gray-500">{formatDate(transaction.date)}</div>
                 <div className="font-medium">
-                  {transaction.type === 'EXPENSE' ? '支出' : '收入'}
+                  {transaction.type === 'EXPENSE' ? t('expense') : t('income')}
                 </div>
               </div>
               <div className="text-lg font-semibold">
@@ -341,7 +342,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
               <Badge
                 variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
               >
-                {transaction.paymentStatus === 'PAID' ? '已付款' : '未付款'}
+                {transaction.paymentStatus === 'PAID' ? t('payment_status.paid') : t('payment_status.unpaid')}
               </Badge>
             </div>
 
@@ -352,19 +353,18 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
             )}
 
             <div className="text-sm text-gray-500">
-              建立者: {transaction.user.name}
+              {t('table.creator')}: {transaction.user.name}
             </div>
 
             {transaction.activity && (
               <div className="text-sm text-gray-500">
-                活動: {transaction.activity.name}
+                {t('table.activity')}: {transaction.activity.name}
               </div>
             )}
 
             <div className="text-sm text-gray-500">
-              最後更新: {formatDate(transaction.updatedAt)}
+              {t('table.last_updated')}: {formatDate(transaction.updatedAt)}
             </div>
-
 
             {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
               <div className="flex items-center justify-between pt-2 border-t">
@@ -382,7 +382,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                     openConfirmModal([transaction.id], false);
                   }}
                 >
-                  標記為已付款
+                  {t('mark_as_paid')}
                 </Button>
               </div>
             )}
