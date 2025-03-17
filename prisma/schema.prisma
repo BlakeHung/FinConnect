@@ -22,6 +22,7 @@ model User {
   image         String?
   transactions  Transaction[]
   activities    ActivityParticipant[]
+  createdGroups Group[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -44,6 +45,7 @@ model Activity {
   description     String?
   participants    ActivityParticipant[]
   transactions    Transaction[]
+  groups          ActivityGroup[]
   status          String        @default("ACTIVE")
   enabled         Boolean       @default(true)
   createdAt       DateTime      @default(now())
@@ -97,4 +99,55 @@ model Transaction {
   paidAt      DateTime? // 付款日期，可選
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+}
+
+// 群體定義
+model Group {
+  id          String         @id @default(auto()) @map("_id") @db.ObjectId
+  name        String        // 群體名稱
+  description String?       // 描述
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  members     GroupMember[] // 群體成員
+  activities  ActivityGroup[] // 參與的活動
+  createdBy   User          @relation(fields: [createdById], references: [id])
+  createdById String        @db.ObjectId
+}
+
+// 群體成員
+model GroupMember {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   // 成員名稱
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId   String   @db.ObjectId
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// 活動中的群體參與
+model ActivityGroup {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  activity    Activity  @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  activityId  String    @db.ObjectId
+  group       Group     @relation(fields: [groupId], references: [id])
+  groupId     String    @db.ObjectId
+  memberCount Int       // 這個活動中，這個群體實際參與的人數
+  expenses    ActivityGroupExpense[] // 這個群體在活動中的支出
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([activityId, groupId])
+}
+
+// 活動群體支出
+model ActivityGroupExpense {
+  id              String        @id @default(auto()) @map("_id") @db.ObjectId
+  activityGroup   ActivityGroup @relation(fields: [activityGroupId], references: [id], onDelete: Cascade)
+  activityGroupId String        @db.ObjectId
+  amount          Float         // 支出金額
+  splitType       String        // 分帳方式：EQUAL（平均）, PERCENTAGE（比例）, FIXED（固定金額）
+  splitValue      Float?        // 分帳值（比例時為百分比，固定金額時為金額）
+  description     String?       // 描述
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }

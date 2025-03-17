@@ -147,13 +147,13 @@ const zh = {
       unpaid: '未付款'
     },
     mark_as_paid: '標記為已付款',
-    mark_selected_as_paid: '標記選中項目為已付款',
-    confirm_payment: '確認更新付款狀態',
+    mark_selected_as_paid: '標記選中項目為已付款 ({count})',
+    confirm_payment_status: '確認更新付款狀態',
     confirm_batch_payment: '確定要將選中的 {count} 筆交易標記為已付款嗎？',
     confirm_single_payment: '確定要將此筆交易標記為已付款嗎？',
     update_failed: '更新失敗，請稍後再試',
     activity_filter: '活動篩選',
-    all_activities: '全部活動',
+    all_activities: '所有活動',
     table: {
       date: '日期',
       type: '類型',
@@ -166,8 +166,8 @@ const zh = {
       last_updated: '最後更新',
       actions: '操作'
     },
-    new_expense: 'New Expense',
-    new_income: 'New Income',
+    new_expense: '新增支出',
+    new_income: '新增收入',
     select_activity: '選擇活動',
     no_activity: '無活動',
     saving: '儲存中...',
@@ -177,31 +177,6 @@ const zh = {
       title_edit: '編輯交易',
       submit_success: '交易已儲存',
       submit_error: '儲存失敗，請稍後再試',
-    },
-    confirm_payment_status: '確認更新付款狀態',
-    confirm_batch_payment: '確定要將選中的 {count} 筆交易標記為已付款嗎？',
-    confirm_single_payment: '確定要將此筆交易標記為已付款嗎？',
-    mark_selected_as_paid: '標記選中項目為已付款 ({count})',
-    mark_as_paid: '標記為已付款',
-    table: {
-      date: '日期',
-      type: '類型',
-      amount: '金額',
-      category: '分類',
-      description: '說明',
-      creator: '建立者',
-      payment_status: '付款狀態',
-      activity: '活動',
-      last_updated: '最後更新',
-      actions: '操作'
-    },
-    activity_filter: '活動篩選',
-    all_activities: '所有活動',
-    expense: '支出',
-    income: '收入',
-    payment_status: {
-      paid: '已付款',
-      unpaid: '未付款'
     }
   },
   
@@ -234,11 +209,9 @@ const zh = {
     new_income: '新增收入',
     add: '新增',
     update: '更新',
-    cancel: '取消',
     processing: '處理中',
     submit_error: '提交錯誤',
-    delete_error: '刪除錯誤',
-    delete_confirm: '確定要刪除這個分類嗎？',
+    delete_error: '刪除錯誤'
   },
   
   analytics: {
@@ -270,6 +243,7 @@ const zh = {
     settings: '設定',
     logout: '登出',
     users: '使用者管理',
+    groups: '群組管理',
   },
   
   auth: {
@@ -423,6 +397,48 @@ const zh = {
       amount_desc: '金額（大到小）',
       amount_asc: '金額（小到大）'
     }
+  },
+  
+  groups: {
+    title: '群組管理',
+    your_groups: '你的群組',
+    group_count: '共 {count} 個群組',
+    create_group: '建立群組',
+    create_new_group: '建立新群組',
+    create_group_description: '建立一個新的群組並添加成員',
+    group_name: '群組名稱',
+    group_name_placeholder: '例如：大學同學、公司同事',
+    description: '描述',
+    description_placeholder: '簡短描述這個群組',
+    members: '成員',
+    add_member: '添加成員',
+    member_name: '成員名稱',
+    member_name_placeholder: '輸入成員名稱',
+    cancel: '取消',
+    creating: '建立中...',
+    create: '建立',
+    edit: '編輯',
+    delete: '刪除',
+    view: '查看',
+    activities: '活動',
+    add_to_activity: '添加到活動',
+    total_members: '共 {count} 名成員',
+    total_activities: '參與 {count} 個活動',
+    no_members: '尚無成員',
+    no_activities: '尚未參與任何活動',
+    participating_members: '{count} 名成員參與',
+    name_required: '名稱為必填項',
+    at_least_one_member: '至少需要一名成員',
+    group_created: '群組建立成功',
+    create_error: '建立群組失敗',
+    add_new_member: '添加新成員',
+    add_member_description: '添加一個新成員到這個群組',
+    adding: '添加中...',
+    add: '添加',
+    member_added: '成員添加成功',
+    add_member_error: '添加成員失敗',
+    more: '更多',
+    view_details: '查看詳情',
   },
 };
 

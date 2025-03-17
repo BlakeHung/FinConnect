@@ -59,6 +59,11 @@ export function Sidebar() {
       icon: <CalendarDays className="w-5 h-5" />,
       href: "/activities",
     },
+    {
+      label: t('groups'),
+      icon: <Users className="w-5 h-5" />,
+      href: "/groups",
+    },
   ]
 
   // 根據使用者角色決定要顯示的路由

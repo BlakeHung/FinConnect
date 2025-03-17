@@ -163,8 +163,8 @@ const en = {
       unpaid: 'Unpaid'
     },
     mark_as_paid: 'Mark as Paid',
-    mark_selected_as_paid: 'Mark Selected as Paid',
-    confirm_payment: 'Confirm Payment Status Update',
+    mark_selected_as_paid: 'Mark Selected as Paid ({count})',
+    confirm_payment_status: 'Confirm Payment Status Update',
     confirm_batch_payment: 'Are you sure you want to mark {count} selected transactions as paid?',
     confirm_single_payment: 'Are you sure you want to mark this transaction as paid?',
     update_failed: 'Update failed, please try again later',
@@ -183,16 +183,7 @@ const en = {
       actions: 'Actions'
     },
     new_expense: 'New Expense',
-    new_income: 'New Income',
-    confirm_payment_status: 'Confirm Payment Status Update',
-    mark_selected_as_paid: 'Mark Selected as Paid ({count})',
-    mark_as_paid: 'Mark as Paid',
-    expense: 'Expense',
-    income: 'Income',
-    payment_status: {
-      paid: 'Paid',
-      unpaid: 'Unpaid'
-    }
+    new_income: 'New Income'
   },
   
   categories: {
@@ -258,6 +249,7 @@ const en = {
     settings: 'Settings',
     logout: 'Logout',
     users: 'Users',
+    groups: 'Groups',
   },
   
   auth: {
@@ -406,6 +398,48 @@ const en = {
       amount_desc: 'Amount (High to Low)',
       amount_asc: 'Amount (Low to High)'
     }
+  },
+  
+  groups: {
+    title: 'Group Management',
+    your_groups: 'Your Groups',
+    group_count: '{count} groups in total',
+    create_group: 'Create Group',
+    create_new_group: 'Create New Group',
+    create_group_description: 'Create a new group and add members',
+    group_name: 'Group Name',
+    group_name_placeholder: 'e.g., College Friends, Colleagues',
+    description: 'Description',
+    description_placeholder: 'Briefly describe this group',
+    members: 'Members',
+    add_member: 'Add Member',
+    member_name: 'Member Name',
+    member_name_placeholder: 'Enter member name',
+    cancel: 'Cancel',
+    creating: 'Creating...',
+    create: 'Create',
+    edit: 'Edit',
+    delete: 'Delete',
+    view: 'View',
+    activities: 'Activities',
+    add_to_activity: 'Add to Activity',
+    total_members: '{count} members in total',
+    total_activities: 'Participating in {count} activities',
+    no_members: 'No members yet',
+    no_activities: 'Not participating in any activities yet',
+    participating_members: '{count} members participating',
+    name_required: 'Name is required',
+    at_least_one_member: 'At least one member is required',
+    group_created: 'Group created successfully',
+    create_error: 'Failed to create group',
+    add_new_member: 'Add New Member',
+    add_member_description: 'Add a new member to this group',
+    adding: 'Adding...',
+    add: 'Add',
+    member_added: 'Member added successfully',
+    add_member_error: 'Failed to add member',
+    more: 'more',
+    view_details: 'View Details',
   },
 };
 
