@@ -1,20 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 
 // 獲取所有群組
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
-
   try {
-    const groups = await prisma.group.findMany({
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    
+    // 獲取用戶創建的群組
+    const createdGroups = await prisma.group.findMany({
       where: {
-        createdById: session.user.id as string
+        createdById: session.user.id
       },
       include: {
         members: true,
@@ -26,50 +27,79 @@ export async function GET() {
         createdAt: 'desc'
       }
     });
-
-    return NextResponse.json(groups);
+    
+    // 獲取用戶作為成員參與的群組
+    const memberGroups = await prisma.group.findMany({
+      where: {
+        members: {
+          some: {
+            userId: session.user.id
+          }
+        },
+        NOT: {
+          createdById: session.user.id
+        }
+      },
+      include: {
+        members: true,
+        createdBy: true,
+        _count: {
+          select: { members: true }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    
+    // 合併並標記群組
+    const allGroups = [
+      ...createdGroups.map(group => ({
+        ...group,
+        isOwner: true
+      })),
+      ...memberGroups.map(group => ({
+        ...group,
+        isOwner: false
+      }))
+    ];
+    
+    return NextResponse.json(allGroups);
   } catch (error) {
     console.error('Error fetching groups:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch groups' }, { status: 500 });
   }
 }
 
 // 創建新群組
-export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
-
+export async function POST(request: Request) {
   try {
-    const { name, description, members } = await req.json();
-
-    // 驗證必要欄位
-    if (!name || !members || !Array.isArray(members) || members.length === 0) {
-      return new NextResponse('Missing required fields', { status: 400 });
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
-    // 創建群組和成員
-    const group = await prisma.group.create({
+    
+    const { name, description } = await request.json();
+    
+    if (!name || !name.trim()) {
+      return NextResponse.json({ error: 'Group name is required' }, { status: 400 });
+    }
+    
+    // 創建新群組
+    const newGroup = await prisma.group.create({
       data: {
-        name,
-        description,
-        createdById: session.user.id as string,
-        members: {
-          create: members.map((member: { name: string }) => ({
-            name: member.name
-          }))
+        name: name.trim(),
+        description: description?.trim() || null,
+        createdBy: {
+          connect: { id: session.user.id }
         }
-      },
-      include: {
-        members: true
       }
     });
-
-    return NextResponse.json(group);
+    
+    return NextResponse.json(newGroup);
   } catch (error) {
     console.error('Error creating group:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    return NextResponse.json({ error: 'Failed to create group' }, { status: 500 });
   }
 } 

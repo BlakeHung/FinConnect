@@ -1,17 +1,34 @@
 'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useClientLocale } from '@/lib/i18n/utils';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, Plus, Trash, Users, Calendar } from "lucide-react";
-import { AddMemberDialog } from "./AddMemberDialog";
+import { Edit, Plus, Trash, Users, Calendar, User, UserPlus, Trash2 } from "lucide-react";
+import { AddMemberDialog } from "@/components/AddMemberDialog";
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface GroupMember {
   id: string;
   name: string;
+  userId?: string;
+  user?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface ActivityGroup {
@@ -34,12 +51,118 @@ interface Group {
 
 interface GroupDetailProps {
   group: Group;
+  systemUsers?: { id: string; name: string; email: string }[];
+  isCreator?: boolean;
+  currentUserId?: string;
 }
 
-export function GroupDetail({ group }: GroupDetailProps) {
+export function GroupDetail({ 
+  group, 
+  systemUsers = [], 
+  isCreator = true,
+  currentUserId 
+}: GroupDetailProps) {
   const router = useRouter();
+  const locale = useClientLocale();
   const t = useTranslations('groups');
-  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
+  const [isAddMemberOpen, setIsAddMemberOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<GroupMember | null>(null);
+  const [members, setMembers] = useState<GroupMember[]>(group.members || []);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleEditGroup = () => {
+    toast.info(t('editGroupNotAvailable'));
+    
+    router.push(`/${locale}/dashboard`);
+  };
+
+  const handleDeleteGroup = async () => {
+    try {
+      const response = await fetch(`/api/groups/${group.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete group');
+      }
+      
+      toast.success(t('groupDeleted'));
+      router.push(`/${locale}/groups`);
+    } catch (error) {
+      console.error('Error deleting group:', error);
+      toast.error(t('errorDeletingGroup'));
+    }
+  };
+
+  const handleSaveMember = async (memberData: { name: string; userId?: string }) => {
+    try {
+      const url = editingMember 
+        ? `/api/groups/${group.id}/members/${editingMember.id}` 
+        : `/api/groups/${group.id}/members`;
+      
+      const method = editingMember ? 'PUT' : 'POST';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(memberData)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save member');
+      }
+      
+      const savedMember = await response.json();
+      
+      if (editingMember) {
+        setMembers(members.map(m => m.id === editingMember.id ? savedMember : m));
+      } else {
+        setMembers([...members, savedMember]);
+      }
+      
+      setIsAddMemberOpen(false);
+      setEditingMember(null);
+      toast.success(editingMember ? t('memberUpdated') : t('memberAdded'));
+      router.refresh();
+    } catch (error) {
+      console.error('Error saving member:', error);
+      toast.error(t('errorSavingMember'));
+    }
+  };
+
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      const response = await fetch(`/api/groups/${group.id}/members/${memberId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete member');
+      }
+      
+      setMembers(members.filter(m => m.id !== memberId));
+      toast.success(t('memberDeleted'));
+      router.refresh();
+    } catch (error) {
+      console.error('Error deleting member:', error);
+      toast.error(t('errorDeletingMember'));
+    }
+  };
+
+  const openEditMember = (member: GroupMember) => {
+    setEditingMember(member);
+    setIsAddMemberOpen(true);
+  };
+
+  const handleAddToActivity = () => {
+    router.push(`/${locale}/activities?selectGroup=${group.id}`);
+  };
+
+  const handleViewActivity = (activityId: string) => {
+    router.push(`/${locale}/activities/${activityId}`);
+  };
 
   return (
     <div className="space-y-6">
@@ -50,21 +173,24 @@ export function GroupDetail({ group }: GroupDetailProps) {
             <p className="text-gray-500 mt-1">{group.description}</p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            onClick={() => router.push(`/groups/${group.id}/edit`)}
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            {t('edit')}
-          </Button>
-          <Button 
-            variant="destructive"
-          >
-            <Trash className="w-4 h-4 mr-2" />
-            {t('delete')}
-          </Button>
-        </div>
+        {isCreator && (
+          <div className="flex gap-2">
+            <Button 
+              variant="outline"
+              onClick={handleEditGroup}
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              {t('edit')}
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={() => setIsDeleteDialogOpen(true)}
+            >
+              <Trash className="w-4 h-4 mr-2" />
+              {t('delete')}
+            </Button>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="members">
@@ -84,36 +210,67 @@ export function GroupDetail({ group }: GroupDetailProps) {
             <CardHeader className="pb-3">
               <div className="flex justify-between items-center">
                 <CardTitle>{t('members')}</CardTitle>
-                <Button 
-                  size="sm"
-                  onClick={() => setIsAddMemberDialogOpen(true)}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t('add_member')}
-                </Button>
+                {isCreator && (
+                  <Button 
+                    size="sm"
+                    onClick={() => {
+                      setEditingMember(null);
+                      setIsAddMemberOpen(true);
+                    }}
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    {t('addMember')}
+                  </Button>
+                )}
               </div>
               <CardDescription>
-                {t('total_members', { count: group.members.length })}
+                {t('total_members', { count: members.length })}
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-2">
-                {group.members.map((member) => (
+                {members.map((member) => (
                   <div 
                     key={member.id} 
                     className="flex justify-between items-center p-2 rounded hover:bg-gray-50"
                   >
-                    <span>{member.name}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="w-8 h-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center">
+                      <User className="h-5 w-5 mr-2 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium">{member.name}</p>
+                        {member.userId && member.user && (
+                          <p className="text-xs text-muted-foreground">
+                            {t('linkedToUser')}: {member.user.name}
+                          </p>
+                        )}
+                        {member.userId === currentUserId && (
+                          <p className="text-xs text-primary">
+                            {t('thisIsYou')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {isCreator && (
+                      <div className="flex gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => openEditMember(member)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDeleteMember(member.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ))}
-                {group.members.length === 0 && (
+                {members.length === 0 && (
                   <p className="text-gray-500 text-center py-4">
                     {t('no_members')}
                   </p>
@@ -130,7 +287,7 @@ export function GroupDetail({ group }: GroupDetailProps) {
                 <CardTitle>{t('activities')}</CardTitle>
                 <Button 
                   size="sm"
-                  onClick={() => router.push(`/activities/new?groupId=${group.id}`)}
+                  onClick={handleAddToActivity}
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   {t('add_to_activity')}
@@ -156,7 +313,7 @@ export function GroupDetail({ group }: GroupDetailProps) {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => router.push(`/activities/${activityGroup.activity.id}`)}
+                      onClick={() => handleViewActivity(activityGroup.activity.id)}
                     >
                       {t('view')}
                     </Button>
@@ -174,10 +331,35 @@ export function GroupDetail({ group }: GroupDetailProps) {
       </Tabs>
 
       <AddMemberDialog 
-        groupId={group.id}
-        open={isAddMemberDialogOpen}
-        onOpenChange={setIsAddMemberDialogOpen}
+        isOpen={isAddMemberOpen} 
+        onClose={() => {
+          setIsAddMemberOpen(false);
+          setEditingMember(null);
+        }}
+        onSave={handleSaveMember}
+        existingMember={editingMember}
+        systemUsers={systemUsers}
       />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('deleteGroup')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('deleteGroupConfirmation')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteGroup}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 

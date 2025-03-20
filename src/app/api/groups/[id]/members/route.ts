@@ -42,47 +42,47 @@ export async function GET(
 
 // 添加群組成員
 export async function POST(
-  req: Request,
+  request: Request,
   { params }: { params: { id: string } }
 ) {
-  const session = await getServerSession(authOptions);
-  
-  if (!session?.user) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
-
   try {
-    const { name } = await req.json();
-
-    if (!name) {
-      return new NextResponse('Name is required', { status: 400 });
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-
+    
+    const { name, userId } = await request.json();
+    
+    // 檢查群組是否存在且當前用戶有權限
     const group = await prisma.group.findUnique({
       where: {
-        id: params.id
+        id: params.id,
+        createdById: session.user.id
       }
     });
-
+    
     if (!group) {
-      return new NextResponse('Group not found', { status: 404 });
+      return NextResponse.json({ error: 'Group not found or not authorized' }, { status: 404 });
     }
-
-    // 檢查是否為群組創建者
-    if (group.createdById !== session.user.id) {
-      return new NextResponse('Forbidden', { status: 403 });
-    }
-
-    const member = await prisma.groupMember.create({
+    
+    // 創建新成員
+    const newMember = await prisma.groupMember.create({
       data: {
         name,
-        groupId: params.id
+        userId: userId || undefined, // 如果沒有提供 userId，則設為 undefined
+        group: {
+          connect: { id: params.id }
+        }
+      },
+      include: {
+        user: true // 包含用戶數據
       }
     });
-
-    return NextResponse.json(member);
+    
+    return NextResponse.json(newMember);
   } catch (error) {
-    console.error('Error adding group member:', error);
-    return new NextResponse('Internal Server Error', { status: 500 });
+    console.error('Error creating group member:', error);
+    return NextResponse.json({ error: 'Failed to create group member' }, { status: 500 });
   }
 } 

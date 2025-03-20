@@ -14,17 +14,19 @@ enum UserRole {
 }
 
 model User {
-  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  id            String              @id @default(auto()) @map("_id") @db.ObjectId
   name          String
-  email         String       @unique
+  email         String              @unique
   password      String
-  role          UserRole     @default(USER)
+  role          UserRole            @default(USER)
   image         String?
   transactions  Transaction[]
   activities    ActivityParticipant[]
   createdGroups Group[]
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  payments      TransactionPayment[] // 新增: 付款記錄
+  groupMembers  GroupMember[]       // 用戶在群組中的成員身份
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 }
 
 model Category {
@@ -82,46 +84,92 @@ model EDM {
 }
 
 model Transaction {
-  id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  amount      Float
-  type        String    // 'EXPENSE' | 'INCOME'
-  date        DateTime
-  description String?
-  images      String[]
-  categoryId  String    @db.ObjectId
-  category    Category  @relation(fields: [categoryId], references: [id])
-  userId      String    @db.ObjectId
-  user        User      @relation(fields: [userId], references: [id])
-  activityId  String?   @db.ObjectId
-  activity    Activity? @relation(fields: [activityId], references: [id])
-  status      String    @default("PENDING") // PENDING, APPROVED, REJECTED
-  paymentStatus String  @default("UNPAID")  // UNPAID, PAID
-  paidAt      DateTime? // 付款日期，可選
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String                @id @default(auto()) @map("_id") @db.ObjectId
+  amount        Float
+  type          String                // 'EXPENSE' | 'INCOME'
+  date          DateTime
+  description   String?
+  images        String[]
+  categoryId    String                @db.ObjectId
+  category      Category              @relation(fields: [categoryId], references: [id])
+  userId        String                @db.ObjectId
+  user          User                  @relation(fields: [userId], references: [id])
+  activityId    String?               @db.ObjectId
+  activity      Activity?             @relation(fields: [activityId], references: [id])
+  status        String                @default("PENDING") // PENDING, APPROVED, REJECTED
+  paymentStatus String                @default("UNPAID")  // UNPAID, PAID
+  paidAt        DateTime?             // 付款日期，可選
+  // 新增: 與群組的關聯
+  groupId       String?               @db.ObjectId
+  group         Group?                @relation(fields: [groupId], references: [id])
+  // 新增: 成員分帳記錄
+  memberSplits  TransactionMemberSplit[]
+  // 新增: 多個付款記錄
+  payments      TransactionPayment[]
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+}
+
+// 新增: 交易的付款記錄
+model TransactionPayment {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  transactionId String      @db.ObjectId
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  payerId       String      @db.ObjectId
+  payer         User        @relation(fields: [payerId], references: [id])
+  amount        Float       // 支付金額
+  paymentDate   DateTime    @default(now())
+  paymentMethod String?     // 付款方式
+  note          String?     // 備註
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// 新增: 交易中的成員分配記錄
+model TransactionMemberSplit {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  transactionId String      @db.ObjectId
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  groupId       String      @db.ObjectId
+  group         Group       @relation(fields: [groupId], references: [id])
+  memberId      String      @db.ObjectId  
+  member        GroupMember @relation(fields: [memberId], references: [id])
+  isIncluded    Boolean     @default(true)  // 是否納入計算，默認包含
+  splitType     String      @default("EQUAL") // EQUAL(平均), PERCENTAGE(比例), FIXED(固定金額)
+  splitValue    Float?      // 分帳值（比例時為百分比，固定金額時為金額）
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([transactionId, memberId])
 }
 
 // 群體定義
 model Group {
-  id          String         @id @default(auto()) @map("_id") @db.ObjectId
-  name        String        // 群體名稱
-  description String?       // 描述
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  members     GroupMember[] // 群體成員
-  activities  ActivityGroup[] // 參與的活動
-  createdBy   User          @relation(fields: [createdById], references: [id])
-  createdById String        @db.ObjectId
+  id                String                @id @default(auto()) @map("_id") @db.ObjectId
+  name              String                // 群體名稱
+  description       String?               // 描述
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  members           GroupMember[]         // 群體成員
+  activities        ActivityGroup[]       // 參與的活動
+  transactions      Transaction[]         // 新增: 關聯的交易
+  transactionSplits TransactionMemberSplit[] // 新增: 交易分帳記錄
+  createdBy         User                  @relation(fields: [createdById], references: [id])
+  createdById       String                @db.ObjectId
 }
 
 // 群體成員
 model GroupMember {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String   // 成員名稱
-  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId   String   @db.ObjectId
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String                @id @default(auto()) @map("_id") @db.ObjectId
+  name              String                // 成員名稱
+  group             Group                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId           String                @db.ObjectId
+  // 新增: 與系統用戶的可選關聯
+  userId            String?               @db.ObjectId
+  user              User?                 @relation(fields: [userId], references: [id])
+  transactionSplits TransactionMemberSplit[] // 交易分帳記錄
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 }
 
 // 活動中的群體參與

@@ -1,100 +1,86 @@
 'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useTranslations } from 'next-intl';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useClientTranslation } from '@/lib/i18n/utils';
 
-interface AddMemberDialogProps {
-  groupId: string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+export function AddMemberDialog({ 
+  isOpen, 
+  onClose, 
+  onSave,
+  existingMember = null,
+  systemUsers = [] // 系統用戶列表
+}) {
+  const t = useClientTranslation('groups');
+  const [name, setName] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('');
 
-export function AddMemberDialog({ groupId, open, onOpenChange }: AddMemberDialogProps) {
-  const router = useRouter();
-  const t = useTranslations('groups');
-  const [isLoading, setIsLoading] = useState(false);
-  const [memberName, setMemberName] = useState('');
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!memberName.trim()) {
-      toast.error(t('name_required'));
-      return;
+  useEffect(() => {
+    if (existingMember) {
+      setName(existingMember.name);
+      setSelectedUserId(existingMember.userId || '');
+    } else {
+      setName('');
+      setSelectedUserId('');
     }
+  }, [existingMember, isOpen]);
 
-    try {
-      setIsLoading(true);
-      
-      const response = await fetch(`/api/groups/${groupId}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: memberName
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
-
-      toast.success(t('member_added'));
-      onOpenChange(false);
-      router.refresh();
-      setMemberName('');
-    } catch (error) {
-      console.error('Error adding member:', error);
-      toast.error(t('add_member_error'));
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSave = () => {
+    onSave({
+      name,
+      userId: selectedUserId || null // 如果沒有選擇用戶，則設為null
+    });
+    setName('');
+    setSelectedUserId('');
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>{t('add_new_member')}</DialogTitle>
-            <DialogDescription>
-              {t('add_member_description')}
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="memberName">{t('member_name')}</Label>
-              <Input
-                id="memberName"
-                value={memberName}
-                onChange={(e) => setMemberName(e.target.value)}
-                placeholder={t('member_name_placeholder')}
-              />
-            </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>
+            {existingMember ? t('editMember') : t('addMember')}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="member-name">{t('memberName')}</Label>
+            <Input
+              id="member-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={t('enterMemberName')}
+            />
           </div>
           
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => onOpenChange(false)}
-              disabled={isLoading}
-            >
-              {t('cancel')}
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? t('adding') : t('add')}
-            </Button>
-          </DialogFooter>
-        </form>
+          <div className="space-y-2">
+            <Label htmlFor="member-user">{t('linkToUser')}</Label>
+            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+              <SelectTrigger>
+                <SelectValue placeholder={t('selectUserOptional')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">{t('noUser')}</SelectItem>
+                {systemUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-muted-foreground">{t('linkToUserHelp')}</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>{t('cancel')}</Button>
+          <Button onClick={handleSave} disabled={!name.trim()}>
+            {existingMember ? t('save') : t('add')}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

@@ -14,7 +14,8 @@ import {
   Users,
   CalendarDays,
   Calendar,
-  LogOut
+  LogOut,
+  Wallet
 } from "lucide-react"
 import { usePathname } from 'next/navigation'
 
@@ -35,6 +36,16 @@ export function Sidebar() {
       label: t('transactions'),
       icon: <Receipt className="w-5 h-5" />,
       href: "/transactions",
+    },
+    {
+      label: t('groups'),
+      icon: <Users className="w-5 h-5" />,
+      href: "/groups",
+    },
+    {
+      label: t('settlements'),
+      icon: <Wallet className="w-5 h-5" />,
+      href: "/settlements",
     },
     {
       label: t('categories'),
@@ -58,11 +69,6 @@ export function Sidebar() {
       label: t('activities'),
       icon: <CalendarDays className="w-5 h-5" />,
       href: "/activities",
-    },
-    {
-      label: t('groups'),
-      icon: <Users className="w-5 h-5" />,
-      href: "/groups",
     },
   ]
 

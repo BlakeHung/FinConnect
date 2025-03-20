@@ -1,18 +1,21 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { GroupList } from "@/components/GroupList";
 import { getTranslations } from 'next-intl/server';
-import { unstable_setRequestLocale } from 'next-intl/server';
+import { setRequestLocale } from '@/lib/i18n';
+import { CreateGroupButton } from "@/components/CreateGroupButton";
+import type { Locale } from '@/lib/i18n';
 
 export default async function GroupsPage({
   params: { locale }
 }: {
-  params: { locale: string }
+  params: { locale: Locale }
 }) {
   // 設置請求的語言環境
-  unstable_setRequestLocale(locale);
+  // 在頁面開始時設置 locale
+  setRequestLocale(locale);
 
   const session = await getServerSession(authOptions);
   const t = await getTranslations('groups');
@@ -22,9 +25,10 @@ export default async function GroupsPage({
   }
 
   try {
-    const groups = await prisma.group.findMany({
+    // 獲取用戶創建的群組
+    const createdGroups = await prisma.group.findMany({
       where: {
-        createdById: session.user.id as string
+        createdById: session.user.id
       },
       include: {
         members: true,
@@ -36,12 +40,53 @@ export default async function GroupsPage({
         createdAt: 'desc'
       }
     });
+    
+    // 獲取用戶作為成員參與的群組（基於新增的關聯）
+    const memberGroups = await prisma.group.findMany({
+      where: {
+        members: {
+          some: {
+            userId: session.user.id
+          }
+        },
+        // 排除用戶創建的群組（避免重複）
+        NOT: {
+          createdById: session.user.id
+        }
+      },
+      include: {
+        members: true,
+        createdBy: true,
+        _count: {
+          select: { members: true }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    // 合併用戶的所有群組
+    const allGroups = [
+      ...createdGroups.map(group => ({
+        ...group,
+        isOwner: true
+      })),
+      ...memberGroups.map(group => ({
+        ...group,
+        isOwner: false
+      }))
+    ];
 
     return (
       <div className="container mx-auto p-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
-          <GroupList groups={groups} />
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold">{t('title')}</h1>
+            <CreateGroupButton />
+          </div>
+          
+          <GroupList groups={allGroups} />
         </div>
       </div>
     );
@@ -51,7 +96,7 @@ export default async function GroupsPage({
       <div className="container mx-auto p-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-6">{t('title')}</h1>
-          <p className="text-red-500">Error loading groups. Please try again later.</p>
+          <p className="text-red-500">{t('errorLoadingGroups')}</p>
         </div>
       </div>
     );
