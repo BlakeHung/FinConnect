@@ -1,127 +1,181 @@
-import { prisma } from "@/lib/prisma";
-import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { UserFilter } from "@/components/UserFilter";
-import { SortFilter } from "@/components/SortFilter";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/components/TransactionTable";
-import { getTranslations, setRequestLocale } from 'next-intl/server';
-
-type SearchParams = {
-  userId?: string;
-  activityId?: string;
-  sortBy?: string;
-  order?: 'asc' | 'desc';
-};
-
-type PageProps = {
-  params: { locale: string };
-  searchParams: Promise<SearchParams>;
-};
+import { TransactionFilters } from "@/components/TransactionFilters";
+import { getTranslations } from 'next-intl/server';
+import { setRequestLocale } from '@/lib/i18n';
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, BarChart3, Calendar, LayoutList } from "lucide-react";
+import type { Locale } from '@/lib/i18n';
 
 export default async function TransactionsPage({
   params: { locale },
   searchParams,
-}: PageProps) {
+}: {
+  params: { locale: Locale };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  // 設置請求的語言環境
   setRequestLocale(locale);
+
   const t = await getTranslations('transactions');
-  
-  const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
+  
   if (!session) {
-    redirect('/login');
+    redirect(`/${locale}/login`);
   }
-
-  const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
-
-  const users = canViewAll ? await prisma.user.findMany({
-    orderBy: {
-      name: 'asc',
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-  }) : [];
-
-  const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
-    orderBy: {
-      startDate: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-    },
-  });
-
-  const where = {
-    ...(queryParams.userId && { userId: queryParams.userId }),
-    ...(queryParams.activityId && { activityId: queryParams.activityId }),
+  
+  // 處理搜索與篩選條件
+  const {
+    search,
+    categoryId,
+    activityId,
+    startDate,
+    endDate,
+    type,
+    minAmount,
+    maxAmount,
+    page = '1'
+  } = searchParams;
+  
+  // 構建過濾條件
+  let where = {
+    userId: session.user.id,
   };
-
-  const orderBy = queryParams.sortBy
-    ? {
-        [queryParams.sortBy]: queryParams.order || 'desc',
-      }
-    : { date: 'desc' as const };
-
-  const transactions = await prisma.transaction.findMany({
-    where,
-    orderBy: [
-      { updatedAt: 'desc' },
-      { date: 'desc' }
-    ],
-    include: {
-      category: true,
-      activity: true,
-      user: true,
-    },
-  });
-
-  const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
+  
+  if (search) {
+    where.description = {
+      contains: search,
+      mode: 'insensitive',
+    };
+  }
+  
+  if (categoryId) {
+    where.categoryId = categoryId;
+  }
+  
+  if (activityId) {
+    if (activityId === 'none') {
+      where.activityId = null;
+    } else {
+      where.activityId = activityId;
+    }
+  }
+  
+  if (startDate || endDate) {
+    where.date = {};
+    if (startDate) {
+      where.date.gte = new Date(startDate);
+    }
+    if (endDate) {
+      where.date.lte = new Date(endDate);
+    }
+  }
+  
+  if (type) {
+    where.type = type;
+  }
+  
+  if (minAmount || maxAmount) {
+    where.amount = {};
+    if (minAmount) {
+      where.amount.gte = parseFloat(minAmount);
+    }
+    if (maxAmount) {
+      where.amount.lte = parseFloat(maxAmount);
+    }
+  }
+  
+  // 分頁
+  const pageSize = 10;
+  const skip = (parseInt(page) - 1) * pageSize;
+  
+  // 獲取交易列表與總數
+  const [transactions, totalCount] = await Promise.all([
+    prisma.transaction.findMany({
+      where,
+      include: {
+        category: true,
+        activity: true,
+      },
+      orderBy: {
+        date: 'desc',
+      },
+      skip,
+      take: pageSize,
+    }),
+    prisma.transaction.count({ where }),
+  ]);
+  
+  // 獲取類別和活動數據（用於篩選）
+  const [categories, activities] = await Promise.all([
+    prisma.category.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    }),
+    prisma.activity.findMany({
+      where: {
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    }),
+  ]);
+  
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <h1 className="text-2xl font-bold">{t("title")}</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">{t('transactions')}</h1>
         
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button asChild className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
-            <a href="/transactions/new?type=EXPENSE">
-              <Plus className="mr-2 h-4 w-4" />
-              {t("new_expense")}
-            </a>
-          </Button>
-          <Button asChild className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-            <a href="/transactions/new?type=INCOME">
-              <Plus className="mr-2 h-4 w-4" />
-              {t("new_income")}
-            </a>
-          </Button>
+        <div className="flex gap-2">
+          <Link href={`/${locale}/transactions/summary`}>
+            <Button variant="outline" size="sm">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              {t('summary')}
+            </Button>
+          </Link>
+          
+          <Link href={`/${locale}/transactions/recurring`}>
+            <Button variant="outline" size="sm">
+              <Calendar className="mr-2 h-4 w-4" />
+              {t('recurring')}
+            </Button>
+          </Link>
+          
+          <Link href={`/${locale}/transactions/batch`}>
+            <Button variant="outline" size="sm">
+              <LayoutList className="mr-2 h-4 w-4" />
+              {t('batch')}
+            </Button>
+          </Link>
+          
+          <Link href={`/${locale}/transactions/new?type=EXPENSE`}>
+            <Button>
+              <PlusCircle className="mr-2 h-4 w-4" />
+              {t('new_transaction')}
+            </Button>
+          </Link>
         </div>
       </div>
-
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
-        {canViewAll && (
-          <UserFilter users={users} />
-        )}
-        <SortFilter />
-      </div>
-
-      <div className="mt-6">
-        <TransactionTable 
-          transactions={transactions} 
-          activities={activities}
-          canManagePayments={canManagePayments}
-        />
-      </div>
+      
+      <TransactionFilters 
+        categories={categories}
+        activities={activities}
+      />
+      
+      <TransactionTable 
+        transactions={JSON.parse(JSON.stringify(transactions))}
+        currentPage={parseInt(page)}
+        totalPages={totalPages}
+        locale={locale}
+      />
     </div>
   );
 } 

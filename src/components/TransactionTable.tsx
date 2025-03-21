@@ -281,9 +281,9 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.type === 'EXPENSE' ? t('expense') : t('income')}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.amount}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.category.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.description}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.user.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.category?.name || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.description || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.user?.name || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Badge
                     variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
@@ -338,7 +338,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
             </div>
 
             <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">{transaction.category.name}</div>
+              <div className="text-sm text-gray-600">{transaction.category?.name || '-'}</div>
               <Badge
                 variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
               >
@@ -353,7 +353,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
             )}
 
             <div className="text-sm text-gray-500">
-              {t('table.creator')}: {transaction.user.name}
+              {t('table.creator')}: {transaction.user?.name || '-'}
             </div>
 
             {transaction.activity && (
