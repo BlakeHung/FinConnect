@@ -17,25 +17,25 @@ export function AddMemberDialog({
 }) {
   const t = useClientTranslation('groups');
   const [name, setName] = useState('');
-  const [selectedUserId, setSelectedUserId] = useState('');
+  const [selectedUserId, setSelectedUserId] = useState('none');
 
   useEffect(() => {
     if (existingMember) {
       setName(existingMember.name);
-      setSelectedUserId(existingMember.userId || '');
+      setSelectedUserId(existingMember.userId || 'none');
     } else {
       setName('');
-      setSelectedUserId('');
+      setSelectedUserId('none');
     }
   }, [existingMember, isOpen]);
 
   const handleSave = () => {
     onSave({
       name,
-      userId: selectedUserId || null // 如果沒有選擇用戶，則設為null
+      userId: selectedUserId === 'none' ? null : selectedUserId
     });
     setName('');
-    setSelectedUserId('');
+    setSelectedUserId('none');
   };
 
   return (
@@ -59,12 +59,12 @@ export function AddMemberDialog({
           
           <div className="space-y-2">
             <Label htmlFor="member-user">{t('linkToUser')}</Label>
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <Select value={selectedUserId || undefined} onValueChange={setSelectedUserId}>
               <SelectTrigger>
                 <SelectValue placeholder={t('selectUserOptional')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">{t('noUser')}</SelectItem>
+                <SelectItem value="none">{t('noUser')}</SelectItem>
                 {systemUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.name} ({user.email})

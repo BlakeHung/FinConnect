@@ -472,6 +472,7 @@ const zh = {
     delete: '刪除',
     view: '查看',
     activities: '活動',
+    selectUser: '選擇用戶',
     
   },
 };

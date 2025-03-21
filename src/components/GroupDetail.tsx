@@ -20,6 +20,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface GroupMember {
   id: string;
@@ -95,12 +97,18 @@ export function GroupDetail({
   };
 
   const handleSaveMember = async (memberData: { name: string; userId?: string }) => {
+    console.log("Current editingMember:", editingMember);
+    
     try {
       const url = editingMember 
         ? `/api/groups/${group.id}/members/${editingMember.id}` 
         : `/api/groups/${group.id}/members`;
       
       const method = editingMember ? 'PUT' : 'POST';
+      
+      console.log("Request URL:", url);
+      console.log("Request Method:", method);
+      console.log("Request Data:", memberData);
       
       const response = await fetch(url, {
         method,
@@ -360,6 +368,25 @@ export function GroupDetail({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isAddMemberOpen && (
+        <Dialog open={isAddMemberOpen} onOpenChange={setIsAddMemberOpen}>
+          <DialogContent>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder={t('selectUser')} />
+              </SelectTrigger>
+              <SelectContent>
+                {systemUsers.map(user => (
+                  <SelectItem key={user.id} value={user.id || "none"}>
+                    {user.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 } 

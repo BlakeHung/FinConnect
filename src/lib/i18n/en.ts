@@ -482,7 +482,7 @@ const en = {
     viewDetails: 'View Details',
     enterGroupName: 'Enter group name',
     enterGroupDescription: 'Enter group description',
-    
+    selectUser: 'Select User',
   },
 };
 

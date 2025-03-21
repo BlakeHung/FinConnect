@@ -66,23 +66,41 @@ export async function POST(
       return NextResponse.json({ error: 'Group not found or not authorized' }, { status: 404 });
     }
     
+    // 準備創建成員的數據
+    const memberData: any = {
+      name,
+      group: {
+        connect: { id: params.id }
+      }
+    };
+    
+    // 只有當userId存在且不為空時才添加用戶關聯
+    if (userId && userId.trim() !== '') {
+      // 檢查用戶是否存在
+      const userExists = await prisma.user.findUnique({
+        where: { id: userId }
+      });
+      
+      if (userExists) {
+        memberData.user = {
+          connect: { id: userId }
+        };
+      } else {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+    }
+    
     // 創建新成員
     const newMember = await prisma.groupMember.create({
-      data: {
-        name,
-        userId: userId || undefined, // 如果沒有提供 userId，則設為 undefined
-        group: {
-          connect: { id: params.id }
-        }
-      },
+      data: memberData,
       include: {
-        user: true // 包含用戶數據
+        user: !!userId // 只有在有userId時才包含user數據
       }
     });
     
     return NextResponse.json(newMember);
   } catch (error) {
     console.error('Error creating group member:', error);
-    return NextResponse.json({ error: 'Failed to create group member' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to create group member', details: (error as Error).message }, { status: 500 });
   }
 } 
