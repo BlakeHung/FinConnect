@@ -103,7 +103,6 @@ export function TransactionForm({
   type,
   defaultValues,
   transactionId,
-  canManagePayments = false,
   splitData,
 }: TransactionFormProps) {
   const t = useTranslations('transactions');
@@ -112,7 +111,6 @@ export function TransactionForm({
   const [previewImages, setPreviewImages] = useState<string[]>(
     defaultValues?.images || []
   );
-  const [isPaid, setIsPaid] = useState(defaultValues?.paymentStatus === 'PAID');
   const [splitEnabled, setSplitEnabled] = useState(defaultValues?.splitEnabled || false);
   const [splitType, setSplitType] = useState<'EQUAL' | 'PERCENTAGE' | 'FIXED'>('EQUAL');
   const [members, setMembers] = useState<SplitMemberState[]>([]);
@@ -371,7 +369,6 @@ export function TransactionForm({
         body: JSON.stringify({
           ...data,
           type,
-          paymentStatus: isPaid ? 'PAID' : 'UNPAID',
           ...splitData
         }),
       });
@@ -728,19 +725,6 @@ export function TransactionForm({
               </CardContent>
             </Card>
           )}
-        </div>
-      )}
-
-      {canManagePayments && (
-        <div className="flex items-center space-x-2">
-          <Switch
-            id="payment-status"
-            checked={isPaid}
-            onCheckedChange={setIsPaid}
-          />
-          <Label htmlFor="payment-status">
-            {isPaid ? t('payment_status.paid') : t('payment_status.unpaid')}
-          </Label>
         </div>
       )}
 

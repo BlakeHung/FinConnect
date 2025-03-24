@@ -17,7 +17,6 @@ interface Transaction {
   type: string;
   date: Date;
   description?: string;
-  paymentStatus: string;
   updatedAt: Date;
   category: {
     name: string;
@@ -39,7 +38,6 @@ interface Activity {
 interface TransactionTableProps {
   transactions: Transaction[];
   activities: Activity[];
-  canManagePayments: boolean;
 }
 
 function formatDate(date: Date) {
@@ -51,20 +49,10 @@ function formatDate(date: Date) {
   return `${year}/${month}/${day}`;
 }
 
-export function TransactionTable({ transactions, activities = [], canManagePayments }: TransactionTableProps) {
+export function TransactionTable({ transactions, activities = [] }: TransactionTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [confirmModal, setConfirmModal] = useState<{
-    isOpen: boolean;
-    ids: string[];
-    isBatch: boolean;
-  }>({
-    isOpen: false,
-    ids: [],
-    isBatch: false,
-  });
   const t = useTranslations('transactions');
 
   // 獲取當前排序狀態
@@ -123,62 +111,6 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
     );
   };
 
-  const handleMarkAsPaid = async (ids: string[]) => {
-    try {
-      const results = await Promise.all(
-        ids.map(id =>
-          fetch(`/api/transactions/${id}/payment`, {
-            method: 'PUT',
-          })
-        )
-      );
-
-      if (results.some(response => !response.ok)) {
-        throw new Error('部分更新失敗');
-      }
-
-      window.location.reload();
-    } catch (error) {
-      console.error('Error:', error);
-      alert('更新失敗，請稍後再試');
-    }
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const unpaidIds = transactions
-        .filter(t => t.paymentStatus === 'UNPAID')
-        .map(t => t.id);
-      setSelectedIds(unpaidIds);
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelectOne = (id: string, checked: boolean) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(i => i !== id));
-    }
-  };
-
-  const openConfirmModal = (ids: string[], isBatch: boolean) => {
-    setConfirmModal({
-      isOpen: true,
-      ids,
-      isBatch,
-    });
-  };
-
-  const closeConfirmModal = () => {
-    setConfirmModal({
-      isOpen: false,
-      ids: [],
-      isBatch: false,
-    });
-  };
-
   return (
     <div className="w-full space-y-4">
       {/* 活動篩選 - 只在有活動時顯示 */}
@@ -204,56 +136,19 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
         </div>
       )}
 
-      {/* 確認 Modal */}
-      <ConfirmModal
-        isOpen={confirmModal.isOpen}
-        onClose={closeConfirmModal}
-        onConfirm={() => {
-          handleMarkAsPaid(confirmModal.ids);
-          closeConfirmModal();
-        }}
-        title={t('confirm_payment_status')}
-        description={
-          confirmModal.isBatch
-            ? t('confirm_batch_payment', { count: confirmModal.ids.length })
-            : t('confirm_single_payment')
-        }
-      />
-
-      {/* 批量操作按鈕 */}
-      {canManagePayments && selectedIds.length > 0 && (
-        <div className="mb-4">
-          <Button
-            onClick={() => openConfirmModal(selectedIds, true)}
-          >
-            {t('mark_selected_as_paid', { count: selectedIds.length })}
-          </Button>
-        </div>
-      )}
-      
       {/* 桌面版表格 */}
       <div className="hidden md:block">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              {canManagePayments && (
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <Checkbox
-                    checked={selectedIds.length === transactions.filter(t => t.paymentStatus === 'UNPAID').length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </th>
-              )}
               <SortableHeader field="date">{t('table.date')}</SortableHeader>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.type')}</th>
               <SortableHeader field="amount">{t('table.amount')}</SortableHeader>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.category')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.description')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.creator')}</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.payment_status')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.activity')}</th>
               <SortableHeader field="updatedAt">{t('table.last_updated')}</SortableHeader>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.actions')}</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -263,21 +158,6 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 className="hover:bg-gray-50 cursor-pointer"
                 onClick={() => router.push(`/transactions/${transaction.id}/edit`)}
               >
-                {canManagePayments && (
-                  <td 
-                    className="px-6 py-4 whitespace-nowrap"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {transaction.paymentStatus === 'UNPAID' && (
-                      <Checkbox
-                        checked={selectedIds.includes(transaction.id)}
-                        onCheckedChange={(checked) => 
-                          handleSelectOne(transaction.id, checked as boolean)
-                        }
-                      />
-                    )}
-                  </td>
-                )}
                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.type === 'EXPENSE' ? t('expense') : t('income')}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.amount}</td>
@@ -285,31 +165,10 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.user?.name || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <Badge
-                    variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
-                  >
-                    {transaction.paymentStatus === 'PAID' ? t('payment_status.paid') : t('payment_status.unpaid')}
-                  </Badge>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
                   {transaction.activity?.name || '-'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {formatDate(transaction.updatedAt)}
-                </td>
-
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
-                    <Button
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openConfirmModal([transaction.id], false);
-                      }}
-                    >
-                      {t('mark_as_paid')}
-                    </Button>
-                  )}
                 </td>
               </tr>
             ))}
@@ -337,13 +196,8 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
               </div>
             </div>
 
-            <div className="flex justify-between items-center">
-              <div className="text-sm text-gray-600">{transaction.category?.name || '-'}</div>
-              <Badge
-                variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
-              >
-                {transaction.paymentStatus === 'PAID' ? t('payment_status.paid') : t('payment_status.unpaid')}
-              </Badge>
+            <div className="text-sm text-gray-600">
+              {transaction.category?.name || '-'}
             </div>
 
             {transaction.description && (
@@ -365,27 +219,6 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
             <div className="text-sm text-gray-500">
               {t('table.last_updated')}: {formatDate(transaction.updatedAt)}
             </div>
-
-            {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
-              <div className="flex items-center justify-between pt-2 border-t">
-                <Checkbox
-                  checked={selectedIds.includes(transaction.id)}
-                  onCheckedChange={(checked) => {
-                    handleSelectOne(transaction.id, checked as boolean);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-                <Button
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    openConfirmModal([transaction.id], false);
-                  }}
-                >
-                  {t('mark_as_paid')}
-                </Button>
-              </div>
-            )}
           </div>
         ))}
       </div>
