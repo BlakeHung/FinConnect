@@ -23,7 +23,6 @@ model User {
   transactions  Transaction[]
   activities    ActivityParticipant[]
   createdGroups Group[]
-  payments      TransactionPayment[] // 新增: 付款記錄
   groupMembers  GroupMember[]       // 用戶在群組中的成員身份
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -97,35 +96,14 @@ model Transaction {
   activityId    String?               @db.ObjectId
   activity      Activity?             @relation(fields: [activityId], references: [id])
   status        String                @default("PENDING") // PENDING, APPROVED, REJECTED
-  paymentStatus String                @default("UNPAID")  // UNPAID, PAID
-  paidAt        DateTime?             // 付款日期，可選
-  // 新增: 與群組的關聯
   groupId       String?               @db.ObjectId
   group         Group?                @relation(fields: [groupId], references: [id])
-  // 新增: 成員分帳記錄
   memberSplits  TransactionMemberSplit[]
-  // 新增: 多個付款記錄
-  payments      TransactionPayment[]
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 }
 
-// 新增: 交易的付款記錄
-model TransactionPayment {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  transactionId String      @db.ObjectId
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  payerId       String      @db.ObjectId
-  payer         User        @relation(fields: [payerId], references: [id])
-  amount        Float       // 支付金額
-  paymentDate   DateTime    @default(now())
-  paymentMethod String?     // 付款方式
-  note          String?     // 備註
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-}
-
-// 新增: 交易中的成員分配記錄
+// 交易中的成員分配記錄
 model TransactionMemberSplit {
   id            String      @id @default(auto()) @map("_id") @db.ObjectId
   transactionId String      @db.ObjectId
@@ -139,7 +117,6 @@ model TransactionMemberSplit {
   splitValue    Float?      // 分帳值（比例時為百分比，固定金額時為金額）
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-
   @@unique([transactionId, memberId])
 }
 
