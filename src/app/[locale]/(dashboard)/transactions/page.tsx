@@ -82,11 +82,7 @@ export default async function TransactionsPage({
       category: true,
       activity: true,
       user: true,
-      splits: {
-        include: {
-          assignedTo: true
-        }
-      }
+      splits: true
     },
   });
 

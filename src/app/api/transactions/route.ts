@@ -79,7 +79,8 @@ export async function POST(req: Request) {
           });
           console.log("Split created:", JSON.stringify(createdSplit, null, 2));
         } catch (error) {
-          console.error("Error creating split:", error);
+          // 更詳細的錯誤日誌
+          console.error(`Error creating split: ${error.message}`);
         }
       }
     } else {

@@ -46,9 +46,6 @@ export default async function EditTransactionPage({
     console.log("Fetching split data for transaction ID:", id);
     const splitData = await prisma.transactionSplit.findMany({
       where: { transactionId: id },
-      include: {
-        assignedTo: true
-      }
     });
     
     console.log("Split data fetched:", JSON.stringify(splitData, null, 2));

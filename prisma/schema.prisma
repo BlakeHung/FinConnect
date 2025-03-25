@@ -27,7 +27,6 @@ model User {
   groupMembers  GroupMember[]       // 用戶在群組中的成員身份
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
-  assignedSplits TransactionSplit[] // 被分配的分帳記錄
 }
 
 model Category {
@@ -104,7 +103,6 @@ model Transaction {
   group         Group?                @relation(fields: [groupId], references: [id])
   splits        TransactionSplit[]
   payments      TransactionPayment[]  // 交易的付款記錄
-  memberSplits  TransactionMemberSplit[] // 交易的成員分帳記錄
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 }
@@ -124,24 +122,6 @@ model TransactionPayment {
   updatedAt     DateTime    @updatedAt
 }
 
-// 新增: 交易中的成員分配記錄
-model TransactionMemberSplit {
-  id            String      @id @default(auto()) @map("_id") @db.ObjectId
-  transactionId String      @db.ObjectId
-  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
-  groupId       String      @db.ObjectId
-  group         Group       @relation(fields: [groupId], references: [id])
-  memberId      String      @db.ObjectId  
-  member        GroupMember @relation(fields: [memberId], references: [id])
-  isIncluded    Boolean     @default(true)  // 是否納入計算，默認包含
-  splitType     String      @default("EQUAL") // EQUAL(平均), PERCENTAGE(比例), FIXED(固定金額)
-  splitValue    Float?      // 分帳值（比例時為百分比，固定金額時為金額）
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  @@unique([transactionId, memberId])
-}
-
 // 群體定義
 model Group {
   id                String                @id @default(auto()) @map("_id") @db.ObjectId
@@ -152,23 +132,22 @@ model Group {
   members           GroupMember[]         // 群體成員
   activities        ActivityGroup[]       // 參與的活動
   transactions      Transaction[]         // 新增: 關聯的交易
-  transactionSplits TransactionMemberSplit[] // 新增: 交易分帳記錄
   createdBy         User                  @relation(fields: [createdById], references: [id])
   createdById       String                @db.ObjectId
 }
 
 // 群體成員
 model GroupMember {
-  id                String                @id @default(auto()) @map("_id") @db.ObjectId
-  name              String                // 成員名稱
-  group             Group                 @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  groupId           String                @db.ObjectId
+  id                String              @id @default(auto()) @map("_id") @db.ObjectId
+  name              String              // 成員名稱
+  group             Group               @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  groupId           String              @db.ObjectId
   // 新增: 與系統用戶的可選關聯
-  userId            String?               @db.ObjectId
-  user              User?                 @relation(fields: [userId], references: [id])
-  transactionSplits TransactionMemberSplit[] // 交易分帳記錄
-  createdAt         DateTime              @default(now())
-  updatedAt         DateTime              @updatedAt
+  userId            String?             @db.ObjectId
+  user              User?               @relation(fields: [userId], references: [id])
+  assignedSplits    TransactionSplit[]  // 只保留這個欄位，作為 TransactionSplit.assignedTo 的反向關聯
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
 }
 
 // 活動中的群體參與
@@ -207,8 +186,10 @@ model TransactionSplit {
   splitAmount     Float       // 分帳金額
   description     String?     // 分帳說明
   assignedToId    String      @db.ObjectId
-  assignedTo      User        @relation(fields: [assignedToId], references: [id])
+  assignedTo      GroupMember @relation(fields: [assignedToId], references: [id])
   status          String      @default("EQUAL") // EQUAL, PERCENTAGE, FIXED
+  isIncluded      Boolean     @default(true)    // 是否納入計算，很重要的功能
+  splitValue      Float?      // 分帳值，用於存儲百分比或固定金額
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }

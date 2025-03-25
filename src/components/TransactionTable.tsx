@@ -308,7 +308,8 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                     <div className="space-y-1">
                       {transaction.splits.map((split, index) => (
                         <div key={index} className="text-sm">
-                          <span className="text-gray-600">{split.assignedTo.name}:</span>
+                          <span className="text-gray-600">     {split.assignedTo ? split.assignedTo.name : '未分配用戶'}:
+                          </span>
                           <span className="ml-1">${split.splitAmount}</span>
                         </div>
                       ))}
@@ -395,7 +396,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 <div className="mt-1 space-y-1">
                   {transaction.splits.map((split, index) => (
                     <div key={index} className="flex justify-between text-sm">
-                      <span>{split.assignedTo.name}</span>
+                      <span>{split.assignedTo ? split.assignedTo.name : '未分配用戶'}</span>
                       <span>${split.splitAmount}</span>
                     </div>
                   ))}
