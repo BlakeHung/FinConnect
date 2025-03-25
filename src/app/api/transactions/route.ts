@@ -3,125 +3,132 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(request: Request) {
+// 定義分帳類型
+interface Split {
+  amount: number;
+  description?: string;
+  assignedToId: string;
+  isIncluded?: boolean;
+  splitType?: string;
+}
+
+export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const data = await request.json();
-    console.log("Received data:", data);
+    const body = await req.json();
+    console.log("POST transaction request body:", JSON.stringify(body, null, 2));
+    
+    const {
+      amount,
+      type,
+      categoryId,
+      date,
+      description,
+      images,
+      activityId,
+      paymentStatus,
+      groupId,
+      splits,
+    } = body;
 
-    // 驗證必要欄位
-    if (!data.amount || !data.categoryId || !data.date) {
-      return NextResponse.json(
-        { error: "Missing required fields", data },
-        { status: 400 }
-      );
-    }
+    console.log("Processing transaction with splits:", JSON.stringify(splits, null, 2));
+    console.log("Number of splits:", splits?.length || 0);
 
-    // 獲取預設活動或第一個活動
-    const defaultActivity = await prisma.activity.findFirst({
-      where: {
-        status: "ACTIVE",
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    if (!defaultActivity) {
-      return NextResponse.json(
-        { error: "No active activity found" },
-        { status: 400 }
-      );
-    }
-
-    // 確保日期格式正確
-    const date = new Date(data.date);
-    if (isNaN(date.getTime())) {
-      return NextResponse.json(
-        { error: "Invalid date format" },
-        { status: 400 }
-      );
-    }
-
-    // 創建新的支出記錄
+    // 創建主交易
     const transaction = await prisma.transaction.create({
       data: {
-        amount: parseFloat(data.amount),
-        type: data.type,
-        description: data.description || "",
-        date: date,
-        categoryId: data.categoryId,
+        amount: parseFloat(amount),
+        type,
+        categoryId,
+        date: new Date(date),
+        description: description || null,
+        images: images || [],
+        activityId: activityId === 'none' ? null : activityId,
+        paymentStatus: paymentStatus || 'UNPAID',
         userId: session.user.id,
-        activityId: data.activityId || defaultActivity.id,
-        status: "PENDING",
-        images: data.images || [],
+        groupId: groupId || null,
       },
     });
-
-    console.log("Created transaction:", transaction);
-
-    return NextResponse.json({ data: transaction });
     
+    console.log("Created transaction:", JSON.stringify(transaction, null, 2));
+
+    // 處理分帳數據
+    if (splits && splits.length > 0) {
+      console.log("Processing splits for new transaction...");
+      
+      // 篩選出要包含的分帳項目
+      const includedSplits = splits.filter((split: any) => split.isIncluded !== false);
+      console.log("Included splits:", JSON.stringify(includedSplits, null, 2));
+      
+      // 創建分帳記錄
+      for (const split of includedSplits) {
+        console.log("Creating split:", JSON.stringify(split, null, 2));
+        try {
+          const createdSplit = await prisma.transactionSplit.create({
+            data: {
+              transactionId: transaction.id,
+              splitAmount: parseFloat(split.amount),
+              description: split.description || null,
+              assignedToId: split.assignedToId,
+              status: split.splitType || 'EQUAL',
+            },
+          });
+          console.log("Split created:", JSON.stringify(createdSplit, null, 2));
+        } catch (error) {
+          console.error("Error creating split:", error);
+        }
+      }
+    } else {
+      console.log("No splits to process for this transaction.");
+    }
+
+    return NextResponse.json(transaction);
   } catch (error) {
-    console.error("[TRANSACTION_CREATE]", error);
-    return NextResponse.json(
-      { 
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error"
-      },
-      { status: 500 }
-    );
+    console.error("Error creating transaction:", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const sortBy = searchParams.get('sortBy') || 'date';
-    const order = searchParams.get('order') || 'desc';
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get("userId");
+    const activityId = searchParams.get("activityId");
 
-    // 檢查是否有權限查看所有記錄
-    const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
+    const where = {
+      ...(userId && { userId }),
+      ...(activityId && { activityId }),
+    };
 
     const transactions = await prisma.transaction.findMany({
-      where: {
-        userId: canViewAll 
-          ? userId || undefined
-          : session.user.id,
-      },
+      where,
       include: {
         category: true,
-        user: true,
         activity: true,
+        user: true,
+        splits: {
+          include: {
+            assignedTo: true,
+          },
+        },
       },
       orderBy: {
-        [sortBy]: order,
+        createdAt: "desc",
       },
     });
 
-    return NextResponse.json({ data: transactions });
+    return NextResponse.json(transactions);
   } catch (error) {
     console.error("[TRANSACTIONS_GET]", error);
-    return NextResponse.json(
-      { error: "Failed to fetch transactions" },
-      { status: 500 }
-    );
+    return new NextResponse("Internal error", { status: 500 });
   }
 } 

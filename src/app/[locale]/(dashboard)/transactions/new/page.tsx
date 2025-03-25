@@ -11,17 +11,23 @@ type PageProps = {
 };
 
 export default async function NewTransactionPage({
-  params: { locale },
+  params,
   searchParams,
 }: PageProps) {
-  const t = await getTranslations('transactions');
+  const { locale } = await params;
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
+  const t = await getTranslations('transactions');
+  const today = new Date().toISOString().split('T')[0];
+  
   if (!session) {
     redirect('/login');
   }
 
-  // 獲取分類列表
+  if (!queryParams.type || !['EXPENSE', 'INCOME'].includes(queryParams.type)) {
+    redirect('/transactions');
+  }
+
   const categories = await prisma.category.findMany({
     where: {
       type: queryParams.type,
@@ -30,13 +36,8 @@ export default async function NewTransactionPage({
       name: 'asc',
     },
   });
-  const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
 
-  // 獲取進行中的活動，按創建時間降序排序
   const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
     orderBy: {
       startDate: 'desc',
     },
@@ -45,8 +46,28 @@ export default async function NewTransactionPage({
       name: true,
     },
   });
-  console.log(activities)
-  // 獲取最新創建的活動（如果有的話）
+
+  // 取得用戶的群組
+  const groups = await prisma.group.findMany({
+    where: {
+      OR: [
+        { createdById: session.user.id },
+        { 
+          members: {
+            some: {
+              userId: session.user.id
+            }
+          }
+        }
+      ]
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  // 獲取最新的活動（如果有的話）
   const latestActivity = activities[0];
 
   return (
@@ -59,6 +80,7 @@ export default async function NewTransactionPage({
           type={queryParams.type} 
           categories={categories}
           activities={activities}
+          groups={groups}
           defaultValues={{
             date: today,
             activityId: latestActivity?.id || 'none', // 預設最新活動

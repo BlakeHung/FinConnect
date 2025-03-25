@@ -19,6 +19,14 @@ interface Transaction {
   description?: string;
   paymentStatus: string;
   updatedAt: Date;
+  isSplit: boolean;
+  splits?: {
+    splitAmount: number;
+    description?: string;
+    assignedTo: {
+      name: string;
+    };
+  }[];
   category: {
     name: string;
   };
@@ -252,6 +260,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.creator')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.payment_status')}</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.activity')}</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.split')}</th>
               <SortableHeader field="updatedAt">{t('table.last_updated')}</SortableHeader>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('table.actions')}</th>
             </tr>
@@ -293,6 +302,20 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {transaction.activity?.name || '-'}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {transaction.isSplit && transaction.splits && transaction.splits.length > 0 ? (
+                    <div className="space-y-1">
+                      {transaction.splits.map((split, index) => (
+                        <div key={index} className="text-sm">
+                          <span className="text-gray-600">{split.assignedTo.name}:</span>
+                          <span className="ml-1">${split.splitAmount}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    '-'
+                  )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {formatDate(transaction.updatedAt)}
@@ -365,6 +388,20 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
             <div className="text-sm text-gray-500">
               {t('table.last_updated')}: {formatDate(transaction.updatedAt)}
             </div>
+
+            {transaction.isSplit && transaction.splits && transaction.splits.length > 0 && (
+              <div className="mt-2 pt-2 border-t">
+                <div className="text-sm font-medium text-gray-600">{t('split_details')}</div>
+                <div className="mt-1 space-y-1">
+                  {transaction.splits.map((split, index) => (
+                    <div key={index} className="flex justify-between text-sm">
+                      <span>{split.assignedTo.name}</span>
+                      <span>${split.splitAmount}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {canManagePayments && transaction.paymentStatus === 'UNPAID' && (
               <div className="flex items-center justify-between pt-2 border-t">

@@ -23,10 +23,11 @@ model User {
   transactions  Transaction[]
   activities    ActivityParticipant[]
   createdGroups Group[]
-  payments      TransactionPayment[] // 新增: 付款記錄
+  payments      TransactionPayment[] // 付款記錄
   groupMembers  GroupMember[]       // 用戶在群組中的成員身份
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
+  assignedSplits TransactionSplit[] // 被分配的分帳記錄
 }
 
 model Category {
@@ -99,13 +100,11 @@ model Transaction {
   status        String                @default("PENDING") // PENDING, APPROVED, REJECTED
   paymentStatus String                @default("UNPAID")  // UNPAID, PAID
   paidAt        DateTime?             // 付款日期，可選
-  // 新增: 與群組的關聯
   groupId       String?               @db.ObjectId
   group         Group?                @relation(fields: [groupId], references: [id])
-  // 新增: 成員分帳記錄
-  memberSplits  TransactionMemberSplit[]
-  // 新增: 多個付款記錄
-  payments      TransactionPayment[]
+  splits        TransactionSplit[]
+  payments      TransactionPayment[]  // 交易的付款記錄
+  memberSplits  TransactionMemberSplit[] // 交易的成員分帳記錄
   createdAt     DateTime              @default(now())
   updatedAt     DateTime              @updatedAt
 }
@@ -198,4 +197,18 @@ model ActivityGroupExpense {
   description     String?       // 描述
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+// 新增: 交易分帳記錄
+model TransactionSplit {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  transactionId   String      @db.ObjectId
+  transaction     Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  splitAmount     Float       // 分帳金額
+  description     String?     // 分帳說明
+  assignedToId    String      @db.ObjectId
+  assignedTo      User        @relation(fields: [assignedToId], references: [id])
+  status          String      @default("EQUAL") // EQUAL, PERCENTAGE, FIXED
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }

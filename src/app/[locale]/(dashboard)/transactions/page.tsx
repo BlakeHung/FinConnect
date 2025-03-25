@@ -82,8 +82,19 @@ export default async function TransactionsPage({
       category: true,
       activity: true,
       user: true,
+      splits: {
+        include: {
+          assignedTo: true
+        }
+      }
     },
   });
+
+  // 處理事務數據，確保它們有正確的 isSplit 屬性
+  const enhancedTransactions = transactions.map(transaction => ({
+    ...transaction,
+    isSplit: transaction.splits && transaction.splits.length > 0,
+  }));
 
   const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
@@ -117,7 +128,7 @@ export default async function TransactionsPage({
 
       <div className="mt-6">
         <TransactionTable 
-          transactions={transactions} 
+          transactions={enhancedTransactions} 
           activities={activities}
           canManagePayments={canManagePayments}
         />
