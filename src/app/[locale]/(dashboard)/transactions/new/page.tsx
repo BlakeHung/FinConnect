@@ -18,7 +18,7 @@ export default async function NewTransactionPage({
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
   if (!session) {
-    redirect(`/${locale}/login`);
+    redirect('/login');
   }
 
   // 獲取分類列表
@@ -30,8 +30,9 @@ export default async function NewTransactionPage({
       name: 'asc',
     },
   });
-  
-  // 獲取進行中的活動
+  const today = new Date().toISOString().split('T')[0];  // 格式化今天的日期為 YYYY-MM-DD
+
+  // 獲取進行中的活動，按創建時間降序排序
   const activities = await prisma.activity.findMany({
     where: {
       status: 'ACTIVE',
@@ -44,42 +45,13 @@ export default async function NewTransactionPage({
       name: true,
     },
   });
-  
-  // 獲取用戶的群組，包含成員數據
-  const groups = await prisma.group.findMany({
-    where: {
-      OR: [
-        { createdById: session.user.id },
-        { members: { some: { userId: session.user.id } } },
-      ],
-    },
-    orderBy: {
-      name: 'asc',
-    },
-    select: {
-      id: true,
-      name: true,
-      members: {
-        select: {
-          id: true,
-          name: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-            }
-          }
-        }
-      }
-    },
-  });
-  
-  const today = new Date().toISOString().split('T')[0];
+  console.log(activities)
+  // 獲取最新創建的活動（如果有的話）
   const latestActivity = activities[0];
 
   return (
     <div className="container mx-auto p-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
           {queryParams.type === 'EXPENSE' ? t('new_expense') : t('new_income')}
         </h1>
@@ -87,10 +59,9 @@ export default async function NewTransactionPage({
           type={queryParams.type} 
           categories={categories}
           activities={activities}
-          groups={groups}
           defaultValues={{
             date: today,
-            activityId: latestActivity?.id || 'none',
+            activityId: latestActivity?.id || 'none', // 預設最新活動
           }}
         />
       </div>

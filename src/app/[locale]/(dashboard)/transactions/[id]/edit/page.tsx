@@ -1,44 +1,48 @@
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { redirect, notFound } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 import { getTranslations } from 'next-intl/server';
 
 type PageProps = {
-  params: { locale: string; id: string };
+  params: Promise<{ id: string; locale: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function EditTransactionPage({
-  params: { locale, id },
+  params,
+  searchParams,
 }: PageProps) {
+  const { id, locale } = await params;
   const t = await getTranslations('transactions');
+  const queryParams = await searchParams;
+  console.log(queryParams);
   const session = await getServerSession(authOptions);
+  
   if (!session) {
-    redirect(`/${locale}/login`);
+    redirect('/login');
   }
 
-  // 獲取交易詳情，包括分帳數據
   const transaction = await prisma.transaction.findUnique({
-    where: {
-      id,
-    },
-    include: {
-      category: true,
-      memberSplits: true, // 包含分帳記錄
-    },
+    where: { id },
+    include: { category: true },
   });
-
+  console.log(transaction)
   if (!transaction) {
-    redirect(`/${locale}/transactions`);
+    notFound();
   }
 
-  // 如果不是創建者，則無法編輯
-  if (transaction.userId !== session.user.id) {
-    redirect(`/${locale}/transactions`);
+  // 檢查權限
+  const isOwner = transaction.userId === session.user.id;
+  const isAdmin = session.user.role === 'ADMIN';
+  if (!isOwner && !isAdmin) {
+    redirect('/transactions');
   }
 
-  // 獲取分類列表
+  // 格式化交易日期為 YYYY-MM-DD
+  const formattedDate = transaction.date.toISOString().split('T')[0];
+
   const categories = await prisma.category.findMany({
     where: {
       type: transaction.type,
@@ -48,11 +52,7 @@ export default async function EditTransactionPage({
     },
   });
 
-  // 獲取活動列表
   const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
     orderBy: {
       startDate: 'desc',
     },
@@ -61,98 +61,28 @@ export default async function EditTransactionPage({
       name: true,
     },
   });
-
-  // 獲取用戶的群組，包含成員數據
-  const groups = await prisma.group.findMany({
-    where: {
-      OR: [
-        { createdById: session.user.id },
-        { members: { some: { userId: session.user.id } } },
-      ],
-    },
-    orderBy: {
-      name: 'asc',
-    },
-    select: {
-      id: true,
-      name: true,
-      members: {
-        select: {
-          id: true,
-          name: true,
-          user: {
-            select: {
-              id: true,
-              name: true,
-            }
-          }
-        }
-      }
-    },
-  });
-
-  // 如果有分帳記錄，獲取分帳詳情
-  let splitData = null;
-  if (transaction.memberSplits && transaction.memberSplits.length > 0) {
-    // 確定分帳類型
-    const splitType = transaction.memberSplits[0].splitType;
-    
-    // 如果群組有變更，需要重新獲取成員
-    if (transaction.groupId) {
-      const groupMembers = await prisma.groupMember.findMany({
-        where: {
-          groupId: transaction.groupId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-            }
-          }
-        }
-      });
-      
-      splitData = {
-        splitEnabled: true,
-        splitType,
-        splitMembers: groupMembers.map(member => {
-          const split = transaction.memberSplits.find(s => s.memberId === member.id);
-          return {
-            memberId: member.id,
-            isIncluded: split ? true : false,
-            value: split ? split.splitValue : undefined,
-          };
-        })
-      };
-    }
-  }
+  
+  const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
   return (
     <div className="container mx-auto p-4">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">
-          {t('edit_transaction')}
-        </h1>
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">{t('form.title_edit')}</h1>
         <TransactionForm 
-          type={transaction.type} 
+          type={transaction.type}
           categories={categories}
           activities={activities}
-          groups={groups}
           defaultValues={{
             amount: transaction.amount,
             categoryId: transaction.categoryId,
-            date: transaction.date.toISOString().split('T')[0],
+            activityId: transaction.activityId || 'none',
+            date: formattedDate,
             description: transaction.description || '',
             images: transaction.images || [],
-            activityId: transaction.activityId || 'none',
-            groupId: transaction.groupId || 'none',
             paymentStatus: transaction.paymentStatus,
-            splitEnabled: splitData ? true : false,
           }}
-          splitData={splitData}
           transactionId={transaction.id}
-          canManagePayments={true}
+          canManagePayments={canManagePayments}
         />
       </div>
     </div>

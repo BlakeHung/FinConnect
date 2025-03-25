@@ -3,152 +3,124 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session) {
-      return NextResponse.json({ message: "未授權" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const data = await req.json();
-    const { 
-      amount, 
-      categoryId, 
-      date, 
-      description, 
-      type, 
-      activityId, 
-      images, 
-      paymentStatus,
-      groupId,
-      splitEnabled,
-      splitType,
-      splitMembers
-    } = data;
+    const data = await request.json();
+    console.log("Received data:", data);
 
-    // 創建基本交易
+    // 驗證必要欄位
+    if (!data.amount || !data.categoryId || !data.date) {
+      return NextResponse.json(
+        { error: "Missing required fields", data },
+        { status: 400 }
+      );
+    }
+
+    // 獲取預設活動或第一個活動
+    const defaultActivity = await prisma.activity.findFirst({
+      where: {
+        status: "ACTIVE",
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    if (!defaultActivity) {
+      return NextResponse.json(
+        { error: "No active activity found" },
+        { status: 400 }
+      );
+    }
+
+    // 確保日期格式正確
+    const date = new Date(data.date);
+    if (isNaN(date.getTime())) {
+      return NextResponse.json(
+        { error: "Invalid date format" },
+        { status: 400 }
+      );
+    }
+
+    // 創建新的支出記錄
     const transaction = await prisma.transaction.create({
       data: {
-        amount: Number(amount),
-        type,
-        date: new Date(date),
-        description,
-        images: images || [],
-        categoryId,
-        activityId: activityId === "none" || !activityId ? null : activityId,
+        amount: parseFloat(data.amount),
+        type: data.type,
+        description: data.description || "",
+        date: date,
+        categoryId: data.categoryId,
         userId: session.user.id,
-        paymentStatus: paymentStatus || "UNPAID",
-        groupId: groupId === "none" || !groupId ? null : groupId,
+        activityId: data.activityId || defaultActivity.id,
+        status: "PENDING",
+        images: data.images || [],
       },
     });
 
-    // 如果啟用了分帳，並且有群組和成員
-    if (splitEnabled && groupId && groupId !== "none" && splitMembers?.length > 0) {
-      // 過濾出要包含的成員
-      const includedMembers = splitMembers.filter(m => m.isIncluded);
-      
-      // 沒有包含的成員，不進行分帳
-      if (includedMembers.length === 0) {
-        return NextResponse.json({ transaction }, { status: 201 });
-      }
-      
-      // 創建分帳記錄
-      const splits = includedMembers.map(member => ({
-        transactionId: transaction.id,
-        groupId,
-        memberId: member.memberId,
-        isIncluded: true,
-        splitType,
-        splitValue: splitType === 'EQUAL' ? null : member.value,
-      }));
-      
-      // 創建所有分帳記錄
-      await prisma.transactionMemberSplit.createMany({
-        data: splits,
-      });
-    }
+    console.log("Created transaction:", transaction);
 
-    return NextResponse.json({ transaction }, { status: 201 });
+    return NextResponse.json({ data: transaction });
+    
   } catch (error) {
-    console.error("Error creating transaction:", error);
+    console.error("[TRANSACTION_CREATE]", error);
     return NextResponse.json(
-      { message: "創建交易失敗", error: error.message },
+      { 
+        error: "Internal server error",
+        details: error instanceof Error ? error.message : "Unknown error"
+      },
       { status: 500 }
     );
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return NextResponse.json({ message: "未授權" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    const { searchParams } = new URL(req.url);
-    const type = searchParams.get("type");
-    const categoryId = searchParams.get("categoryId");
-    const activityId = searchParams.get("activityId");
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
-    const groupId = searchParams.get("groupId");
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    const sortBy = searchParams.get('sortBy') || 'date';
+    const order = searchParams.get('order') || 'desc';
 
-    // 構建查詢條件
-    const where: any = {
-      userId: session.user.id,
-    };
-
-    if (type) {
-      where.type = type;
-    }
-
-    if (categoryId) {
-      where.categoryId = categoryId;
-    }
-
-    if (activityId) {
-      where.activityId = activityId;
-    }
-
-    if (groupId) {
-      where.groupId = groupId;
-    }
-
-    if (startDate || endDate) {
-      where.date = {};
-      if (startDate) {
-        where.date.gte = new Date(startDate);
-      }
-      if (endDate) {
-        // 設置結束日期為當天的23:59:59，以包含整天
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        where.date.lte = end;
-      }
-    }
+    // 檢查是否有權限查看所有記錄
+    const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
 
     const transactions = await prisma.transaction.findMany({
-      where,
+      where: {
+        userId: canViewAll 
+          ? userId || undefined
+          : session.user.id,
+      },
       include: {
         category: true,
+        user: true,
         activity: true,
-        group: true,
-        memberSplits: {
-          include: {
-            member: true,
-          }
-        }
       },
       orderBy: {
-        date: "desc",
+        [sortBy]: order,
       },
     });
 
-    return NextResponse.json({ transactions });
+    return NextResponse.json({ data: transactions });
   } catch (error) {
-    console.error("Error fetching transactions:", error);
+    console.error("[TRANSACTIONS_GET]", error);
     return NextResponse.json(
-      { message: "獲取交易失敗", error: error.message },
+      { error: "Failed to fetch transactions" },
       { status: 500 }
     );
   }

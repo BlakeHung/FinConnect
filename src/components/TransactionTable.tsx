@@ -161,9 +161,9 @@ export function TransactionTable({ transactions, activities = [] }: TransactionT
                 <td className="px-6 py-4 whitespace-nowrap">{formatDate(transaction.date)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.type === 'EXPENSE' ? t('expense') : t('income')}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{transaction.amount}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.category?.name || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.description || '-'}</td>
-                <td className="px-6 py-4 whitespace-nowrap">{transaction.user?.name || '-'}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.category.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{transaction.user.name}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {transaction.activity?.name || '-'}
                 </td>
@@ -196,8 +196,13 @@ export function TransactionTable({ transactions, activities = [] }: TransactionT
               </div>
             </div>
 
-            <div className="text-sm text-gray-600">
-              {transaction.category?.name || '-'}
+            <div className="flex justify-between items-center">
+              <div className="text-sm text-gray-600">{transaction.category.name}</div>
+              <Badge
+                variant={transaction.paymentStatus === 'PAID' ? 'success' : 'warning'}
+              >
+                {transaction.paymentStatus === 'PAID' ? t('payment_status.paid') : t('payment_status.unpaid')}
+              </Badge>
             </div>
 
             {transaction.description && (
@@ -207,7 +212,7 @@ export function TransactionTable({ transactions, activities = [] }: TransactionT
             )}
 
             <div className="text-sm text-gray-500">
-              {t('table.creator')}: {transaction.user?.name || '-'}
+              {t('table.creator')}: {transaction.user.name}
             </div>
 
             {transaction.activity && (
