@@ -5,9 +5,10 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
 import { getTranslations } from 'next-intl/server';
+import PaymentSummary from "@/components/PaymentSummary";
 
 type PageProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
@@ -15,7 +16,7 @@ export default async function TransactionPage({
   params,
   searchParams,
 }: PageProps) {
-  const { id } = await params;
+  const { id, locale } = await params;
   const queryParams = await searchParams;
   console.log(queryParams);
   const session = await getServerSession(authOptions);
@@ -33,20 +34,22 @@ export default async function TransactionPage({
         category: true,
         activity: true,
         user: true,
+        splits: {
+          include: {
+            assignedTo: true
+          }
+        },
+        payments: {
+          include: {
+            payer: true
+          }
+        }
       },
     });
 
     if (!transaction) {
       notFound();
     }
-
-    // 單獨查詢分帳數據
-    const splitData = await prisma.transactionSplit.findMany({
-      where: { transactionId: id },
-      include: {
-        assignedTo: true
-      }
-    });
 
     // 檢查權限
     const isOwner = transaction.userId === session.user.id;
@@ -57,7 +60,7 @@ export default async function TransactionPage({
 
     // 檢查使用者權限
     const canEdit = isOwner || isAdmin;
-    const hasSplits = splitData.length > 0;
+    const hasSplits = transaction.splits.length > 0;
 
     console.log({
       transactionUserId: transaction.userId,
@@ -120,7 +123,7 @@ export default async function TransactionPage({
               <div className="border-t pt-4">
                 <h3 className="text-gray-600 mb-2">{t('split_details')}</h3>
                 <div className="space-y-2">
-                  {splitData.map((split, index) => (
+                  {transaction.splits.map((split, index) => (
                     <div key={index} className="bg-gray-50 p-3 rounded-lg">
                       <div className="flex justify-between items-center">
                         <div>
@@ -151,6 +154,17 @@ export default async function TransactionPage({
                     />
                   ))}
                 </div>
+              </div>
+            )}
+
+            {transaction.groupId && transaction.splits && transaction.splits.length > 0 && (
+              <div className="mt-6">
+                <PaymentSummary
+                  splits={transaction.splits}
+                  payments={transaction.payments}
+                  transactionId={transaction.id}
+                  locale={locale}
+                />
               </div>
             )}
           </div>
