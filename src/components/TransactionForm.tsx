@@ -673,7 +673,14 @@ export function TransactionForm({
               {splitItems.length === 0 ? (
                 <div className="text-center py-8">
                   <p className="text-gray-500">{t('no_split_items')}</p>
-                  <Button onClick={handleAddSplitItem} className="mt-4">
+                  <Button 
+                    type="button" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleAddSplitItem();
+                    }} 
+                    className="mt-4"
+                  >
                     {t('add_split_item')}
                   </Button>
                 </div>
