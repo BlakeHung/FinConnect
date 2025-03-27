@@ -25,7 +25,7 @@ export default async function EditTransactionPage({
   }
 
   try {
-    // 使用 Prisma 查詢事務詳情，明確包含分帳關聯
+    // 使用 Prisma 查詢事務詳情，明確包含分帳和付款記錄關聯
     console.log("Fetching transaction with ID:", id);
     const transaction = await prisma.transaction.findUnique({
       where: { id },
@@ -50,6 +50,18 @@ export default async function EditTransactionPage({
     
     console.log("Split data fetched:", JSON.stringify(splitData, null, 2));
     console.log("Number of splits found:", splitData.length);
+
+    // 單獨查詢付款記錄
+    console.log("Fetching payment records for transaction ID:", id);
+    const paymentData = await prisma.transactionPayment.findMany({
+      where: { transactionId: id },
+      include: {
+        payer: true
+      }
+    });
+    
+    console.log("Payment records fetched:", JSON.stringify(paymentData, null, 2));
+    console.log("Number of payments found:", paymentData.length);
 
     // 檢查權限
     const isOwner = transaction.userId === session.user.id;
@@ -102,20 +114,43 @@ export default async function EditTransactionPage({
       },
     });
     
+    // 獲取系統中的用戶列表（用於付款記錄）
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+    
     const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
     // 處理分帳數據
-    const splits = splitData.map((split: any) => {
+    const splits = splitData.map((split) => {
       console.log("Processing split:", JSON.stringify(split, null, 2));
       return {
         amount: split.splitAmount,
         description: split.description || '',
         assignedToId: split.assignedToId,
         splitType: split.status,
-        isIncluded: true
+        isIncluded: split.isIncluded
       };
     });
     console.log("Processed splits for form:", JSON.stringify(splits, null, 2));
+
+    // 處理付款記錄
+    const payments = paymentData.map((payment) => {
+      return {
+        payerId: payment.payerId,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod || '',
+        note: payment.note || ''
+      };
+    });
+    console.log("Processed payments for form:", JSON.stringify(payments, null, 2));
 
     // 這裡我們將原始數據轉化為表單所需格式
     const transactionType = transaction.type === 'EXPENSE' || transaction.type === 'INCOME' 
@@ -127,12 +162,13 @@ export default async function EditTransactionPage({
       amount: transaction.amount,
       categoryId: transaction.categoryId,
       activityId: transaction.activityId || 'none',
-      date: formattedDate,
+      date: new Date(formattedDate),
       description: transaction.description || '',
       images: transaction.images || [],
       paymentStatus: transaction.paymentStatus,
       groupId: transaction.groupId || undefined,
-      splits: splits
+      splits: splits,
+      payments: payments
     };
     
     console.log("Default values for form:", JSON.stringify(defaultValues, null, 2));
@@ -146,6 +182,7 @@ export default async function EditTransactionPage({
             categories={categories}
             activities={activities}
             groups={groups}
+            users={users}
             defaultValues={defaultValues}
             transactionId={transaction.id}
             canManagePayments={canManagePayments}

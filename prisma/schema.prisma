@@ -188,8 +188,25 @@ model TransactionSplit {
   assignedToId    String      @db.ObjectId
   assignedTo      GroupMember @relation(fields: [assignedToId], references: [id])
   status          String      @default("EQUAL") // EQUAL, PERCENTAGE, FIXED
-  isIncluded      Boolean     @default(true)    // 是否納入計算，很重要的功能
-  splitValue      Float?      // 分帳值，用於存儲百分比或固定金額
+  isIncluded      Boolean     @default(true)    // 是否納入計算
+  splitValue      Float?      // 分帳值
+  splitItemType   String?     // 新增：分帳項目類型，如"牡蠣"、"酒類"、"一般食物"
+  members         SplitItemMember[] // 新增：對應到多個成員
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+}
+
+// 新增：分帳項目與成員的多對多關聯模型
+model SplitItemMember {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  splitId       String          @db.ObjectId
+  split         TransactionSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
+  memberId      String          @db.ObjectId
+  member        GroupMember     @relation(fields: [memberId], references: [id])
+  isIncluded    Boolean         @default(true)
+  splitAmount   Float           // 個人在此項目的分攤金額
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([splitId, memberId])
 }

@@ -10,6 +10,15 @@ interface Split {
   assignedToId: string;
   isIncluded?: boolean;
   splitType?: string;
+  splitItemType?: string;
+}
+
+// 定義付款記錄類型
+interface Payment {
+  payerId: string;
+  amount: number;
+  paymentMethod?: string;
+  note?: string;
 }
 
 export async function POST(req: Request) {
@@ -33,10 +42,13 @@ export async function POST(req: Request) {
       paymentStatus,
       groupId,
       splits,
+      payments,
     } = body;
 
     console.log("Processing transaction with splits:", JSON.stringify(splits, null, 2));
     console.log("Number of splits:", splits?.length || 0);
+    console.log("Processing transaction with payments:", JSON.stringify(payments, null, 2));
+    console.log("Number of payments:", payments?.length || 0);
 
     // 創建主交易
     const transaction = await prisma.transaction.create({
@@ -60,12 +72,8 @@ export async function POST(req: Request) {
     if (splits && splits.length > 0) {
       console.log("Processing splits for new transaction...");
       
-      // 篩選出要包含的分帳項目
-      const includedSplits = splits.filter((split: any) => split.isIncluded !== false);
-      console.log("Included splits:", JSON.stringify(includedSplits, null, 2));
-      
       // 創建分帳記錄
-      for (const split of includedSplits) {
+      for (const split of splits) {
         console.log("Creating split:", JSON.stringify(split, null, 2));
         try {
           const createdSplit = await prisma.transactionSplit.create({
@@ -75,6 +83,8 @@ export async function POST(req: Request) {
               description: split.description || null,
               assignedToId: split.assignedToId,
               status: split.splitType || 'EQUAL',
+              isIncluded: split.isIncluded !== false,
+              splitItemType: split.splitItemType || null,
             },
           });
           console.log("Split created:", JSON.stringify(createdSplit, null, 2));
@@ -85,6 +95,45 @@ export async function POST(req: Request) {
       }
     } else {
       console.log("No splits to process for this transaction.");
+    }
+
+    // 處理付款記錄
+    if (payments && payments.length > 0) {
+      console.log("Processing payments for new transaction...");
+      
+      // 創建付款記錄
+      for (const payment of payments) {
+        console.log("Creating payment:", JSON.stringify(payment, null, 2));
+        try {
+          const createdPayment = await prisma.transactionPayment.create({
+            data: {
+              transactionId: transaction.id,
+              payerId: payment.payerId,
+              amount: parseFloat(payment.amount),
+              paymentMethod: payment.paymentMethod || null,
+              note: payment.note || null,
+            },
+          });
+          console.log("Payment record created:", JSON.stringify(createdPayment, null, 2));
+        } catch (error) {
+          console.error(`Error creating payment record: ${error.message}`);
+        }
+      }
+      
+      // 如果有付款記錄且總額等於或超過交易金額，自動更新付款狀態為已付
+      const totalPaid = payments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+      if (totalPaid >= parseFloat(amount)) {
+        await prisma.transaction.update({
+          where: { id: transaction.id },
+          data: { 
+            paymentStatus: 'PAID',
+            paidAt: new Date()
+          }
+        });
+        console.log("Transaction status updated to PAID automatically");
+      }
+    } else {
+      console.log("No payment records to process for this transaction.");
     }
 
     return NextResponse.json(transaction);
@@ -119,6 +168,11 @@ export async function GET(req: Request) {
         splits: {
           include: {
             assignedTo: true,
+          },
+        },
+        payments: {
+          include: {
+            payer: true,
           },
         },
       },

@@ -14,6 +14,11 @@ import { useTranslations } from 'next-intl';
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLocale } from 'use-intl';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const transactionSchema = z.object({
   amount: z.number().positive("金額必須大於 0"),
@@ -23,6 +28,14 @@ const transactionSchema = z.object({
   images: z.array(z.string()).optional(),
   activityId: z.string().optional(),
   groupId: z.string().nullable().optional(),
+  payments: z.array(
+    z.object({
+      payerId: z.string(),
+      amount: z.number().positive(),
+      paymentMethod: z.string().optional(),
+      note: z.string().optional(),
+    })
+  ).optional(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -49,6 +62,12 @@ interface GroupMember {
   userId?: string;
 }
 
+interface User {
+  id: string;
+  name: string;
+  email?: string;
+}
+
 // 分帳方式枚舉
 type SplitType = 'EQUAL' | 'PERCENTAGE' | 'FIXED';
 
@@ -60,10 +79,33 @@ interface Split {
   splitType?: SplitType;
 }
 
+interface Payment {
+  payerId: string;
+  amount: number;
+  paymentMethod?: string;
+  note?: string;
+}
+
+interface SplitItem {
+  id: string;
+  name: string;
+  amount: number;
+  description?: string;
+  splitType: SplitType;
+  members: SplitItemMember[];
+}
+
+interface SplitItemMember {
+  memberId: string;
+  isIncluded: boolean;
+  amount?: number;
+}
+
 interface TransactionFormProps {
   categories: Category[];
   activities: Activity[];
   groups?: Group[];
+  users?: User[];
   type: 'EXPENSE' | 'INCOME';
   defaultValues?: {
     amount: number;
@@ -75,6 +117,7 @@ interface TransactionFormProps {
     paymentStatus?: string;
     groupId?: string;
     splits?: Split[];
+    payments?: Payment[];
   };
   transactionId?: string;
   canManagePayments?: boolean;
@@ -84,6 +127,7 @@ export function TransactionForm({
   categories, 
   activities,
   groups = [],
+  users = [],
   type,
   defaultValues,
   transactionId,
@@ -102,6 +146,11 @@ export function TransactionForm({
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [splitType, setSplitType] = useState<SplitType>('EQUAL');
   const [totalAmount, setTotalAmount] = useState<number>(defaultValues?.amount || 0);
+  const [payments, setPayments] = useState<Payment[]>(defaultValues?.payments || []);
+  const [activeTab, setActiveTab] = useState<string>("details");
+  const [splitItems, setSplitItems] = useState<SplitItem[]>([]);
+  const [showSplitItemModal, setShowSplitItemModal] = useState(false);
+  const [currentSplitItem, setCurrentSplitItem] = useState<SplitItem | null>(null);
 
   // 新增日誌
   console.log("TransactionForm initialized with props:", {
@@ -124,8 +173,12 @@ export function TransactionForm({
   // 處理日期格式
   const formattedDefaultValues = defaultValues ? {
     ...defaultValues,
-    date: typeof defaultValues.date === 'string' ? defaultValues.date : (defaultValues.date instanceof Date ? defaultValues.date.toISOString().split('T')[0] : today)
-  } : { date: today };
+    date: typeof defaultValues.date === 'string' ? defaultValues.date : (defaultValues.date instanceof Date ? defaultValues.date.toISOString().split('T')[0] : today),
+    payments: defaultValues.payments || []
+  } : { 
+    date: today,
+    payments: []
+  };
 
   const {
     register,
@@ -160,30 +213,33 @@ export function TransactionForm({
   }, [currentAmount]);
 
   // 當選擇群組時，獲取群組成員
-  useEffect(() => {
-    const fetchGroupMembers = async () => {
-      if (selectedGroupId) {
-        const response = await fetch(`/api/groups/${selectedGroupId}/members`);
-        const data = await response.json();
-        setGroupMembers(data);
-        
-        // 如果沒有已存在的分帳，則創建默認的平均分帳
-        if (splits.length === 0 && data.length > 0) {
-          const defaultSplits = data.map((member: GroupMember) => ({
-            amount: 0,
-            assignedToId: member.id,
-            splitType: 'EQUAL' as SplitType,
-            isIncluded: true
-          }));
-          setSplits(defaultSplits);
-          updateSplitAmounts(defaultSplits, currentAmount, 'EQUAL');
-        }
-      } else {
-        setGroupMembers([]);
-        setSplits([]);
+  const fetchGroupMembers = async (groupId: string) => {
+    if (groupId) {
+      const response = await fetch(`/api/groups/${groupId}/members`);
+      const data = await response.json();
+      setGroupMembers(data);
+      
+      // 如果沒有已存在的分帳，則創建默認的平均分帳
+      if (splits.length === 0 && data.length > 0) {
+        const defaultSplits = data.map((member: GroupMember) => ({
+          amount: 0,
+          assignedToId: member.id,
+          splitType: 'EQUAL' as SplitType,
+          isIncluded: true
+        }));
+        setSplits(defaultSplits);
+        updateSplitAmounts(defaultSplits, currentAmount, 'EQUAL');
       }
-    };
-    fetchGroupMembers();
+    } else {
+      setGroupMembers([]);
+      setSplits([]);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedGroupId) {
+      fetchGroupMembers(selectedGroupId);
+    }
   }, [selectedGroupId]);
 
   // 更新分帳金額
@@ -287,12 +343,87 @@ export function TransactionForm({
     return splits.reduce((sum, split) => sum + (split.amount || 0), 0);
   };
 
+  // 新增：處理付款管理
+  const handleAddPayment = () => {
+    // 預設付款金額為當前未支付的金額
+    const paidAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+    const remainingAmount = totalAmount - paidAmount;
+    
+    setPayments([
+      ...payments, 
+      { 
+        payerId: users[0]?.id || '',
+        amount: remainingAmount > 0 ? remainingAmount : 0,
+        paymentMethod: '',
+        note: '' 
+      }
+    ]);
+  };
+
+  const handleRemovePayment = (index: number) => {
+    setPayments(payments.filter((_, i) => i !== index));
+  };
+
+  const handlePaymentChange = (index: number, field: keyof Payment, value: string | number) => {
+    const newPayments = [...payments];
+    if (field === 'amount') {
+      newPayments[index] = { ...newPayments[index], [field]: Number(value) || 0 };
+    } else {
+      newPayments[index] = { ...newPayments[index], [field]: value };
+    }
+    setPayments(newPayments);
+  };
+
+  const getTotalPaymentAmount = () => {
+    return payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+  };
+
+  // 新增分帳項目方法
+  const handleAddSplitItem = () => {
+    setCurrentSplitItem({
+      id: Date.now().toString(),
+      name: '',
+      amount: 0,
+      splitType: 'EQUAL',
+      members: groupMembers.map(member => ({
+        memberId: member.id,
+        isIncluded: true
+      }))
+    });
+    setShowSplitItemModal(true);
+  };
+
+  // 保存分帳項目
+  const handleSaveSplitItem = (item: SplitItem) => {
+    if (item.id) {
+      // 更新已有項目
+      setSplitItems(prev => prev.map(i => i.id === item.id ? item : i));
+    } else {
+      // 新增項目
+      setSplitItems(prev => [...prev, {...item, id: Date.now().toString()}]);
+    }
+    setShowSplitItemModal(false);
+    setCurrentSplitItem(null);
+  };
+
+  // 計算每個成員應付總額
+  const calculateMemberTotal = (memberId: string) => {
+    return splitItems.reduce((total, item) => {
+      const memberSplit = item.members.find(m => m.memberId === memberId);
+      if (memberSplit?.isIncluded) {
+        if (item.splitType === 'FIXED') {
+          return total + (memberSplit.amount || 0);
+        } else if (item.splitType === 'EQUAL') {
+          const includedMembersCount = item.members.filter(m => m.isIncluded).length;
+          return total + (includedMembersCount > 0 ? item.amount / includedMembersCount : 0);
+        }
+      }
+      return total;
+    }, 0);
+  };
+
   const onSubmit = async (data: TransactionFormData) => {
     console.log("Form submitted with data:", JSON.stringify(data, null, 2));
-    
-    if (data.splits && data.splits.length > 0) {
-      console.log("Submitting splits:", JSON.stringify(data.splits, null, 2));
-    }
     
     setIsSubmitting(true);
     
@@ -302,6 +433,36 @@ export function TransactionForm({
         : '/api/transactions';
       
       const method = transactionId ? 'PUT' : 'POST';
+      
+      // 轉換 splitItems 為 API 所需格式
+      const apiSplits = [];
+      
+      for (const item of splitItems) {
+        const includedMembers = item.members.filter(m => m.isIncluded);
+        const memberCount = includedMembers.length;
+        
+        if (memberCount === 0) continue;
+        
+        for (const member of includedMembers) {
+          let splitAmount = 0;
+          
+          if (item.splitType === 'FIXED') {
+            splitAmount = member.amount || 0;
+          } else if (item.splitType === 'EQUAL') {
+            splitAmount = item.amount / memberCount;
+          }
+          
+          apiSplits.push({
+            amount: splitAmount,
+            description: item.name,
+            assignedToId: member.memberId,
+            splitType: item.splitType,
+            isIncluded: true,
+            splitItemType: item.name
+          });
+        }
+      }
+      
       const response = await fetch(url, {
         method: method,
         headers: {
@@ -312,7 +473,8 @@ export function TransactionForm({
           type,
           paymentStatus: isPaid ? 'PAID' : 'UNPAID',
           groupId: selectedGroupId || undefined,
-          splits: selectedGroupId && splits.length > 0 ? splits : undefined,
+          splits: apiSplits.length > 0 ? apiSplits : undefined,
+          payments: payments.length > 0 ? payments : undefined,
         }),
       });
 
@@ -329,287 +491,401 @@ export function TransactionForm({
     }
   };
 
-  // 計算總分帳金額
+  // 計算分帳和付款的金額差異
   const totalSplitAmount = getTotalSplitAmount();
-  // 計算差額
+  const totalPaymentAmount = getTotalPaymentAmount();
   const amountDifference = totalAmount - totalSplitAmount;
+  const paymentDifference = totalAmount - totalPaymentAmount;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          {t('amount')}
-        </label>
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          onKeyDown={(e) => {
-            if (!/[\d.]/.test(e.key) && 
-                !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
-              e.preventDefault();
-            }
-          }}
-          {...register("amount", { valueAsNumber: true })}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-        />
-        {errors.amount && (
-          <p className="mt-1 text-sm text-red-600">{t('amount_required')}</p>
-        )}
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-3 mb-4">
+          <TabsTrigger value="details">{t('details')}</TabsTrigger>
+          <TabsTrigger value="split">{t('split')}</TabsTrigger>
+          <TabsTrigger value="payment">{t('payment')}</TabsTrigger>
+        </TabsList>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          {t('category')}
-        </label>
-        <select
-          {...register("categoryId")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-        >
-          <option value="">{t('select_category')}</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        {errors.categoryId && (
-          <p className="mt-1 text-sm text-red-600">{t('category_required')}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          {t('date')}
-        </label>
-        <input
-          type="date"
-          {...register("date")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-        />
-        {errors.date && (
-          <p className="mt-1 text-sm text-red-600">{t('date_required')}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          {t('description')}
-        </label>
-        <input
-          type="text"
-          {...register("description")}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-        />
-        {errors.description && (
-          <p className="mt-1 text-sm text-red-600">{t('description_error')}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700">
-          {t('images')}
-        </label>
-        <input
-          type="file"
-          multiple
-          accept="image/*"
-          onChange={onImageChange}
-          className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
-        />
-        <div className="mt-2 grid grid-cols-2 gap-4">
-          {previewImages.map((image, index) => (
-            <div key={index} className="relative">
-              <img
-                src={image}
-                alt={t('image_preview', { index: index + 1 })}
-                className="w-full h-32 object-cover rounded-lg"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  const newImages = previewImages.filter((_, i) => i !== index);
-                  setPreviewImages(newImages);
-                  setValue('images', newImages);
-                }}
-                className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="activityId">{t('activity')}</Label>
-        
-        <Select
-          value={watch('activityId') || 'none'}
-          onValueChange={(value) => setValue('activityId', value === 'none' ? undefined : value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t('select_activity')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t('no_activity')}</SelectItem>
-            {activities?.map((activity) => (
-              <SelectItem key={activity.id} value={activity.id}>
-                {activity.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="groupId">{t('group')}</Label>
-        <Select
-          value={selectedGroupId || 'none'}
-          onValueChange={(value) => setSelectedGroupId(value === 'none' ? null : value)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t('select_group')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">{t('no_group')}</SelectItem>
-            {groups.map((group) => (
-              <SelectItem key={group.id} value={group.id}>
-                {group.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {selectedGroupId && groupMembers.length > 0 && (
-        <div className="space-y-4 border p-4 rounded-lg">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">{t('split_details')}</h3>
-            <div className="flex space-x-2">
-              <Select
-                value={splitType}
-                onValueChange={(value) => handleSplitTypeChange(value as SplitType)}
-              >
-                <SelectTrigger className="w-[150px]">
-                  <SelectValue placeholder={t('split_type')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="EQUAL">{t('split_type_equal')}</SelectItem>
-                  <SelectItem value="PERCENTAGE">{t('split_type_percentage')}</SelectItem>
-                  <SelectItem value="FIXED">{t('split_type_fixed')}</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddSplit}
-              >
-                {t('add_split')}
-              </Button>
-            </div>
-          </div>
-
-          {splits.map((split, index) => (
-            <div key={index} className="space-y-2 border-b pb-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`split-included-${index}`}
-                    checked={split.isIncluded !== false}
-                    onCheckedChange={(checked) => 
-                      handleSplitChange(index, 'isIncluded', !!checked)
-                    }
-                  />
-                  <label 
-                    htmlFor={`split-included-${index}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {t('split')} {index + 1}
-                  </label>
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveSplit(index)}
-                >
-                  {t('remove')}
-                </Button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>{t('amount')}</Label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    disabled={split.isIncluded === false || splitType !== 'FIXED'}
-                    value={split.amount || 0}
-                    onChange={(e) => handleSplitChange(index, 'amount', parseFloat(e.target.value) || 0)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 disabled:bg-gray-100"
-                  />
-                </div>
-
-                <div>
-                  <Label>{t('assigned_to')}</Label>
-                  <select
-                    value={split.assignedToId}
-                    onChange={(e) => handleSplitChange(index, 'assignedToId', e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                  >
-                    <option value="">{t('select_member')}</option>
-                    {groupMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="col-span-2">
-                  <Label>{t('description')}</Label>
-                  <input
-                    type="text"
-                    value={split.description || ''}
-                    onChange={(e) => handleSplitChange(index, 'description', e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-
-          <div className="flex flex-col space-y-2 pt-2">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">{t('total_split_amount')}:</span>
-              <span className="font-medium">${totalSplitAmount.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="font-medium">{t('total_amount')}:</span>
-              <span className="font-medium">${totalAmount.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center">
-              <span className="font-medium">{t('amount_difference')}:</span>
-              <span className={`font-medium ${Math.abs(amountDifference) > 0.01 ? 'text-red-500' : 'text-green-500'}`}>
-                ${amountDifference.toFixed(2)}
-              </span>
-            </div>
-            
-            {Math.abs(amountDifference) > 0.01 && (
-              <p className="text-sm text-red-500">
-                {amountDifference > 0 
-                  ? t('amount_not_fully_split') 
-                  : t('amount_over_split')}
-              </p>
+        <TabsContent value="details" className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {t('amount')}
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              onKeyDown={(e) => {
+                if (!/[\d.]/.test(e.key) && 
+                    !['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'].includes(e.key)) {
+                  e.preventDefault();
+                }
+              }}
+              {...register("amount", { valueAsNumber: true })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            />
+            {errors.amount && (
+              <p className="mt-1 text-sm text-red-600">{t('amount_required')}</p>
             )}
           </div>
-        </div>
-      )}
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {t('category')}
+            </label>
+            <select
+              {...register("categoryId")}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            >
+              <option value="">{t('select_category')}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {errors.categoryId && (
+              <p className="mt-1 text-sm text-red-600">{t('category_required')}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {t('date')}
+            </label>
+            <input
+              type="date"
+              {...register("date")}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            />
+            {errors.date && (
+              <p className="mt-1 text-sm text-red-600">{t('date_required')}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {t('description')}
+            </label>
+            <input
+              type="text"
+              {...register("description")}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+            />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">{t('description_error')}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              {t('images')}
+            </label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={onImageChange}
+              className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+            />
+            <div className="mt-2 grid grid-cols-2 gap-4">
+              {previewImages.map((image, index) => (
+                <div key={index} className="relative">
+                  <img
+                    src={image}
+                    alt={t('image_preview', { index: index + 1 })}
+                    className="w-full h-32 object-cover rounded-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newImages = previewImages.filter((_, i) => i !== index);
+                      setPreviewImages(newImages);
+                      setValue('images', newImages);
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="activityId">{t('activity')}</Label>
+            
+            <Select
+              value={watch('activityId') || 'none'}
+              onValueChange={(value) => setValue('activityId', value === 'none' ? undefined : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('select_activity')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('no_activity')}</SelectItem>
+                {activities?.map((activity) => (
+                  <SelectItem key={activity.id} value={activity.id}>
+                    {activity.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="groupId">{t('group')}</Label>
+            <Select
+              value={selectedGroupId || 'none'}
+              onValueChange={(value) => setSelectedGroupId(value === 'none' ? null : value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={t('select_group')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">{t('no_group')}</SelectItem>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="split" className="space-y-4">
+          {selectedGroupId ? (
+            <>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-medium">{t('split_items')}</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddSplitItem}
+                >
+                  {t('add_split_item')}
+                </Button>
+              </div>
+              
+              {/* 分帳項目列表 */}
+              {splitItems.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">{t('no_split_items')}</p>
+                  <Button onClick={handleAddSplitItem} className="mt-4">
+                    {t('add_split_item')}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {splitItems.map((item) => (
+                    <Card key={item.id} className="p-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-medium">{item.name}</h4>
+                          <p className="text-sm text-gray-500">
+                            {t('amount')}: ${item.amount.toFixed(2)} • 
+                            {t(`split_type_${item.splitType.toLowerCase()}`)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setCurrentSplitItem(item);
+                              setShowSplitItemModal(true);
+                            }}
+                          >
+                            {t('edit')}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSplitItems(prev => prev.filter(i => i.id !== item.id))}
+                          >
+                            {t('remove')}
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <h5 className="text-sm font-medium mb-2">{t('participants')}</h5>
+                        <div className="flex flex-wrap gap-2">
+                          {item.members.map((member) => {
+                            const groupMember = groupMembers.find(m => m.id === member.memberId);
+                            return groupMember ? (
+                              <Badge
+                                key={member.memberId}
+                                variant={member.isIncluded ? "default" : "outline"}
+                                className="flex items-center gap-1"
+                              >
+                                {groupMember.name}
+                                {member.isIncluded && item.splitType === 'FIXED' && (
+                                  <span>: ${member.amount?.toFixed(2)}</span>
+                                )}
+                              </Badge>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                  
+                  {/* 成員付款摘要 */}
+                  <Card className="p-4 mt-6">
+                    <h4 className="font-medium mb-4">{t('member_totals')}</h4>
+                    <div className="space-y-2">
+                      {groupMembers.map((member) => {
+                        const total = calculateMemberTotal(member.id);
+                        return (
+                          <div key={member.id} className="flex justify-between items-center">
+                            <span>{member.name}</span>
+                            <span className="font-medium">${total.toFixed(2)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">{t('select_group_for_split')}</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="payment" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium">{t('payment_details')}</h3>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddPayment}
+            >
+              {t('add_payment')}
+            </Button>
+          </div>
+
+          {payments.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">{t('no_payment_records')}</p>
+              <Button onClick={handleAddPayment} className="mt-4" variant="outline">
+                {t('add_payment')}
+              </Button>
+            </div>
+          ) : (
+            <>
+              {payments.map((payment, index) => (
+                <div key={index} className="space-y-2 border-b pb-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium">{t('payment')} {index + 1}</h4>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemovePayment(index)}
+                    >
+                      {t('remove')}
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>{t('payer')}</Label>
+                      <select
+                        value={payment.payerId}
+                        onChange={(e) => handlePaymentChange(index, 'payerId', e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      >
+                        <option value="">{t('select_payer')}</option>
+                        {users.map((user) => (
+                          <option key={user.id} value={user.id}>
+                            {user.name}
+                          </option>
+                        ))}
+                        {groupMembers.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {member.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label>{t('amount')}</Label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={payment.amount || 0}
+                        onChange={(e) => handlePaymentChange(index, 'amount', parseFloat(e.target.value) || 0)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>{t('payment_method')}</Label>
+                      <select
+                        value={payment.paymentMethod || ''}
+                        onChange={(e) => handlePaymentChange(index, 'paymentMethod', e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      >
+                        <option value="">{t('select_method')}</option>
+                        <option value="CASH">{t('payment_method.cash')}</option>
+                        <option value="CREDIT_CARD">{t('payment_method.credit_card')}</option>
+                        <option value="BANK_TRANSFER">{t('payment_method.bank_transfer')}</option>
+                        <option value="OTHER">{t('payment_method.other')}</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label>{t('note')}</Label>
+                      <input
+                        type="text"
+                        value={payment.note || ''}
+                        onChange={(e) => handlePaymentChange(index, 'note', e.target.value)}
+                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="flex flex-col space-y-2 pt-2">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{t('total_payment_amount')}:</span>
+                  <span className="font-medium">${totalPaymentAmount.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{t('total_amount')}:</span>
+                  <span className="font-medium">${totalAmount.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">{t('payment_difference')}:</span>
+                  <span className={`font-medium ${Math.abs(paymentDifference) > 0.01 ? 'text-red-500' : 'text-green-500'}`}>
+                    ${paymentDifference.toFixed(2)}
+                  </span>
+                </div>
+                
+                {Math.abs(paymentDifference) > 0.01 && (
+                  <p className="text-sm text-red-500">
+                    {paymentDifference > 0 
+                      ? t('amount_not_fully_paid') 
+                      : t('amount_over_paid')}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {canManagePayments && (
         <div className="flex items-center space-x-2">
@@ -639,6 +915,189 @@ export function TransactionForm({
           {t('save')}
         </LoadingButton>
       </div>
+
+      {/* 分帳項目編輯模態框 */}
+      {showSplitItemModal && currentSplitItem && (
+        <SplitItemModal
+          item={currentSplitItem}
+          members={groupMembers}
+          onClose={() => {
+            setShowSplitItemModal(false);
+            setCurrentSplitItem(null);
+          }}
+          onSave={handleSaveSplitItem}
+        />
+      )}
     </form>
+  );
+}
+
+// 新增：分帳項目編輯模態框組件
+function SplitItemModal({
+  item,
+  members,
+  onClose,
+  onSave
+}: {
+  item: SplitItem;
+  members: GroupMember[];
+  onClose: () => void;
+  onSave: (item: SplitItem) => void;
+}) {
+  const [editItem, setEditItem] = useState<SplitItem>(item);
+  const t = useTranslations('transactions');
+  
+  const handleMemberChange = (memberId: string, field: string, value: any) => {
+    setEditItem(prev => ({
+      ...prev,
+      members: prev.members.map(m => 
+        m.memberId === memberId ? { ...m, [field]: value } : m
+      )
+    }));
+  };
+  
+  const calculateRemainingMembers = () => {
+    return members.filter(member => 
+      !editItem.members.some(m => m.memberId === member.id)
+    );
+  };
+  
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{item.id ? t('edit_split_item') : t('add_split_item')}</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-4 mt-4">
+          <div>
+            <Label>{t('name')}</Label>
+            <Input
+              value={editItem.name}
+              onChange={(e) => setEditItem(prev => ({ ...prev, name: e.target.value }))}
+              placeholder={t('item_name_placeholder')}
+            />
+          </div>
+          
+          <div>
+            <Label>{t('amount')}</Label>
+            <Input
+              type="number"
+              step="0.01"
+              min="0"
+              value={editItem.amount}
+              onChange={(e) => setEditItem(prev => ({ ...prev, amount: parseFloat(e.target.value) || 0 }))}
+            />
+          </div>
+          
+          <div>
+            <Label>{t('split_type')}</Label>
+            <Select
+              value={editItem.splitType}
+              onValueChange={(value) => setEditItem(prev => ({ ...prev, splitType: value as SplitType }))}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EQUAL">{t('split_type_equal')}</SelectItem>
+                <SelectItem value="FIXED">{t('split_type_fixed')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <Label className="mb-2 block">{t('participants')}</Label>
+            
+            <div className="space-y-3 max-h-60 overflow-y-auto p-2">
+              {editItem.members.map((member) => {
+                const groupMember = members.find(m => m.id === member.memberId);
+                if (!groupMember) return null;
+                
+                return (
+                  <div key={member.memberId} className="flex items-center gap-3 border-b pb-2">
+                    <Checkbox
+                      id={`include-${member.memberId}`}
+                      checked={member.isIncluded}
+                      onCheckedChange={(checked) => 
+                        handleMemberChange(member.memberId, 'isIncluded', !!checked)
+                      }
+                    />
+                    <Label htmlFor={`include-${member.memberId}`} className="flex-1">
+                      {groupMember.name}
+                    </Label>
+                    
+                    {member.isIncluded && editItem.splitType === 'FIXED' && (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={member.amount || 0}
+                        onChange={(e) => handleMemberChange(
+                          member.memberId, 
+                          'amount', 
+                          parseFloat(e.target.value) || 0
+                        )}
+                        className="w-24"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+              
+              {/* 新增成員 */}
+              {calculateRemainingMembers().length > 0 && (
+                <div className="mt-4">
+                  <Label>{t('add_member')}</Label>
+                  <Select
+                    onValueChange={(value) => {
+                      setEditItem(prev => ({
+                        ...prev,
+                        members: [
+                          ...prev.members,
+                          {
+                            memberId: value,
+                            isIncluded: true,
+                            amount: 0
+                          }
+                        ]
+                      }));
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={t('select_member')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {calculateRemainingMembers().map(member => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {member.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+          }}>
+            {t('cancel')}
+          </Button>
+          <Button onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSave(editItem);
+          }}>
+            {t('save')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

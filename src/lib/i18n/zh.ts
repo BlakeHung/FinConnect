@@ -201,7 +201,15 @@ const zh = {
       title_edit: '編輯交易',
       submit_success: '交易已儲存',
       submit_error: '儲存失敗，請稍後再試',
-    }
+    },
+    payment: '付款',
+    split_items: '分帳項目',
+    add_split_item: '新增分帳項目',
+    no_split_items: '沒有分帳項目',
+    payment_details: '付款詳情',
+    add_payment: '新增付款',
+    no_payment_records: '沒有付款記錄',
+    select_group_for_split: '選擇群組進行分帳',
   },
   
   categories: {

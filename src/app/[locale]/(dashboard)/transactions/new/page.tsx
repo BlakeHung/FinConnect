@@ -18,7 +18,7 @@ export default async function NewTransactionPage({
   const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
   const t = await getTranslations('transactions');
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
   
   if (!session) {
     redirect('/login');
@@ -67,8 +67,22 @@ export default async function NewTransactionPage({
     },
   });
 
+  // 獲取系統中的用戶列表（用於付款記錄）
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      name: true,
+      email: true,
+    },
+    orderBy: {
+      name: 'asc',
+    },
+  });
+
   // 獲取最新的活動（如果有的話）
   const latestActivity = activities[0];
+
+  const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
   return (
     <div className="container mx-auto p-4">
@@ -81,10 +95,12 @@ export default async function NewTransactionPage({
           categories={categories}
           activities={activities}
           groups={groups}
+          users={users}
           defaultValues={{
             date: today,
             activityId: latestActivity?.id || 'none', // 預設最新活動
           }}
+          canManagePayments={canManagePayments}
         />
       </div>
     </div>
