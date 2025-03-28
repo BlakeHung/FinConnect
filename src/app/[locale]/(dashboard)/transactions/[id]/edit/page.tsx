@@ -34,8 +34,27 @@ export default async function EditTransactionPage({
       include: { 
         category: true,
         group: true,
-        splits: true,
-        payments: true
+        splits: {
+          select: {
+            id: true,
+            splitAmount: true,
+            description: true,
+            assignedToId: true,
+            isIncluded: true,
+            splitValue: true,
+            assignedTo: true
+          }
+        },
+        payments: {
+          select: {
+            id: true,
+            payerId: true,
+            amount: true,
+            paymentMethod: true,
+            note: true,
+            payer: true
+          }
+        }
       },
     });
     
@@ -136,12 +155,13 @@ export default async function EditTransactionPage({
     const splits = splitData.map((split) => {
       console.log("Processing split:", JSON.stringify(split, null, 2));
       return {
+        id: split.id,
         amount: split.splitAmount,
         description: split.description || '',
         assignedToId: split.assignedToId,
         splitType: split.status as SplitType,
         isIncluded: split.isIncluded,
-        splitItemType: split.splitItemType || ''
+        splitValue: split.splitValue || 0
       };
     });
     console.log("Processed splits for form:", JSON.stringify(splits, null, 2));

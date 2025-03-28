@@ -222,10 +222,18 @@ const zh = {
     add_member: '新增成員',
     add_member_description: '新增成員到這個群組',
     payer: '付款者',
-    payment_method: '付款方式',
     total_payment_amount: '總付款金額',
     payment_difference: '付款差額',
     note: '備註',
+    select_method: '選擇付款方式',
+    payment_method_title: "付款方式",
+    payment_method: {
+      cash: '現金',
+      bank_transfer: '銀行轉帳',
+      credit_card: '信用卡',
+      mobile_payment: '行動支付',
+      other: '其他'
+    }
   },
   
   categories: {

@@ -72,12 +72,13 @@ interface User {
 type SplitType = 'EQUAL' | 'PERCENTAGE' | 'FIXED';
 
 interface Split {
+  id: string;
   amount: number;
   description?: string;
   assignedToId: string;
   isIncluded?: boolean;
   splitType?: SplitType;
-  splitItemType?: string;
+  splitValue?: number;
 }
 
 interface Payment {
@@ -214,12 +215,12 @@ export function TransactionForm({
       // 將 splits 轉換為 splitItems 格式
       const groupedSplits = defaultValues.splits.reduce((acc, split) => {
         // 使用 splitItemType 或 description 作為分組鍵
-        const key = split.splitItemType || split.description || 'default';
+        const key = split.description || 'default';
         
         if (!acc[key]) {
           acc[key] = {
-            id: Date.now().toString(),
-            name: key,
+            id: split.id, // 使用原始的 split ID
+            name: split.description || 'default',
             amount: 0,
             splitType: split.splitType || 'EQUAL',
             members: []
@@ -462,7 +463,7 @@ export function TransactionForm({
     console.log("Adjusted total:", adjustedTotal);
     console.log("Transaction total:", totalAmount);
 
-    // 確保 item 有正確的 ID
+    // 確保 item 有正確的唯一 ID
     const itemToSave = {
       ...item,
       id: item.id || Date.now().toString()
@@ -517,6 +518,7 @@ export function TransactionForm({
   const onSubmit = async (data: TransactionFormData) => {
     console.log("Form submitted with data:", JSON.stringify(data, null, 2));
     console.log("Current splitItems:", JSON.stringify(splitItems, null, 2));
+    console.log("Current payments state:", JSON.stringify(payments, null, 2));
     
     setIsSubmitting(true);
     
@@ -561,16 +563,26 @@ export function TransactionForm({
       
       console.log("Final apiSplits:", JSON.stringify(apiSplits, null, 2));
       
+      // 處理付款資料
+      const processedPayments = payments.map(payment => ({
+        payerId: payment.payerId,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod || '',
+        note: payment.note || ''
+      }));
+      
+      console.log("Processed payments:", JSON.stringify(processedPayments, null, 2));
+      
       const requestBody = {
         ...data,
         type,
         paymentStatus: isPaid ? 'PAID' : 'UNPAID',
         groupId: selectedGroupId || undefined,
         splits: apiSplits.length > 0 ? apiSplits : undefined,
-        payments: payments.length > 0 ? payments : undefined,
+        payments: processedPayments.length > 0 ? processedPayments : undefined,
       };
       
-      console.log("Request body:", JSON.stringify(requestBody, null, 2));
+      console.log("Final request body:", JSON.stringify(requestBody, null, 2));
       
       const response = await fetch(url, {
         method: method,
@@ -792,10 +804,10 @@ export function TransactionForm({
               ) : (
                 <div className="space-y-4">
                   {splitItems.map((item) => (
-                    <Card key={item.id} className="p-4">
+                    <Card key={`split-item-${item.id}`} className="p-4">
                       <div className="flex justify-between items-center">
                         <div>
-                          <h4 className="font-medium">{item.name}</h4>
+                          <h4 className="font-medium">{item.name} {item.id}</h4>
                           <p className="text-sm text-gray-500">
                             {t('amount')}: ${item.amount.toFixed(2)} • 
                             {t(`split_type_${item.splitType.toLowerCase()}`)}
@@ -829,7 +841,7 @@ export function TransactionForm({
                             const groupMember = groupMembers.find(m => m.id === member.memberId);
                             return groupMember ? (
                               <Badge
-                                key={member.memberId}
+                                key={`member-${member.memberId}`}
                                 variant={member.isIncluded ? "default" : "outline"}
                                 className="flex items-center gap-1"
                               >
@@ -846,13 +858,13 @@ export function TransactionForm({
                   ))}
                   
                   {/* 成員付款摘要 */}
-                  <Card className="p-4 mt-6">
+                  <Card key="member-totals" className="p-4 mt-6">
                     <h4 className="font-medium mb-4">{t('member_totals')}</h4>
                     <div className="space-y-2">
                       {groupMembers.map((member) => {
                         const total = calculateMemberTotal(member.id);
                         return (
-                          <div key={member.id} className="flex justify-between items-center">
+                          <div key={`total-${member.id}`} className="flex justify-between items-center">
                             <span>{member.name}</span>
                             <span className="font-medium">${total.toFixed(2)}</span>
                           </div>
@@ -941,7 +953,7 @@ export function TransactionForm({
                     </div>
 
                     <div>
-                      <Label>{t('payment_method')}</Label>
+                      <Label>{t('payment_method_title')}</Label>
                       <select
                         value={payment.paymentMethod || ''}
                         onChange={(e) => handlePaymentChange(index, 'paymentMethod', e.target.value)}
