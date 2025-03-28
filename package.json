@@ -13,7 +13,8 @@
     "migrate:expenses": "ts-node scripts/migrate-expenses-to-transactions.ts",
     "test-db": "ts-node scripts/test-db.ts",
     "seed": "ts-node scripts/seed-db.ts",
-    "delete-transactions": "ts-node scripts/delete-transactions.ts"
+    "delete-transactions": "ts-node scripts/delete-transactions.ts",
+    "delete-activities": "ts-node scripts/delete-activities.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
