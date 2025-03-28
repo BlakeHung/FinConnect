@@ -77,6 +77,7 @@ interface Split {
   assignedToId: string;
   isIncluded?: boolean;
   splitType?: SplitType;
+  splitItemType?: string;
 }
 
 interface Payment {
@@ -204,6 +205,46 @@ export function TransactionForm({
       console.log("Initial preview images set:", defaultValues.images);
     }
   }, [defaultValues, getValues]);
+
+  // 新增：初始化 splitItems
+  useEffect(() => {
+    if (defaultValues?.splits && defaultValues.splits.length > 0) {
+      console.log("Initializing splitItems from splits:", defaultValues.splits);
+      
+      // 將 splits 轉換為 splitItems 格式
+      const groupedSplits = defaultValues.splits.reduce((acc, split) => {
+        // 使用 splitItemType 或 description 作為分組鍵
+        const key = split.splitItemType || split.description || 'default';
+        
+        if (!acc[key]) {
+          acc[key] = {
+            id: Date.now().toString(),
+            name: key,
+            amount: 0,
+            splitType: split.splitType || 'EQUAL',
+            members: []
+          };
+        }
+        
+        // 累加金額
+        acc[key].amount += split.amount;
+        
+        // 添加成員
+        acc[key].members.push({
+          memberId: split.assignedToId,
+          isIncluded: split.isIncluded !== false,
+          amount: split.amount
+        });
+        
+        return acc;
+      }, {} as Record<string, SplitItem>);
+      
+      // 轉換為數組
+      const initialSplitItems = Object.values(groupedSplits);
+      console.log("Converted splitItems:", initialSplitItems);
+      setSplitItems(initialSplitItems);
+    }
+  }, [defaultValues?.splits]);
 
   // 監聽金額變化
   const currentAmount = watch('amount') || 0;
@@ -395,15 +436,66 @@ export function TransactionForm({
 
   // 保存分帳項目
   const handleSaveSplitItem = (item: SplitItem) => {
-    if (item.id) {
-      // 更新已有項目
-      setSplitItems(prev => prev.map(i => i.id === item.id ? item : i));
-    } else {
-      // 新增項目
-      setSplitItems(prev => [...prev, {...item, id: Date.now().toString()}]);
+    if (!item.name || item.amount <= 0) {
+      toast.error(t('invalid_split_item'));
+      return;
     }
-    setShowSplitItemModal(false);
-    setCurrentSplitItem(null);
+
+    // 計算當前所有分帳項目的總金額
+    const currentTotal = splitItems.reduce((sum, i) => sum + i.amount, 0);
+    
+    // 如果是編輯現有項目，需要減去原項目的金額
+    const existingItem = splitItems.find(i => i.id === item.id);
+    const adjustedTotal = existingItem 
+      ? currentTotal - existingItem.amount + item.amount
+      : currentTotal + item.amount;
+
+    // 驗證總金額不能超過交易金額
+    if (adjustedTotal > totalAmount) {
+      toast.error(t('split_amount_exceeds_total'));
+      return;
+    }
+
+    console.log("Saving split item:", item);
+    console.log("Current splitItems before update:", splitItems);
+    console.log("Current total:", currentTotal);
+    console.log("Adjusted total:", adjustedTotal);
+    console.log("Transaction total:", totalAmount);
+
+    // 確保 item 有正確的 ID
+    const itemToSave = {
+      ...item,
+      id: item.id || Date.now().toString()
+    };
+
+    // 先檢查是否已存在相同 ID 的項目
+    setSplitItems(prevItems => {
+      const existingIndex = prevItems.findIndex(i => i.id === itemToSave.id);
+      let newItems;
+      
+      if (existingIndex >= 0) {
+        // 如果存在，更新該項目
+        newItems = prevItems.map((i, index) => 
+          index === existingIndex ? itemToSave : i
+        );
+        console.log("Updating existing item at index:", existingIndex);
+      } else {
+        // 如果不存在，新增項目
+        newItems = [...prevItems, itemToSave];
+        console.log("Adding new item");
+      }
+      
+      console.log("Previous items:", prevItems);
+      console.log("New items:", newItems);
+      return newItems;
+    });
+
+    // 使用 setTimeout 來確保狀態更新完成後再關閉模態框
+    setTimeout(() => {
+      setShowSplitItemModal(false);
+      setCurrentSplitItem(null);
+      toast.success(t('split_item_saved'));
+    }, 0);
   };
 
   // 計算每個成員應付總額
@@ -424,6 +516,7 @@ export function TransactionForm({
 
   const onSubmit = async (data: TransactionFormData) => {
     console.log("Form submitted with data:", JSON.stringify(data, null, 2));
+    console.log("Current splitItems:", JSON.stringify(splitItems, null, 2));
     
     setIsSubmitting(true);
     
@@ -438,6 +531,7 @@ export function TransactionForm({
       const apiSplits = [];
       
       for (const item of splitItems) {
+        console.log("Processing split item:", JSON.stringify(item, null, 2));
         const includedMembers = item.members.filter(m => m.isIncluded);
         const memberCount = includedMembers.length;
         
@@ -452,37 +546,48 @@ export function TransactionForm({
             splitAmount = item.amount / memberCount;
           }
           
-          apiSplits.push({
+          const splitData = {
             amount: splitAmount,
             description: item.name,
             assignedToId: member.memberId,
             splitType: item.splitType,
             isIncluded: true,
             splitItemType: item.name
-          });
+          };
+          console.log("Created split data:", JSON.stringify(splitData, null, 2));
+          apiSplits.push(splitData);
         }
       }
+      
+      console.log("Final apiSplits:", JSON.stringify(apiSplits, null, 2));
+      
+      const requestBody = {
+        ...data,
+        type,
+        paymentStatus: isPaid ? 'PAID' : 'UNPAID',
+        groupId: selectedGroupId || undefined,
+        splits: apiSplits.length > 0 ? apiSplits : undefined,
+        payments: payments.length > 0 ? payments : undefined,
+      };
+      
+      console.log("Request body:", JSON.stringify(requestBody, null, 2));
       
       const response = await fetch(url, {
         method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...data,
-          type,
-          paymentStatus: isPaid ? 'PAID' : 'UNPAID',
-          groupId: selectedGroupId || undefined,
-          splits: apiSplits.length > 0 ? apiSplits : undefined,
-          payments: payments.length > 0 ? payments : undefined,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         throw new Error('提交失敗');
       }
 
-      window.location.href = '/transactions';
+      const responseData = await response.json();
+      console.log("API Response:", JSON.stringify(responseData, null, 2));
+
+      //window.location.href = '/transactions';
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error(t('form.submit_error'));

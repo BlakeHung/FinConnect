@@ -5,6 +5,8 @@ import { redirect, notFound } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 import { getTranslations } from 'next-intl/server';
 
+type SplitType = 'EQUAL' | 'PERCENTAGE' | 'FIXED';
+
 type PageProps = {
   params: Promise<{ id: string; locale: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -31,7 +33,9 @@ export default async function EditTransactionPage({
       where: { id },
       include: { 
         category: true,
-        group: true
+        group: true,
+        splits: true,
+        payments: true
       },
     });
     
@@ -135,8 +139,9 @@ export default async function EditTransactionPage({
         amount: split.splitAmount,
         description: split.description || '',
         assignedToId: split.assignedToId,
-        splitType: split.status,
-        isIncluded: split.isIncluded
+        splitType: split.status as SplitType,
+        isIncluded: split.isIncluded,
+        splitItemType: split.splitItemType || ''
       };
     });
     console.log("Processed splits for form:", JSON.stringify(splits, null, 2));
