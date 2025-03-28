@@ -553,8 +553,7 @@ export function TransactionForm({
             description: item.name,
             assignedToId: member.memberId,
             splitType: item.splitType,
-            isIncluded: true,
-            splitItemType: item.name
+            isIncluded: true
           };
           console.log("Created split data:", JSON.stringify(splitData, null, 2));
           apiSplits.push(splitData);
@@ -567,8 +566,8 @@ export function TransactionForm({
       const processedPayments = payments.map(payment => ({
         payerId: payment.payerId,
         amount: payment.amount,
-        paymentMethod: payment.paymentMethod || '',
-        note: payment.note || ''
+        paymentMethod: payment.paymentMethod || null,
+        note: payment.note || null
       }));
       
       console.log("Processed payments:", JSON.stringify(processedPayments, null, 2));
@@ -577,7 +576,7 @@ export function TransactionForm({
         ...data,
         type,
         paymentStatus: isPaid ? 'PAID' : 'UNPAID',
-        groupId: selectedGroupId || undefined,
+        groupId: selectedGroupId || null,
         splits: apiSplits.length > 0 ? apiSplits : undefined,
         payments: processedPayments.length > 0 ? processedPayments : undefined,
       };
@@ -599,7 +598,8 @@ export function TransactionForm({
       const responseData = await response.json();
       console.log("API Response:", JSON.stringify(responseData, null, 2));
 
-      //window.location.href = '/transactions';
+      toast.success(t('form.submit_success'));
+      router.push('/transactions');
     } catch (error) {
       console.error("Form submission error:", error);
       toast.error(t('form.submit_error'));

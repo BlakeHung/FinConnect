@@ -233,7 +233,8 @@ const zh = {
       credit_card: '信用卡',
       mobile_payment: '行動支付',
       other: '其他'
-    }
+    },
+    select_payer: '選擇付款者',
   },
   
   categories: {
