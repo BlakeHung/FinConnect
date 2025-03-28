@@ -815,6 +815,7 @@ export function TransactionForm({
                         </div>
                         <div className="flex gap-2">
                           <Button
+                            type="button"
                             variant="outline"
                             size="sm"
                             onClick={() => {
