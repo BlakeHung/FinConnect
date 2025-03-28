@@ -102,6 +102,8 @@ const zh = {
   },
   
   transactions: {
+    name: '名稱',
+    split_type: '分帳方式',
     title: '交易記錄',
     new: '新增交易',
     search: '搜尋交易',
@@ -210,6 +212,20 @@ const zh = {
     add_payment: '新增付款',
     no_payment_records: '沒有付款記錄',
     select_group_for_split: '選擇群組進行分帳',
+    invalid_split_item: '無效的分帳項目',
+    split_amount_exceeds_total: '分帳總金額不能超過交易金額',
+    split_item_saved: '分帳項目已儲存',
+    member_totals: '成員應付總額',
+    participants: '參與者',
+    item_name_placeholder: '輸入分帳項目名稱',
+    edit_split_item: '編輯分帳項目',
+    add_member: '新增成員',
+    add_member_description: '新增成員到這個群組',
+    payer: '付款者',
+    payment_method: '付款方式',
+    total_payment_amount: '總付款金額',
+    payment_difference: '付款差額',
+    note: '備註',
   },
   
   categories: {
