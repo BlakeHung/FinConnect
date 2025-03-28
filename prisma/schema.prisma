@@ -23,7 +23,6 @@ model User {
   transactions  Transaction[]
   activities    ActivityParticipant[]
   createdGroups Group[]
-  payments      TransactionPayment[] // 付款記錄
   groupMembers  GroupMember[]       // 用戶在群組中的成員身份
   createdAt     DateTime            @default(now())
   updatedAt     DateTime            @updatedAt
@@ -113,7 +112,7 @@ model TransactionPayment {
   transactionId String      @db.ObjectId
   transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   payerId       String      @db.ObjectId
-  payer         User        @relation(fields: [payerId], references: [id])
+  payer         GroupMember @relation(fields: [payerId], references: [id], onDelete: Cascade)
   amount        Float       // 支付金額
   paymentDate   DateTime    @default(now())
   paymentMethod String?     // 付款方式
@@ -146,6 +145,7 @@ model GroupMember {
   userId            String?             @db.ObjectId
   user              User?               @relation(fields: [userId], references: [id])
   assignedSplits    TransactionSplit[]  // 只保留這個欄位，作為 TransactionSplit.assignedTo 的反向關聯
+  payments          TransactionPayment[] // 新增：付款記錄
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 }
@@ -191,22 +191,6 @@ model TransactionSplit {
   isIncluded      Boolean     @default(true)    // 是否納入計算
   splitValue      Float?      // 分帳值
   splitItemType   String?     // 新增：分帳項目類型，如"牡蠣"、"酒類"、"一般食物"
-  members         SplitItemMember[] // 新增：對應到多個成員
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
-}
-
-// 新增：分帳項目與成員的多對多關聯模型
-model SplitItemMember {
-  id            String          @id @default(auto()) @map("_id") @db.ObjectId
-  splitId       String          @db.ObjectId
-  split         TransactionSplit @relation(fields: [splitId], references: [id], onDelete: Cascade)
-  memberId      String          @db.ObjectId
-  member        GroupMember     @relation(fields: [memberId], references: [id])
-  isIncluded    Boolean         @default(true)
-  splitAmount   Float           // 個人在此項目的分攤金額
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-
-  @@unique([splitId, memberId])
 }

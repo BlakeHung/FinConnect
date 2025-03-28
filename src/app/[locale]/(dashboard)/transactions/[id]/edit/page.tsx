@@ -51,8 +51,7 @@ export default async function EditTransactionPage({
             payerId: true,
             amount: true,
             paymentMethod: true,
-            note: true,
-            payer: true
+            note: true
           }
         }
       },
@@ -78,9 +77,6 @@ export default async function EditTransactionPage({
     console.log("Fetching payment records for transaction ID:", id);
     const paymentData = await prisma.transactionPayment.findMany({
       where: { transactionId: id },
-      include: {
-        payer: true
-      }
     });
     
     console.log("Payment records fetched:", JSON.stringify(paymentData, null, 2));
