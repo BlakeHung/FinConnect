@@ -139,6 +139,7 @@ const zh = {
     split_type_equal: '平均分配',
     split_type_percentage: '百分比分配',
     split_type_fixed: '固定金額',
+    split_type: '分帳方式',
     type: '類型',
     user: '使用者',
     actions: '操作',
