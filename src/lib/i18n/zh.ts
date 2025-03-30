@@ -599,7 +599,11 @@ const zh = {
     split_types: {
       EQUAL: '平均分配',
       PERCENTAGE: '百分比',
-      FIXED: '固定金額'
+      FIXED: '固定金額',
+      PENDING: '待處理',
+      APPROVED: '已核准',
+      REJECTED: '已拒絕',
+      CANCELLED: '已取消'
     }
   },
 };

@@ -645,7 +645,11 @@ const en = {
     split_types: {
       EQUAL: 'Equal Split',
       PERCENTAGE: 'Percentage',
-      FIXED: 'Fixed Amount'
+      FIXED: 'Fixed Amount',
+      PENDING: 'Pending',
+      APPROVED: 'Approved',
+      REJECTED: 'Rejected',
+      CANCELLED: 'Cancelled'
     }
   },
 };
