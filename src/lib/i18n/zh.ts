@@ -103,7 +103,7 @@ const zh = {
   
   transactions: {
     name: '名稱',
-    split_type: '分帳方式',
+    split_method: '分帳方式',
     title: '交易記錄',
     new: '新增交易',
     search: '搜尋交易',
@@ -136,7 +136,6 @@ const zh = {
     amount_difference: '金額差額',
     amount_not_fully_split: '還有金額未分配完',
     amount_over_split: '分配金額超過總金額',
-    split_type: '分帳方式',
     split_type_equal: '平均分配',
     split_type_percentage: '百分比分配',
     split_type_fixed: '固定金額',
@@ -534,7 +533,8 @@ const zh = {
   },
   
   settlements: {
-    settlements: '結算管理',
+    title: '結帳中心',
+    page_title: '結算管理',
     record_payment: '記錄付款',
     payment_details: '付款詳情',
     payment_method: '付款方式',
@@ -545,7 +545,7 @@ const zh = {
     split_amount: '分帳金額',
     status: '狀態',
     payment_date: '付款日期',
-    paid: '已付款',
+    paid_status: '已付款',
     unpaid: '未付款',
     back: '返回結算管理',
     payment_recorded: '付款已成功記錄',
@@ -571,6 +571,33 @@ const zh = {
     splits: '分帳',
     payment: '付款',
     unauthorized: '未授權',
+    total_balances: '總結餘',
+    by_activity: '活動別結餘',
+    activity_summary: '活動總覽',
+    transaction_details: '交易明細',
+    split_details: '分帳明細',
+    total_owed: '應付總額',
+    total_paid: '已付總額',
+    balance: '餘額',
+    activity: '活動',
+    owed: '應付金額',
+    paid_amount: '已付金額',
+    category: '類別',
+    member_name: '成員名稱',
+    group_summary: '群組總覽',
+    activity_details: '活動詳情',
+    payment_method_types: {
+      cash: '現金',
+      bank_transfer: '銀行轉帳',
+      credit_card: '信用卡',
+      mobile_payment: '行動支付',
+      other: '其他'
+    },
+    split_types: {
+      EQUAL: '平均分配',
+      PERCENTAGE: '百分比',
+      FIXED: '固定金額'
+    }
   },
 };
 

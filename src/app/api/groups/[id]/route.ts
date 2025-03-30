@@ -31,11 +31,7 @@ export async function GET(
             }
           }
         },
-        activities: {
-          include: {
-            activity: true
-          }
-        },
+        activities: true,
         createdBy: true
       }
     });

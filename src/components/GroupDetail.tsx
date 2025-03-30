@@ -33,14 +33,10 @@ interface GroupMember {
   };
 }
 
-interface ActivityGroup {
+interface Activity {
   id: string;
-  memberCount: number;
-  activity: {
-    id: string;
-    name: string;
-    startDate: string;
-  };
+  name: string;
+  startDate: string;
 }
 
 interface Group {
@@ -48,7 +44,7 @@ interface Group {
   name: string;
   description?: string;
   members: GroupMember[];
-  activities: ActivityGroup[];
+  activities: Activity[];
 }
 
 interface GroupDetailProps {
@@ -307,21 +303,18 @@ export function GroupDetail({
             </CardHeader>
             <CardContent>
               <div className="grid gap-2">
-                {group.activities.map((activityGroup) => (
+                {group.activities.map((activity) => (
                   <div 
-                    key={activityGroup.id} 
+                    key={activity.id} 
                     className="flex justify-between items-center p-2 rounded hover:bg-gray-50"
                   >
                     <div>
-                      <div className="font-medium">{activityGroup.activity.name}</div>
-                      <div className="text-sm text-gray-500">
-                        {t('participating_members', { count: activityGroup.memberCount })}
-                      </div>
+                      <div className="font-medium">{activity.name}</div>
                     </div>
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => handleViewActivity(activityGroup.activity.id)}
+                      onClick={() => handleViewActivity(activity.id)}
                     >
                       {t('view')}
                     </Button>
