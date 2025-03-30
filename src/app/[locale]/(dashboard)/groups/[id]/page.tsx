@@ -44,11 +44,7 @@ export default async function GroupPage({ params }: GroupPageProps) {
             }
           }
         },
-        activities: {
-          include: {
-            activity: true
-          }
-        },
+        activities: true,
         createdBy: true,
         transactions: {
           take: 5,  // 只獲取最新的5條交易

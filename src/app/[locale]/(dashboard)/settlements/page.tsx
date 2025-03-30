@@ -3,17 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getTranslations } from 'next-intl/server';
-import { Group, Activity, Transaction, TransactionSplit, TransactionPayment, Category, GroupMember } from "@prisma/client";
-
-type ActivityWithTransactions = Activity & {
-  transactions: (Transaction & {
-    category: Category;
-    splits: (TransactionSplit & {
-      assignedTo: GroupMember;
-    })[];
-    payments: TransactionPayment[];
-  })[];
-};
+import { Activity, Transaction, TransactionSplit, TransactionPayment, Category, GroupMember } from "@prisma/client";
 
 export default async function SettlementsPage() {
   const session = await getServerSession(authOptions);
@@ -130,25 +120,58 @@ export default async function SettlementsPage() {
       });
     });
 
+    // 計算成員間的債務關係
+    const members = Array.from(group.members.values());
+    const settlements = [];
+    
+    // 找出需要付錢和收錢的成員，並按照金額排序
+    const debtors = members
+      .filter(m => m.totalPaid - m.totalOwed < 0)
+      .sort((a, b) => (a.totalPaid - a.totalOwed) - (b.totalPaid - b.totalOwed)); // 由小到大（欠最多的排前面）
+
+    const creditors = members
+      .filter(m => m.totalPaid - m.totalOwed > 0)
+      .sort((a, b) => (b.totalPaid - b.totalOwed) - (a.totalPaid - a.totalOwed)); // 由大到小（應收最多的排前面）
+
+    // 處理每個債務人
+    debtors.forEach(debtor => {
+      let remainingDebt = Math.abs(debtor.totalPaid - debtor.totalOwed); // 這個人總共要付多少
+      let creditorIndex = 0;
+
+      // 依序分配給債權人，直到還清債務
+      while (remainingDebt > 0 && creditorIndex < creditors.length) {
+        const creditor = creditors[creditorIndex];
+        const creditorRemaining = creditor.totalPaid - creditor.totalOwed; // 這個人還能收多少
+
+        if (creditorRemaining > 0) {
+          const amount = Math.min(remainingDebt, creditorRemaining);
+          settlements.push({
+            from: debtor,
+            to: creditor,
+            amount: amount,
+            status: 'PENDING' as const
+          });
+
+          // 更新剩餘金額
+          remainingDebt -= amount;
+          creditors[creditorIndex] = {
+            ...creditor,
+            totalPaid: creditor.totalPaid - amount // 減少可收金額
+          };
+        }
+
+        creditorIndex++;
+      }
+    });
+
     return {
       id: group.id,
       name: group.name,
-      members: Array.from(group.members.values()),
-      activities: Array.from(group.activities.values())
+      members: members,
+      activities: Array.from(group.activities.values()),
+      settlements
     };
   });
-
-  console.log('Debug - Groups:', JSON.stringify(groupSettlements.map(g => ({
-    id: g.id,
-    name: g.name,
-    memberCount: g.members.length,
-    activityCount: g.activities.length,
-    activities: g.activities.map(a => ({
-      activityId: a.id,
-      activityName: a.name,
-      transactionCount: a.transactions.length
-    }))
-  })), null, 2));
 
   return (
     <div className="container mx-auto p-4">
@@ -160,6 +183,25 @@ export default async function SettlementsPage() {
           <div key={group.id} className="bg-white rounded-lg shadow-lg p-6">
             <h2 className="text-xl font-bold mb-4">{group.name}</h2>
             
+            {/* 結帳建議 */}
+            <div className="mb-6 bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-lg font-semibold mb-3">{t('settlement_suggestions')}</h3>
+              <div className="space-y-4">
+                {group.settlements.map((settlement, index) => (
+                  <div key={index} className="flex items-center justify-between bg-white p-3 rounded-md">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-red-600">{settlement.from.name}</span>
+                      <span>→</span>
+                      <span className="font-medium text-green-600">{settlement.to.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="font-bold">${settlement.amount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* 群體成員總結餘 */}
             <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">{t('total_balances')}</h3>

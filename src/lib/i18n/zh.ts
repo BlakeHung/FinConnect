@@ -586,6 +586,9 @@ const zh = {
     member_name: '成員名稱',
     group_summary: '群組總覽',
     activity_details: '活動詳情',
+    detailed_info: '詳細資訊',
+    settlement_suggestions: '結帳建議',
+    mark_as_paid: '標記為已付款',
     payment_method_types: {
       cash: '現金',
       bank_transfer: '銀行轉帳',
