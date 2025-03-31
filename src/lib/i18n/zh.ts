@@ -590,12 +590,13 @@ const zh = {
     settlement_suggestions: '結帳建議',
     mark_as_paid: '標記為已付款',
     payment_method_types: {
-      cash: '現金',
+      CASH: '現金',
       bank_transfer: '銀行轉帳',
       credit_card: '信用卡',
       mobile_payment: '行動支付',
       other: '其他'
     },
+    payment_method_types_title: '付款方式',
     split_types: {
       EQUAL: '平均分配',
       PERCENTAGE: '百分比',
