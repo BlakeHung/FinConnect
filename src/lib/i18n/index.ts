@@ -21,20 +21,11 @@ export const translations = {
 
 // 獲取特定語言的翻譯
 export async function getMessages(locale: Locale) {
-  if (!locales.includes(locale)) {
-    console.error(`Invalid locale: ${locale}`);
-    return translations[defaultLocale];
-  }
-
   try {
-    const messages = translations[locale];
-    if (!messages) {
-      console.error(`No messages found for locale: ${locale}`);
-      return translations[defaultLocale];
-    }
+    const messages = (await import(`./${locale}`)).default;
     return messages;
   } catch (error) {
     console.error(`Error loading messages for locale: ${locale}`, error);
-    return translations[defaultLocale];
+    return {};
   }
 } 

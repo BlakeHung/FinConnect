@@ -108,11 +108,7 @@ const en = {
   
   transactions: {
     name: 'Name',
-    split_type: {
-      equal: 'Equal Split',
-      percentage: 'Percentage Split',
-      fixed: 'Fixed Amount Split'
-    },
+    split_type: 'Split Type',
     title: 'Transactions',
     new: 'New Transaction',
     search: 'Search transactions',
@@ -145,6 +141,10 @@ const en = {
     amount_difference: 'Amount Difference',
     amount_not_fully_split: 'Amount not fully split',
     amount_over_split: 'Split amount exceeds total',
+    split_type: 'Split Type',
+    split_type_equal: 'Equal Split',
+    split_type_percentage: 'Percentage Split',
+    split_type_fixed: 'Fixed Amount Split',
     error_loading: 'Error loading data',
     please_try_again: 'Please try again later',
     saving: 'Saving...',
@@ -223,7 +223,13 @@ const en = {
     participants: 'Participants',
     item_name_placeholder: 'Enter split item name',
     edit_split_item: 'Edit Split Item',
+    split_type: {
+      equal: 'Equal Split',
+      percentage: 'Percentage Split',
+      fixed: 'Fixed Amount Split'
+    },
     add_member: 'Add Member',
+    select_member: 'Select Member',
     add_member_description: 'Add a new member to this group',
     adding: 'Adding...',
     add: 'Add',
@@ -241,6 +247,7 @@ const en = {
     selectUserOptional: 'Select User (Optional)',
     linkToUserHelp: 'Linking to a system user will allow automatic settlement tracking',
     noUser: 'No User (External Member)',
+    save: 'Save',
     memberUpdated: 'Member updated successfully',
     memberAdded: 'Member added successfully',
     memberDeleted: 'Member deleted successfully',
@@ -589,7 +596,6 @@ const en = {
     createGroupButton: 'Create Group',
     createGroupButtonDescription: 'Create a new group and add members',
     createGroupButtonPlaceholder: 'e.g., College Friends, Colleagues',
-    select_member: 'Select Member',
   },
   
   settlements: {
@@ -650,13 +656,12 @@ const en = {
     settlement_suggestions: 'Settlement Suggestions',
     mark_as_paid: 'Mark as Paid',
     payment_method_types: {
-      CASH: 'Cash',
+      cash: 'Cash',
       bank_transfer: 'Bank Transfer',
       credit_card: 'Credit Card',
       mobile_payment: 'Mobile Payment',
       other: 'Other'
     },
-    payment_method_types_title: 'Payment Method',
     split_types: {
       EQUAL: 'Equal Split',
       PERCENTAGE: 'Percentage',
