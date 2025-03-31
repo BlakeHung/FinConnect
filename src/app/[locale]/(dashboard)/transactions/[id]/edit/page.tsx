@@ -9,10 +9,12 @@ type SplitType = 'EQUAL' | 'PERCENTAGE' | 'FIXED';
 
 type PageProps = {
   params: { id: string; locale: string };
+  searchParams: { [key: string]: string | string[] | undefined };
 };
 
 export default async function EditTransactionPage({
   params,
+  searchParams,
 }: PageProps) {
   const { id } = params;
   const t = await getTranslations('transactions');
@@ -23,6 +25,7 @@ export default async function EditTransactionPage({
   }
 
   try {
+    // 使用 Prisma 查詢事務詳情，使用單一查詢包含所有關聯
     const transaction = await prisma.transaction.findUnique({
       where: { id },
       include: { 
@@ -45,46 +48,70 @@ export default async function EditTransactionPage({
       notFound();
     }
 
+    // 檢查權限
     const isOwner = transaction.userId === session.user.id;
     const isAdmin = session.user.role === 'ADMIN';
     if (!isOwner && !isAdmin) {
       redirect('/transactions');
     }
 
+    // 格式化交易日期為 YYYY-MM-DD
     const formattedDate = transaction.date.toISOString().split('T')[0];
 
-    const [categories, activities, groups, users] = await Promise.all([
-      prisma.category.findMany({
-        where: { type: transaction.type },
-        orderBy: { name: 'asc' },
-      }),
-      prisma.activity.findMany({
-        orderBy: { startDate: 'desc' },
-        select: { id: true, name: true },
-      }),
-      prisma.group.findMany({
-        where: {
-          OR: [
-            { createdById: session.user.id },
-            { 
-              members: {
-                some: {
-                  userId: session.user.id
-                }
+    const categories = await prisma.category.findMany({
+      where: {
+        type: transaction.type,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+
+    const activities = await prisma.activity.findMany({
+      orderBy: {
+        startDate: 'desc',
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    
+    // 取得用戶的群組
+    const groups = await prisma.group.findMany({
+      where: {
+        OR: [
+          { createdById: session.user.id },
+          { 
+            members: {
+              some: {
+                userId: session.user.id
               }
             }
-          ]
-        },
-        select: { id: true, name: true },
-      }),
-      prisma.user.findMany({
-        select: { id: true, name: true, email: true },
-        orderBy: { name: 'asc' },
-      })
-    ]);
+          }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+    
+    // 獲取系統中的用戶列表（用於付款記錄）
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
     
     const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
+    // 處理分帳數據
     const splits = transaction.splits.map((split) => ({
       id: split.id,
       amount: split.splitAmount,
@@ -95,6 +122,7 @@ export default async function EditTransactionPage({
       splitValue: split.splitValue || 0
     }));
 
+    // 處理付款記錄
     const payments = transaction.payments.map((payment) => ({
       payerId: payment.payerId,
       amount: payment.amount,
@@ -102,6 +130,7 @@ export default async function EditTransactionPage({
       note: payment.note || ''
     }));
 
+    // 準備傳遞給表單的默認值
     const defaultValues = {
       amount: transaction.amount,
       categoryId: transaction.categoryId,
