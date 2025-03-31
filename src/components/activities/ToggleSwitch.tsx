@@ -31,7 +31,7 @@ export function ToggleSwitch({ id, enabled, canManage }: ToggleSwitchProps) {
           });
 
           if (!response.ok) {
-            throw new Error('更新失敗');
+            return new Error('更新失敗');
           }
 
           window.location.reload();

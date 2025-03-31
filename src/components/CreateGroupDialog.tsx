@@ -84,7 +84,7 @@ export function CreateGroupDialog({ open, onOpenChange }: CreateGroupDialogProps
       });
 
       if (!response.ok) {
-        throw new Error(await response.text());
+        return new Error(await response.text());
       }
 
       toast.success(t('group_created'));

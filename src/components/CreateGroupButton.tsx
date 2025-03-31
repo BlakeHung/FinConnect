@@ -37,7 +37,7 @@ export function CreateGroupButton() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to create group");
+        return new Error("Failed to create group");
       }
 
       const data = await response.json();

@@ -71,7 +71,7 @@ export function ActivityForm({ defaultValues, activityId }: ActivityFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error(t('submit_failed'));
+        return new Error(t('submit_failed'));
       }
 
       router.push('/activities');

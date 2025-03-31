@@ -52,7 +52,7 @@ export function UserForm({ user }: { user?: any }) {
 
       if (!response.ok) {
         const error = await response.text();
-        throw new Error(error);
+        return new Error(error);
       }
 
       toast.success(user ? t('update_success') : t('create_success'));

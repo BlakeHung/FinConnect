@@ -41,7 +41,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
       }),
     })
       .then(response => {
-        if (!response.ok) throw new Error(t('submit_error'));
+        if (!response.ok) return new Error(t('submit_error'));
         router.refresh();
         if (!category) {
           setName("");
@@ -67,7 +67,7 @@ export function CategoryForm({ category, defaultType = 'EXPENSE' }: CategoryForm
       method: "DELETE",
     })
       .then(response => {
-        if (!response.ok) throw new Error(t('delete_error'));
+        if (!response.ok) return new Error(t('delete_error'));
         router.refresh();
       })
       .catch(error => {

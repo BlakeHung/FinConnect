@@ -81,7 +81,7 @@ export function GroupDetail({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete group');
+        return new Error('Failed to delete group');
       }
       
       toast.success(t('groupDeleted'));
@@ -115,7 +115,7 @@ export function GroupDetail({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to save member');
+        return new Error('Failed to save member');
       }
       
       const savedMember = await response.json();
@@ -143,7 +143,7 @@ export function GroupDetail({
       });
       
       if (!response.ok) {
-        throw new Error('Failed to delete member');
+        return new Error('Failed to delete member');
       }
       
       setMembers(members.filter(m => m.id !== memberId));
