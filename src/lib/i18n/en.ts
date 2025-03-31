@@ -225,7 +225,8 @@ const en = {
     edit_split_item: 'Edit Split Item',
     split_type: {
       equal: 'Equal Split',
-      fixed: 'Fixed Amount'
+      percentage: 'Percentage Split',
+      fixed: 'Fixed Amount Split'
     },
     add_member: 'Add Member',
     select_member: 'Select Member',
@@ -278,6 +279,22 @@ const en = {
     enterGroupName: 'Enter group name',
     enterGroupDescription: 'Enter group description',
     selectUser: 'Select User',
+    split_method: 'Split Method',
+    payment: 'Payment',
+    payer: 'Payer',
+    total_payment_amount: 'Total Payment Amount',
+    payment_difference: 'Payment Difference',
+    note: 'Note',
+    select_method: 'Select Payment Method',
+    payment_method_title: "Payment Method",
+    payment_method: {
+      cash: 'Cash',
+      bank_transfer: 'Bank Transfer',
+      credit_card: 'Credit Card',
+      mobile_payment: 'Mobile Payment',
+      other: 'Other'
+    },
+    select_payer: 'Select Payer',
   },
   
   categories: {
@@ -576,6 +593,9 @@ const en = {
     enterGroupName: 'Enter group name',
     enterGroupDescription: 'Enter group description',
     selectUser: 'Select User',
+    createGroupButton: 'Create Group',
+    createGroupButtonDescription: 'Create a new group and add members',
+    createGroupButtonPlaceholder: 'e.g., College Friends, Colleagues',
   },
   
   settlements: {
