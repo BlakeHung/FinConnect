@@ -10,21 +10,10 @@ export default createMiddleware({
   defaultLocale,
   
   // 語言前綴策略 (always: 所有語言都會有前綴)
-  localePrefix: 'always',
-
-  // 添加錯誤處理
-  localeDetection: true,
-  
-  // 添加備用語言
-  alternateLinks: true
+  localePrefix: 'always'
 });
 
 export const config = {
   // 匹配所有路徑，除了 api 路由、靜態文件等
-  matcher: [
-    // 匹配所有路徑除了 api、_next、_vercel、靜態文件等
-    '/((?!api|_next|_vercel|.*\\..*).*)',
-    // 匹配根路徑
-    '/'
-  ]
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 }; 
