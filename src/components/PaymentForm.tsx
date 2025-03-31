@@ -74,7 +74,7 @@ export default function PaymentForm({
       });
 
       if (!response.ok) {
-        throw new Error("Failed to record payment");
+        return new Error("Failed to record payment");
       }
 
       toast.success(t("payment_recorded"));

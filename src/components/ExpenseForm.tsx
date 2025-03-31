@@ -69,7 +69,7 @@ export function ExpenseForm({ expense }: ExpenseFormProps) {
       }),
     })
       .then((response) => {
-        if (!response.ok) throw new Error("提交失敗");
+        if (!response.ok) return new Error("提交失敗");
         router.push("/dashboard");
         router.refresh();
       })

@@ -51,7 +51,7 @@ export default function SettlementForm({ fromId, toId, amount, groupId }: Settle
       const result: ApiResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to process settlement');
+        return new Error(result.error || 'Failed to process settlement');
       }
 
       if (result.success) {
@@ -61,7 +61,7 @@ export default function SettlementForm({ fromId, toId, amount, groupId }: Settle
           window.location.reload();
         }, 1500);
       } else {
-        throw new Error(result.error || 'Failed to process settlement');
+        return new Error(result.error || 'Failed to process settlement');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');

@@ -77,7 +77,7 @@ export function EdmForm({ activityId, defaultValues }: EdmFormProps) {
       });
 
       if (!response.ok) {
-        throw new Error(t('submission_failed'));
+        return new Error(t('submission_failed'));
       }
 
       router.push(`/activities/${activityId}`);

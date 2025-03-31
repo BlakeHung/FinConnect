@@ -26,7 +26,7 @@ async function deleteExpenses() {
 
   } catch (error) {
     console.error('刪除失敗:', error)
-    throw error
+    return error
   } finally {
     await prisma.$disconnect()
   }

@@ -96,7 +96,7 @@ async function cleanInvalidSplits() {
 
   } catch (error) {
     console.error('清理過程中發生錯誤:', error)
-    throw error
+    return error
   } finally {
     await prisma.$disconnect()
   }
