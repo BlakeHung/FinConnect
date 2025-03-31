@@ -592,7 +592,7 @@ export function TransactionForm({
       });
 
       if (!response.ok) {
-        throw new Error('提交失敗');
+        return new Error('提交失敗');
       }
 
       const responseData = await response.json();

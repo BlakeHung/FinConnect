@@ -142,7 +142,7 @@ export function TransactionTable({ transactions, activities = [], canManagePayme
       );
 
       if (results.some(response => !response.ok)) {
-        throw new Error('部分更新失敗');
+        return new Error('部分更新失敗');
       }
 
       window.location.reload();
