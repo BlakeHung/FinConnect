@@ -656,7 +656,7 @@ const en = {
     settlement_suggestions: 'Settlement Suggestions',
     mark_as_paid: 'Mark as Paid',
     payment_method_types: {
-      cash: 'Cash',
+      CASH: 'Cash',
       bank_transfer: 'Bank Transfer',
       credit_card: 'Credit Card',
       mobile_payment: 'Mobile Payment',

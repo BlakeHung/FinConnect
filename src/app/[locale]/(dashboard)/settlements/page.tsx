@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getTranslations } from 'next-intl/server';
 import { Activity, Transaction, TransactionSplit, TransactionPayment, Category, GroupMember } from "@prisma/client";
+import SettlementGraph from '@/components/SettlementGraph';
 
 export default async function SettlementsPage() {
   const session = await getServerSession(authOptions);
@@ -133,16 +134,40 @@ export default async function SettlementsPage() {
       .filter(m => m.totalPaid - m.totalOwed > 0)
       .sort((a, b) => (b.totalPaid - b.totalOwed) - (a.totalPaid - a.totalOwed)); // 由大到小（應收最多的排前面）
 
+    // 找出活動中的主要收款人和付款人
+    const mainReceiver = creditors.find(m => m.role === 'ADMIN' || m.role === 'FINANCE_MANAGER');
+    const mainPayer = debtors.find(m => m.role === 'ADMIN' || m.role === 'FINANCE_MANAGER');
+
     // 處理每個債務人
     debtors.forEach(debtor => {
       let remainingDebt = Math.abs(debtor.totalPaid - debtor.totalOwed); // 這個人總共要付多少
       let creditorIndex = 0;
 
-      // 依序分配給債權人，直到還清債務
+      // 如果有主要收款人，優先付給他
+      if (mainReceiver && remainingDebt > 0) {
+        const mainReceiverRemaining = mainReceiver.totalPaid - mainReceiver.totalOwed;
+        if (mainReceiverRemaining > 0) {
+          const amount = Math.min(remainingDebt, mainReceiverRemaining);
+          settlements.push({
+            from: debtor,
+            to: mainReceiver,
+            amount: amount,
+            status: 'PENDING' as const
+          });
+          remainingDebt -= amount;
+        }
+      }
+
+      // 如果還有剩餘債務，分配給其他債權人
       while (remainingDebt > 0 && creditorIndex < creditors.length) {
         const creditor = creditors[creditorIndex];
-        const creditorRemaining = creditor.totalPaid - creditor.totalOwed; // 這個人還能收多少
+        // 跳過主要收款人，因為已經處理過了
+        if (creditor.id === mainReceiver?.id) {
+          creditorIndex++;
+          continue;
+        }
 
+        const creditorRemaining = creditor.totalPaid - creditor.totalOwed;
         if (creditorRemaining > 0) {
           const amount = Math.min(remainingDebt, creditorRemaining);
           settlements.push({
@@ -152,14 +177,12 @@ export default async function SettlementsPage() {
             status: 'PENDING' as const
           });
 
-          // 更新剩餘金額
           remainingDebt -= amount;
           creditors[creditorIndex] = {
             ...creditor,
-            totalPaid: creditor.totalPaid - amount // 減少可收金額
+            totalPaid: creditor.totalPaid - amount
           };
         }
-
         creditorIndex++;
       }
     });
@@ -184,21 +207,34 @@ export default async function SettlementsPage() {
             <h2 className="text-xl font-bold mb-4">{group.name}</h2>
             
             {/* 結帳建議 */}
-            <div className="mb-6 bg-blue-50 p-4 rounded-lg">
+            <div className="mb-6">
               <h3 className="text-lg font-semibold mb-3">{t('settlement_suggestions')}</h3>
-              <div className="space-y-4">
-                {group.settlements.map((settlement, index) => (
-                  <div key={index} className="flex items-center justify-between bg-white p-3 rounded-md">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-medium text-red-600">{settlement.from.name}</span>
-                      <span>→</span>
-                      <span className="font-medium text-green-600">{settlement.to.name}</span>
+              
+              {/* 添加力導向圖 */}
+              <div className="mb-4">
+                <SettlementGraph
+                  settlements={group.settlements}
+                  width={800}
+                  height={400}
+                />
+              </div>
+
+              {/* 列表視圖 */}
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <div className="space-y-4">
+                  {group.settlements.map((settlement, index) => (
+                    <div key={index} className="flex items-center justify-between bg-white p-3 rounded-md">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-medium text-red-600">{settlement.from.name}</span>
+                        <span>→</span>
+                        <span className="font-medium text-green-600">{settlement.to.name}</span>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <span className="font-bold">${settlement.amount.toFixed(2)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <span className="font-bold">${settlement.amount.toFixed(2)}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
