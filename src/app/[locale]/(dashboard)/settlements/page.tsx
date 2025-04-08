@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from 'next-intl/server';
 import { Activity, Transaction, TransactionSplit, TransactionPayment, Category, GroupMember } from "@prisma/client";
 import SettlementGraph from '@/components/SettlementGraph';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 export default async function SettlementsPage() {
   const session = await getServerSession(authOptions);
@@ -21,18 +22,20 @@ export default async function SettlementsPage() {
   }
 
   // 獲取所有交易資料及其關聯
-  const transactions = await prisma.transaction.findMany({
-    include: {
-      category: true,
-      splits: {
-        include: {
-          assignedTo: true
-        }
-      },
-      payments: true,
-      activity: true,
-      group: true
-    }
+  const transactions = await withServerLoading(async () => {
+    return await prisma.transaction.findMany({
+      include: {
+        category: true,
+        splits: {
+          include: {
+            assignedTo: true
+          }
+        },
+        payments: true,
+        activity: true,
+        group: true
+      }
+    });
   });
 
   // 根據交易資料組織群組和活動

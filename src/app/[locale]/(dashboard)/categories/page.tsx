@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { CategoriesPageClient } from "./client";
 import { setRequestLocale } from '@/lib/i18n';
 import type { Locale } from '@/lib/i18n';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 // 移除 'use client' 指令，這是一個伺服器組件
 export default async function CategoriesPage({
@@ -21,11 +22,13 @@ export default async function CategoriesPage({
     redirect('/dashboard');
   }
 
-  const categories = await prisma.category.findMany({
-    orderBy: [
-      { type: 'asc' },
-      { name: 'asc' },
-    ],
+  const categories = await withServerLoading(async () => {
+    return await prisma.category.findMany({
+      orderBy: [
+        { type: 'asc' },
+        { name: 'asc' },
+      ],
+    });
   });
 
   // 將資料傳遞給客戶端組件

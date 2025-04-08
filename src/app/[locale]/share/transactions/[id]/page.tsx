@@ -1,17 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 export default async function SharedTransactionPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const expense = await prisma.expense.findUnique({
-    where: { id: params.id },
-    include: {
-      category: true,
-      user: true,
-    },
+  // 獲取交易詳情
+  const expense = await withServerLoading(async () => {
+    return await prisma.expense.findUnique({
+      where: {
+        id: params.id,
+      },
+      include: {
+        category: true,
+        activity: true,
+        user: true,
+      },
+    });
   });
 
   if (!expense) {

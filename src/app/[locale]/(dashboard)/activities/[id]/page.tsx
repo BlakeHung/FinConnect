@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 type PageProps = {
   params: { id: string; locale: string };
@@ -29,22 +30,24 @@ export default async function ActivityPage({
     redirect('/login');
   }
 
-  const activity = await prisma.activity.findUnique({
-    where: { id },
-    include: {
-      _count: {
-        select: { transactions: true }
-      },
-      transactions: {
-        include: {
-          category: true,
-          user: true,
+  const activity = await withServerLoading(async () => {
+    return await prisma.activity.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { transactions: true }
         },
-        orderBy: {
-          date: 'desc',
+        transactions: {
+          include: {
+            category: true,
+            user: true,
+          },
+          orderBy: {
+            date: 'desc',
+          },
         },
       },
-    },
+    });
   });
 
   if (!activity) {
