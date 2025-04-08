@@ -1,63 +1,94 @@
 "use client"
 
 import { usePathname, useSearchParams } from 'next/navigation'
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { useLoading } from '@/store/use-loading'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
 
 function LoadingState() {
-  const [progress, setProgress] = useState(0)
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const { isLoading, setLoading } = useLoading()
-
-  useEffect(() => {
-    // 路由變化時設置加載狀態
-    setLoading(true)
-    setProgress(0)
-    
-    // 模擬進度條
-    const progressInterval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) return prev
-        return prev + 10
-      })
-    }, 100)
-
-    const timer = setTimeout(() => {
-      clearInterval(progressInterval)
-      setProgress(100)
-      setTimeout(() => {
-        setLoading(false)
-        setProgress(0)
-      }, 200)
-    }, 500)
-
-    return () => {
-      clearTimeout(timer)
-      clearInterval(progressInterval)
-    }
-  }, [pathname, searchParams, setLoading])
+  const { isLoading } = useLoading()
 
   if (!isLoading) return null
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
-      <div className="text-center">
-        <Spinner className="h-8 w-8 text-blue-600" />
-        <p className="mt-2 text-sm text-gray-500">載入中...</p>
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-200">
-        <div 
-          className="h-full bg-blue-600 transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <Spinner className="h-8 w-8" />
       </div>
     </div>
   )
 }
 
 export function LoadingProvider({ children }: { children: React.ReactNode }) {
+  const { setLoading } = useLoading()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // 配置 NProgress
+    NProgress.configure({ 
+      showSpinner: false,
+      trickleSpeed: 200,
+      minimum: 0.08
+    })
+
+    // 創建一個 MutationObserver 來監視 DOM 變化
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          const addedNodes = Array.from(mutation.addedNodes)
+          const isRscRequest = addedNodes.some((node) => {
+            if (node instanceof HTMLScriptElement) {
+              return node.src?.includes('_rsc=') || node.src?.includes('_next/')
+            }
+            return false
+          })
+
+          if (isRscRequest) {
+            NProgress.start()
+            setLoading(true)
+            
+            // 設置一個合理的超時時間來結束 loading 狀態
+            setTimeout(() => {
+              NProgress.done()
+              setLoading(false)
+            }, 500)
+          }
+        }
+      })
+    })
+
+    // 開始觀察 DOM 變化
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    })
+
+    // 清理函數
+    return () => {
+      observer.disconnect()
+      NProgress.remove()
+    }
+  }, [setLoading])
+
+  // 路由變化時的 loading 效果
+  useEffect(() => {
+    NProgress.start()
+    setLoading(true)
+
+    const timeout = setTimeout(() => {
+      NProgress.done()
+      setLoading(false)
+    }, 500)
+
+    return () => {
+      clearTimeout(timeout)
+      NProgress.remove()
+    }
+  }, [pathname, searchParams, setLoading])
+
   return (
     <Suspense fallback={null}>
       <LoadingState />
