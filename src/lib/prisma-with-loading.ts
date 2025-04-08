@@ -24,7 +24,6 @@ export async function withServerLoading<T>(queryFn: () => Promise<T>): Promise<T
   try {
     // 執行查詢
     const result = await queryFn();
-    
     return result;
   } finally {
     // 清理工作
