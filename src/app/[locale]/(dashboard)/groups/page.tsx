@@ -7,6 +7,7 @@ import { getTranslations } from 'next-intl/server';
 import { setRequestLocale } from '@/lib/i18n';
 import { CreateGroupButton } from "@/components/CreateGroupButton";
 import type { Locale } from '@/lib/i18n';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 export default async function GroupsPage({
   params: { locale }
@@ -26,44 +27,48 @@ export default async function GroupsPage({
 
   try {
     // 獲取用戶創建的群組
-    const createdGroups = await prisma.group.findMany({
-      where: {
-        createdById: session.user.id
-      },
-      include: {
-        members: true,
-        _count: {
-          select: { members: true }
+    const createdGroups = await withServerLoading(async () => {
+      return await prisma.group.findMany({
+        where: {
+          createdById: session.user.id
+        },
+        include: {
+          members: true,
+          _count: {
+            select: { members: true }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      });
     });
     
     // 獲取用戶作為成員參與的群組（基於新增的關聯）
-    const memberGroups = await prisma.group.findMany({
-      where: {
-        members: {
-          some: {
-            userId: session.user.id
+    const memberGroups = await withServerLoading(async () => {
+      return await prisma.group.findMany({
+        where: {
+          members: {
+            some: {
+              userId: session.user.id
+            }
+          },
+          // 排除用戶創建的群組（避免重複）
+          NOT: {
+            createdById: session.user.id
           }
         },
-        // 排除用戶創建的群組（避免重複）
-        NOT: {
-          createdById: session.user.id
+        include: {
+          members: true,
+          createdBy: true,
+          _count: {
+            select: { members: true }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
-      },
-      include: {
-        members: true,
-        createdBy: true,
-        _count: {
-          select: { members: true }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      });
     });
 
     // 合併用戶的所有群組

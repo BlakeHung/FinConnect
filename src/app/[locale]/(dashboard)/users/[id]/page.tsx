@@ -3,6 +3,7 @@ import { UserForm } from "@/components/UserForm"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { notFound, redirect } from "next/navigation"
+import { withServerLoading } from '@/lib/prisma-with-loading'
 
 export default async function EditUserPage({
   params,
@@ -18,15 +19,19 @@ export default async function EditUserPage({
   // 解構並等待 params
   const { id } = await params
 
-  const user = await prisma.user.findUnique({
-    where: { id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-    },
-  })
+  // 獲取用戶詳情
+  const user = await withServerLoading(async () => {
+    return await prisma.user.findUnique({
+      where: {
+        id: params.id,
+      },
+      include: {
+        transactions: true,
+        activities: true,
+        groups: true,
+      },
+    });
+  });
 
   if (!user) {
     notFound()

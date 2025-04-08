@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ToggleSwitch } from "@/components/activities/ToggleSwitch";
 // 使用 next-intl 的官方 API
 import { getTranslations as getNextIntlTranslations, setRequestLocale } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 // 活動狀態判斷函數 - 使用翻譯對象
 function getActivityStatus(startDate: Date, endDate: Date, enabled: boolean, statusTranslations: any) {
@@ -51,11 +52,14 @@ export default async function ActivitiesPage({ params }: { params: { locale: str
     redirect('/login');
   }
 
-  const activities = await prisma.activity.findMany({
-    orderBy: [
-      { updatedAt: 'desc' },
-      { startDate: 'desc' },
-    ],
+  // 獲取活動列表
+  const activities = await withServerLoading(async () => {
+    return await prisma.activity.findMany({
+      orderBy: [
+        { updatedAt: 'desc' },
+        { startDate: 'desc' },
+      ],
+    });
   });
 
   const canManage = ['ADMIN', 'FINANCE_MANAGER'].includes(session.user.role);

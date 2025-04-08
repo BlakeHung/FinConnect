@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TransactionTable } from "@/components/TransactionTable";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { withServerLoading } from "@/lib/prisma-with-loading";
 
 type SearchParams = {
   userId?: string;
@@ -17,80 +18,93 @@ type SearchParams = {
   order?: 'asc' | 'desc';
 };
 
-type PageProps = {
-  params: { locale: string };
-  searchParams: Promise<SearchParams>;
-};
-
 export default async function TransactionsPage({
   params: { locale },
   searchParams,
-}: PageProps) {
+}: {
+  params: { locale: string };
+  searchParams: SearchParams;
+}) {
   setRequestLocale(locale);
   const t = await getTranslations('transactions');
-  
-  const queryParams = await searchParams;
   const session = await getServerSession(authOptions);
+  
   if (!session) {
     redirect('/login');
   }
 
-  const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE';
+  const canViewAll = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
-  const users = canViewAll ? await prisma.user.findMany({
-    orderBy: {
-      name: 'asc',
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
+  // 使用 withServerLoading 包裝用戶查詢
+  const users = canViewAll ? await withServerLoading(async () => {
+    return await prisma.user.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+    });
   }) : [];
 
-  const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
-    orderBy: {
-      startDate: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-    },
+  // 使用 withServerLoading 包裝活動查詢
+  const activities = await withServerLoading(async () => {
+    return await prisma.activity.findMany({
+      where: {
+        status: 'ACTIVE',
+      },
+      orderBy: {
+        startDate: 'desc',
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   });
 
-  const where = {
-    ...(queryParams.userId && { userId: queryParams.userId }),
-    ...(queryParams.activityId && { activityId: queryParams.activityId }),
-  };
+  const where: Record<string, unknown> = {};
+  
+  if (searchParams.userId) {
+    where.userId = searchParams.userId;
+  }
+  
+  if (searchParams.activityId) {
+    where.activityId = searchParams.activityId;
+  }
 
-  const orderBy = queryParams.sortBy
-    ? {
-        [queryParams.sortBy]: queryParams.order || 'desc',
-      }
-    : { date: 'desc' as const };
+  const orderBy: Record<string, 'asc' | 'desc'> = {};
+  
+  if (searchParams.sortBy) {
+    orderBy[searchParams.sortBy] = searchParams.order || 'desc';
+  } else {
+    orderBy.updatedAt = 'desc';
+  }
 
-  const transactions = await prisma.transaction.findMany({
-    where,
-    orderBy: [
-      { updatedAt: 'desc' },
-      { date: 'desc' }
-    ],
-    include: {
-      category: true,
-      activity: true,
-      user: true,
-      splits: true
-    },
+  // 使用 withServerLoading 包裝交易查詢
+  const transactions = await withServerLoading(async () => {
+    const results = await prisma.transaction.findMany({
+      where,
+      orderBy: [
+        { updatedAt: 'desc' },
+        { date: 'desc' }
+      ],
+      include: {
+        user: true,
+        activity: true,
+        category: true,
+        splits: true,
+      },
+    });
+    
+    // 添加 isSplit 屬性
+    return results.map(transaction => ({
+      ...transaction,
+      isSplit: transaction.splits && transaction.splits.length > 0,
+    }));
   });
-
-  // 處理事務數據，確保它們有正確的 isSplit 屬性
-  const enhancedTransactions = transactions.map(transaction => ({
-    ...transaction,
-    isSplit: transaction.splits && transaction.splits.length > 0,
-  }));
 
   const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';
 
@@ -101,16 +115,16 @@ export default async function TransactionsPage({
         
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button asChild className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
-            <a href="/transactions/new?type=EXPENSE">
+            <Link href={`/${locale}/transactions/new?type=EXPENSE`}>
               <Plus className="mr-2 h-4 w-4" />
               {t("new_expense")}
-            </a>
+            </Link>
           </Button>
           <Button asChild className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-            <a href="/transactions/new?type=INCOME">
+            <Link href={`/${locale}/transactions/new?type=INCOME`}>
               <Plus className="mr-2 h-4 w-4" />
               {t("new_income")}
-            </a>
+            </Link>
           </Button>
         </div>
       </div>
@@ -124,7 +138,7 @@ export default async function TransactionsPage({
 
       <div className="mt-6">
         <TransactionTable 
-          transactions={enhancedTransactions} 
+          transactions={transactions} 
           activities={activities}
           canManagePayments={canManagePayments}
         />

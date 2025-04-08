@@ -7,6 +7,7 @@ import { getTranslations } from 'next-intl/server';
 import { unstable_setRequestLocale } from 'next-intl/server';
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 interface GroupPageProps {
   params: {
@@ -28,34 +29,36 @@ export default async function GroupPage({ params }: GroupPageProps) {
 
   try {
     // 獲取群組詳情，包括成員和他們關聯的用戶
-    const group = await prisma.group.findUnique({
-      where: {
-        id: params.id
-      },
-      include: {
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true
+    const group = await withServerLoading(async () => {
+      return await prisma.group.findUnique({
+        where: {
+          id: params.id
+        },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
               }
             }
-          }
-        },
-        activities: true,
-        createdBy: true,
-        transactions: {
-          take: 5,  // 只獲取最新的5條交易
-          orderBy: {
-            date: 'desc'
           },
-          include: {
-            category: true
+          activities: true,
+          createdBy: true,
+          transactions: {
+            take: 5,  // 只獲取最新的5條交易
+            orderBy: {
+              date: 'desc'
+            },
+            include: {
+              category: true
+            }
           }
         }
-      }
+      });
     });
 
     // 如果群組不存在，導向404頁面
@@ -73,15 +76,17 @@ export default async function GroupPage({ params }: GroupPageProps) {
     }
 
     // 獲取系統用戶列表，用於關聯到群組成員
-    const systemUsers = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true
-      },
-      orderBy: {
-        name: 'asc'
-      }
+    const systemUsers = await withServerLoading(async () => {
+      return await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true
+        },
+        orderBy: {
+          name: 'asc'
+        }
+      });
     });
 
     return (

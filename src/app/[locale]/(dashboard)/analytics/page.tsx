@@ -8,6 +8,7 @@ import { TransactionChart } from "@/components/analytics/TransactionChart";
 import { ActivityStats } from "@/components/analytics/ActivityStats";
 import { CategoryChart } from "@/components/analytics/CategoryChart";
 import { MonthlyComparison } from "@/components/analytics/MonthlyComparison";
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 export default async function AnalyticsPage() {
   const session = await getServerSession(authOptions);
@@ -22,13 +23,15 @@ export default async function AnalyticsPage() {
   const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
   // 獲取本月收支統計
-  const monthlyTransactions = await prisma.transaction.findMany({
-    where: {
-      date: {
-        gte: startOfMonth,
-        lte: endOfMonth,
+  const monthlyTransactions = await withServerLoading(async () => {
+    return await prisma.transaction.findMany({
+      where: {
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
       },
-    },
+    });
   });
 
   // 計算本月收入和支出
@@ -45,45 +48,51 @@ export default async function AnalyticsPage() {
   );
 
   // 獲取待付款金額
-  const unpaidAmount = await prisma.transaction.aggregate({
-    where: {
-      paymentStatus: 'UNPAID',
-    },
-    _sum: {
-      amount: true,
-    },
+  const unpaidAmount = await withServerLoading(async () => {
+    return await prisma.transaction.aggregate({
+      where: {
+        paymentStatus: 'UNPAID',
+      },
+      _sum: {
+        amount: true,
+      },
+    });
   });
 
   // 獲取活動支出統計
-  const activityExpenses = await prisma.transaction.groupBy({
-    by: ['activityId'],
-    where: {
-      activityId: { not: null },
-      type: 'EXPENSE',
-    },
-    _sum: {
-      amount: true,
-    },
+  const activityExpenses = await withServerLoading(async () => {
+    return await prisma.transaction.groupBy({
+      by: ['activityId'],
+      where: {
+        activityId: { not: null },
+        type: 'EXPENSE',
+      },
+      _sum: {
+        amount: true,
+      },
+    });
   });
 
   // 獲取過去30天的收支趨勢數據
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const dailyTransactions = await prisma.transaction.findMany({
-    where: {
-      date: {
-        gte: thirtyDaysAgo,
+  const dailyTransactions = await withServerLoading(async () => {
+    return await prisma.transaction.findMany({
+      where: {
+        date: {
+          gte: thirtyDaysAgo,
+        },
       },
-    },
-    select: {
-      date: true,
-      amount: true,
-      type: true,
-    },
-    orderBy: {
-      date: 'asc',
-    },
+      select: {
+        date: true,
+        amount: true,
+        type: true,
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
   });
 
   // 處理圖表數據
@@ -109,23 +118,25 @@ export default async function AnalyticsPage() {
   }, []);
 
   // 獲取活動詳細統計
-  const activities = await prisma.activity.findMany({
-    where: {
-      status: 'ACTIVE',
-    },
-    select: {
-      id: true,
-      name: true,
-      transactions: {
-        where: {
-          type: 'EXPENSE',
-        },
-        select: {
-          amount: true,
-          paymentStatus: true,
+  const activities = await withServerLoading(async () => {
+    return await prisma.activity.findMany({
+      where: {
+        status: 'ACTIVE',
+      },
+      select: {
+        id: true,
+        name: true,
+        transactions: {
+          where: {
+            type: 'EXPENSE',
+          },
+          select: {
+            amount: true,
+            paymentStatus: true,
+          },
         },
       },
-    },
+    });
   });
 
   const activityStats = activities.map(activity => ({
@@ -139,27 +150,31 @@ export default async function AnalyticsPage() {
   }));
 
   // 獲取分類支出統計
-  const categoryExpenses = await prisma.transaction.groupBy({
-    by: ['categoryId'],
-    where: {
-      type: 'EXPENSE',
-      date: {
-        gte: startOfMonth,
-        lte: endOfMonth,
+  const categoryExpenses = await withServerLoading(async () => {
+    return await prisma.transaction.groupBy({
+      by: ['categoryId'],
+      where: {
+        type: 'EXPENSE',
+        date: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
       },
-    },
-    _sum: {
-      amount: true,
-    },
+      _sum: {
+        amount: true,
+      },
+    });
   });
 
   // 獲取分類名稱
-  const categories = await prisma.category.findMany({
-    where: {
-      id: {
-        in: categoryExpenses.map(ce => ce.categoryId),
+  const categories = await withServerLoading(async () => {
+    return await prisma.category.findMany({
+      where: {
+        id: {
+          in: categoryExpenses.map(ce => ce.categoryId),
+        },
       },
-    },
+    });
   });
 
   // 處理分類圖表數據
@@ -172,16 +187,18 @@ export default async function AnalyticsPage() {
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
 
-  const monthlyData = await prisma.transaction.groupBy({
-    by: ['type'],
-    where: {
-      date: {
-        gte: sixMonthsAgo,
+  const monthlyData = await withServerLoading(async () => {
+    return await prisma.transaction.groupBy({
+      by: ['type'],
+      where: {
+        date: {
+          gte: sixMonthsAgo,
+        },
       },
-    },
-    _sum: {
-      amount: true,
-    },
+      _sum: {
+        amount: true,
+      },
+    });
   });
 
   // 處理月度比較數據

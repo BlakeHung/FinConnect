@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { UsersContent } from "./UsersContent"
 import { prisma } from "@/lib/prisma"
+import { withServerLoading } from '@/lib/prisma-with-loading'
 
 export default async function UsersPage() {
   const session = await getServerSession(authOptions)
@@ -11,11 +12,13 @@ export default async function UsersPage() {
     redirect("/login")
   }
 
-  // 在服務器端獲取用戶數據
-  const users = await prisma.user.findMany({
-    orderBy: {
-      createdAt: 'desc',
-    },
+  // 獲取所有用戶
+  const users = await withServerLoading(async () => {
+    return await prisma.user.findMany({
+      orderBy: {
+        name: 'asc',
+      },
+    });
   });
 
   // 格式化日期為字符串，以便可以序列化

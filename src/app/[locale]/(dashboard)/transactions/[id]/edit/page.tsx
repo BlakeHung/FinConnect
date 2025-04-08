@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 import { getTranslations } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 type SplitType = 'EQUAL' | 'PERCENTAGE' | 'FIXED';
 
@@ -27,34 +28,28 @@ export default async function EditTransactionPage({
   }
 
   try {
-    // 使用 Prisma 查詢事務詳情，明確包含分帳和付款記錄關聯
-    console.log("Fetching transaction with ID:", id);
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
-      include: { 
-        category: true,
-        group: true,
-        splits: {
-          select: {
-            id: true,
-            splitAmount: true,
-            description: true,
-            assignedToId: true,
-            isIncluded: true,
-            splitValue: true,
-            assignedTo: true
-          }
+    // 獲取交易詳情
+    const transaction = await withServerLoading(async () => {
+      return await prisma.transaction.findUnique({
+        where: {
+          id: id
         },
-        payments: {
-          select: {
-            id: true,
-            payerId: true,
-            amount: true,
-            paymentMethod: true,
-            note: true
-          }
+        include: {
+          category: true,
+          splits: {
+            include: {
+              assignedTo: true
+            }
+          },
+          payments: {
+            include: {
+              payer: true
+            }
+          },
+          activity: true,
+          group: true
         }
-      },
+      });
     });
     
     if (!transaction) {
@@ -73,10 +68,16 @@ export default async function EditTransactionPage({
     console.log("Split data fetched:", JSON.stringify(splitData, null, 2));
     console.log("Number of splits found:", splitData.length);
 
-    // 單獨查詢付款記錄
-    console.log("Fetching payment records for transaction ID:", id);
-    const paymentData = await prisma.transactionPayment.findMany({
-      where: { transactionId: id },
+    // 獲取付款資料
+    const paymentData = await withServerLoading(async () => {
+      return await prisma.transactionPayment.findMany({
+        where: {
+          transactionId: id
+        },
+        include: {
+          payer: true
+        }
+      });
     });
     
     console.log("Payment records fetched:", JSON.stringify(paymentData, null, 2));
@@ -94,55 +95,61 @@ export default async function EditTransactionPage({
     const formattedDate = transaction.date.toISOString().split('T')[0];
     console.log("Formatted date:", formattedDate);
 
-    const categories = await prisma.category.findMany({
-      where: {
-        type: transaction.type,
-      },
-      orderBy: {
-        name: 'asc',
-      },
+    // 獲取所有分類
+    const categories = await withServerLoading(async () => {
+      return await prisma.category.findMany({
+        where: {
+          type: transaction.type,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
     });
 
-    const activities = await prisma.activity.findMany({
-      orderBy: {
-        startDate: 'desc',
-      },
-      select: {
-        id: true,
-        name: true,
-      },
+    // 獲取所有活動
+    const activities = await withServerLoading(async () => {
+      return await prisma.activity.findMany({
+        orderBy: {
+          name: 'asc'
+        }
+      });
     });
     
-    // 取得用戶的群組
-    const groups = await prisma.group.findMany({
-      where: {
-        OR: [
-          { createdById: session.user.id },
-          { 
-            members: {
-              some: {
-                userId: session.user.id
+    // 獲取所有群組
+    const groups = await withServerLoading(async () => {
+      return await prisma.group.findMany({
+        where: {
+          OR: [
+            { createdById: session.user.id },
+            { 
+              members: {
+                some: {
+                  userId: session.user.id
+                }
               }
             }
-          }
-        ]
-      },
-      select: {
-        id: true,
-        name: true,
-      },
+          ]
+        },
+        select: {
+          id: true,
+          name: true,
+        },
+      });
     });
     
-    // 獲取系統中的用戶列表（用於付款記錄）
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-      },
-      orderBy: {
-        name: 'asc',
-      },
+    // 獲取所有用戶
+    const users = await withServerLoading(async () => {
+      return await prisma.user.findMany({
+        select: {
+          id: true,
+          name: true,
+          email: true,
+        },
+        orderBy: {
+          name: 'asc',
+        },
+      });
     });
     
     const canManagePayments = session.user.role === 'ADMIN' || session.user.role === 'FINANCE_MANAGER';

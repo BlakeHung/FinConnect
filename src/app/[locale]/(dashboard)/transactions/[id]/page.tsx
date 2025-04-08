@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ShareButton } from "@/components/ShareButton";
 import { getTranslations } from 'next-intl/server';
 import PaymentSummary from "@/components/PaymentSummary";
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 type PageProps = {
   params: Promise<{ id: string; locale: string }>;
@@ -27,24 +28,29 @@ export default async function TransactionPage({
   }
 
   try {
-    // 查詢交易資料
-    const transaction = await prisma.transaction.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        activity: true,
-        user: true,
-        splits: {
-          include: {
-            assignedTo: true
-          }
+    // 獲取交易詳情
+    const transaction = await withServerLoading(async () => {
+      return await prisma.transaction.findUnique({
+        where: {
+          id: id
         },
-        payments: {
-          include: {
-            payer: true
-          }
+        include: {
+          category: true,
+          splits: {
+            include: {
+              assignedTo: true
+            }
+          },
+          payments: {
+            include: {
+              payer: true
+            }
+          },
+          activity: true,
+          group: true,
+          user: true
         }
-      },
+      });
     });
 
     if (!transaction) {

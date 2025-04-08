@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation";
 import { ActivityForm } from "@/components/ActivityForm";
 import { Metadata } from "next";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 // 動態生成 metadata
 export async function generateMetadata({ params }: { params: { locale: string } }) {
@@ -38,8 +39,10 @@ export default async function EditActivityPage({
     redirect('/transactions');
   }
 
-  const activity = await prisma.activity.findUnique({
-    where: { id },
+  const activity = await withServerLoading(async () => {
+    return await prisma.activity.findUnique({
+      where: { id },
+    });
   });
 
   if (!activity) {

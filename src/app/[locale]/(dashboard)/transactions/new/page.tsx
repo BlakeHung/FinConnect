@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { TransactionForm } from "@/components/TransactionForm";
 import { getTranslations } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 type PageProps = {
   params: { locale: string };
@@ -28,55 +29,67 @@ export default async function NewTransactionPage({
     redirect('/transactions');
   }
 
-  const categories = await prisma.category.findMany({
-    where: {
-      type: queryParams.type,
-    },
-    orderBy: {
-      name: 'asc',
-    },
+  const type = queryParams.type;
+
+  // 獲取所有分類
+  const categories = await withServerLoading(async () => {
+    return await prisma.category.findMany({
+      where: {
+        type: type,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
   });
 
-  const activities = await prisma.activity.findMany({
-    orderBy: {
-      startDate: 'desc',
-    },
-    select: {
-      id: true,
-      name: true,
-    },
+  // 獲取所有活動
+  const activities = await withServerLoading(async () => {
+    return await prisma.activity.findMany({
+      orderBy: {
+        startDate: 'desc',
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   });
 
   // 取得用戶的群組
-  const groups = await prisma.group.findMany({
-    where: {
-      OR: [
-        { createdById: session.user.id },
-        { 
-          members: {
-            some: {
-              userId: session.user.id
+  const groups = await withServerLoading(async () => {
+    return await prisma.group.findMany({
+      where: {
+        OR: [
+          { createdById: session.user.id },
+          { 
+            members: {
+              some: {
+                userId: session.user.id
+              }
             }
           }
-        }
-      ]
-    },
-    select: {
-      id: true,
-      name: true,
-    },
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
   });
 
   // 獲取系統中的用戶列表（用於付款記錄）
-  const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-    },
-    orderBy: {
-      name: 'asc',
-    },
+  const users = await withServerLoading(async () => {
+    return await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
   });
 
   // 獲取最新的活動（如果有的話）
@@ -88,10 +101,10 @@ export default async function NewTransactionPage({
     <div className="container mx-auto p-4">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">
-          {queryParams.type === 'EXPENSE' ? t('new_expense') : t('new_income')}
+          {type === 'EXPENSE' ? t('new_expense') : t('new_income')}
         </h1>
         <TransactionForm 
-          type={queryParams.type} 
+          type={type} 
           categories={categories}
           activities={activities}
           groups={groups}

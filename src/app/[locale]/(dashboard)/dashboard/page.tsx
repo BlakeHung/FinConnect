@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { DashboardContent } from "./DashboardContent";
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 async function getStats() {
   const today = new Date();
@@ -16,57 +17,65 @@ async function getStats() {
     categoryStats,
   ] = await Promise.all([
     // 進行中的活動
-    prisma.activity.findMany({
-      where: {
-        enabled: true,
-        startDate: { lte: today },
-        endDate: { gte: today },
-      },
-      include: {
-        edm: true,
-      },
-      orderBy: {
-        startDate: 'asc',
-      },
-      take: 5,
+    withServerLoading(async () => {
+      return await prisma.activity.findMany({
+        where: {
+          enabled: true,
+          startDate: { lte: today },
+          endDate: { gte: today },
+        },
+        include: {
+          edm: true,
+        },
+        orderBy: {
+          startDate: 'asc',
+        },
+        take: 5,
+      });
     }),
     // 所有活動（按時間排序）
-    prisma.activity.findMany({
-      where: {
-        enabled: true,
-      },
-      orderBy: {
-        startDate: 'desc',
-      },
-      take: 5,
-      include: {
-        edm: true,
-      },
+    withServerLoading(async () => {
+      return await prisma.activity.findMany({
+        where: {
+          enabled: true,
+        },
+        orderBy: {
+          startDate: 'desc',
+        },
+        take: 5,
+        include: {
+          edm: true,
+        },
+      });
     }),
     // 取得最近的交易記錄
-    prisma.transaction.findMany({
-      include: {
-        category: true,
-        user: true,
-      },
-      orderBy: {
-        date: 'desc',
-      },
-      take: 5,
+    withServerLoading(async () => {
+      return await prisma.transaction.findMany({
+        include: {
+          category: true,
+          user: true,
+        },
+        orderBy: {
+          date: 'desc',
+        },
+        take: 5,
+      });
     }),
     // 取得分類統計
-      prisma.transaction.groupBy({
-      by: ['categoryId'],
-      where: {
-        date: {
-          gte: startOfMonth,
-          lte: endOfMonth,
+    withServerLoading(async () => {
+      const stats = await prisma.transaction.groupBy({
+        by: ['categoryId'],
+        where: {
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
         },
-      },
-      _sum: {
-        amount: true,
-      },
-    }).then(async (stats) => {
+        _sum: {
+          amount: true,
+        },
+      });
+      
       const categories = await prisma.category.findMany({
         where: {
           id: {

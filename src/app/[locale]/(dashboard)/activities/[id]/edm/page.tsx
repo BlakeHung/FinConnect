@@ -5,6 +5,7 @@ import { redirect, notFound } from "next/navigation";
 import { Metadata } from "next";
 import { EdmForm } from "@/components/EdmForm";
 import { getTranslations, setRequestLocale } from 'next-intl/server';
+import { withServerLoading } from '@/lib/prisma-with-loading';
 
 // 動態生成 metadata
 export async function generateMetadata({ params }: { params: { locale: string } }) {
@@ -38,11 +39,13 @@ export default async function EdmPage({
     redirect('/activities');
   }
 
-  const activity = await prisma.activity.findUnique({
-    where: { id },
-    include: {
-      edm: true,
-    },
+  const activity = await withServerLoading(async () => {
+    return await prisma.activity.findUnique({
+      where: { id },
+      include: {
+        edm: true,
+      },
+    });
   });
 
   if (!activity) {
