@@ -34,41 +34,37 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
       minimum: 0.08
     })
 
-    // 創建一個 MutationObserver 來監視 DOM 變化
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'childList') {
-          const addedNodes = Array.from(mutation.addedNodes)
-          const isRscRequest = addedNodes.some((node) => {
-            if (node instanceof HTMLScriptElement) {
-              return node.src?.includes('_rsc=') || node.src?.includes('_next/')
-            }
-            return false
-          })
+    // 保存原始的 fetch 函數
+    const originalFetch = window.fetch
 
-          if (isRscRequest) {
-            NProgress.start()
-            setLoading(true)
-            
-            // 設置一個合理的超時時間來結束 loading 狀態
-            setTimeout(() => {
-              NProgress.done()
-              setLoading(false)
-            }, 500)
-          }
+    // 替換 fetch 函數以攔截請求
+    window.fetch = async (...args) => {
+      const [resource] = args
+      const url = resource instanceof Request ? resource.url : resource.toString()
+
+      // 檢查是否是 RSC 請求
+      if (url.includes('_rsc=')) {
+        NProgress.start()
+        setLoading(true)
+
+        try {
+          const response = await originalFetch(...args)
+          return response
+        } finally {
+          // 設置一個小延遲來確保 loading 狀態可見
+          setTimeout(() => {
+            NProgress.done()
+            setLoading(false)
+          }, 500)
         }
-      })
-    })
+      }
 
-    // 開始觀察 DOM 變化
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    })
+      return originalFetch(...args)
+    }
 
     // 清理函數
     return () => {
-      observer.disconnect()
+      window.fetch = originalFetch
       NProgress.remove()
     }
   }, [setLoading])
