@@ -3,15 +3,17 @@
 import { usePathname, useSearchParams } from 'next/navigation'
 import { Suspense, useEffect, useState } from 'react'
 import { Spinner } from '@/components/ui/spinner'
+import { useLoading } from '@/store/use-loading'
 
 function LoadingState() {
-  const [isLoading, setIsLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { isLoading, setLoading } = useLoading()
 
   useEffect(() => {
-    setIsLoading(true)
+    // 路由變化時設置加載狀態
+    setLoading(true)
     setProgress(0)
     
     // 模擬進度條
@@ -26,7 +28,7 @@ function LoadingState() {
       clearInterval(progressInterval)
       setProgress(100)
       setTimeout(() => {
-        setIsLoading(false)
+        setLoading(false)
         setProgress(0)
       }, 200)
     }, 500)
@@ -35,7 +37,7 @@ function LoadingState() {
       clearTimeout(timer)
       clearInterval(progressInterval)
     }
-  }, [pathname, searchParams])
+  }, [pathname, searchParams, setLoading])
 
   if (!isLoading) return null
 
