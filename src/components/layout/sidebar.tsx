@@ -15,7 +15,8 @@ import {
   CalendarDays,
   Calendar,
   LogOut,
-  Wallet
+  Wallet,
+  BarChart
 } from "lucide-react"
 import { usePathname } from 'next/navigation'
 
@@ -36,6 +37,11 @@ export function Sidebar() {
       label: t('transactions'),
       icon: <Receipt className="w-5 h-5" />,
       href: "/transactions",
+    },
+    {
+      label: t('analytics'),
+      icon: <BarChart className="w-5 h-5" />,
+      href: "/analytics",
     },
     {
       label: t('groups'),
