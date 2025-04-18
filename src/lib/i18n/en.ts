@@ -183,7 +183,11 @@ const en = {
       actions: 'Actions'
     },
     new_expense: 'New Expense',
-    new_income: 'New Income'
+    new_income: 'New Income',
+    payer: 'Payer',
+    select_payer: 'Select Payer',
+    no_participants_for_activity: 'No participants in this activity',
+    payer_required: 'Please select a payer',
   },
   
   categories: {

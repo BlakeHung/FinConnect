@@ -177,7 +177,11 @@ const zh = {
       title_edit: '編輯交易',
       submit_success: '交易已儲存',
       submit_error: '儲存失敗，請稍後再試',
-    }
+    },
+    payer: '付款人',
+    select_payer: '選擇付款人',
+    no_participants_for_activity: '此活動沒有參與者',
+    payer_required: '請選擇付款人',
   },
   
   categories: {
