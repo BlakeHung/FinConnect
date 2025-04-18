@@ -332,7 +332,13 @@ const zh = {
     submit_error_message: '提交失敗，請稍後再試',
     name_required: '請輸入活動名稱',
     start_date_required: '請選擇開始日期',
-    end_date_required: '請選擇結束日期'
+    end_date_required: '請選擇結束日期',
+    select_groups: '選擇群組',
+    no_groups_available: '目前沒有可用的群組',
+    group_selection_required: '請至少選擇一個群組',
+    member_participation: '成員參與狀態',
+    member_name: '成員名稱',
+    participation_status: '參與狀態',
   },
   
   activity_detail: {
