@@ -93,8 +93,8 @@ model Transaction {
   images        String[]
   categoryId    String      @db.ObjectId
   category      Category    @relation(fields: [categoryId], references: [id])
-  groupMemberId String      @db.ObjectId
-  groupMember   GroupMember @relation(fields: [groupMemberId], references: [id])
+  groupMemberId String?     @db.ObjectId
+  groupMember   GroupMember? @relation(fields: [groupMemberId], references: [id])
   activityId    String?     @db.ObjectId
   activity      Activity?   @relation(fields: [activityId], references: [id])
   status        String      @default("PENDING") // PENDING, APPROVED, REJECTED
