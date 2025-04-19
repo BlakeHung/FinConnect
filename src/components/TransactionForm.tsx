@@ -55,6 +55,7 @@ interface TransactionFormProps {
     images?: string[];
   };
   transactionId?: string;
+  canManagePayments?: boolean;
 }
 
 export function TransactionForm({ 
@@ -63,6 +64,7 @@ export function TransactionForm({
   type,
   defaultValues,
   transactionId,
+  canManagePayments,
 }: TransactionFormProps) {
   const t = useTranslations('transactions');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -168,7 +170,7 @@ export function TransactionForm({
         throw new Error('提交失敗');
       }
 
-      //window.location.href = '/transactions';
+      window.location.href = '/transactions';
     } catch (error) {
       console.error('Error:', error);
       alert('提交失敗，請稍後再試');
